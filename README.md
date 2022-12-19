@@ -51,6 +51,12 @@ clingo ooasp/ooasp.lp ooasp/ooasp_check.lp ooasp/ooasp_config.lp examples/racks/
 One possible solution is:
 ![solution](examples/racks/solution_1elementA.png "solution")
 
+### Interactive ASP configuration with OOASP
+
+The folder asp_interactive-configuration contains the code for an interactive configuration framework based on OOASP.
+For further information see [asp_interactive_configuration/README.md](./asp_interactive_configuration/README.md)
+
+
 ### Licensing
 
 OOASP is distributed under the [MIT License](LICENSE).
