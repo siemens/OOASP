@@ -1,7 +1,7 @@
-# Documentation of Interactive configurator
 Copyright (c) 2022 Siemens AG Oesterreich
 SPDX-License-Identifier: MIT
 
+# Documentation of Interactive configurator
 
 ## API classes
 

@@ -1,6 +1,7 @@
-# Interactive Configuration with ASP
 Copyright (c) 2022 Siemens AG Oesterreich
 SPDX-License-Identifier: MIT
+
+# Interactive Configuration with ASP
 
 
 Prototype for interactive configuration using ASP.
