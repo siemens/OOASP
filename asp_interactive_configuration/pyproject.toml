@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "asp_interactive_configuration"
+version = "0.1.0"
+description = "project to develop an interactive asp-based configuration approach"
+authors = ["gschennersie"]
+packages = [
+    { include = "ooasp" }
+]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+clingo = "^5.5.2"
+graphviz = "^0.20"
+natsort = "^8.1.0"
+pytest = "^7.1.2"
+clingraph = ">=1.0.0"
+pylint = "^2.14.4"
+Clorm = "^1.4.0"
+ipywidgets = "^7.7.1"
+
+[tool.poetry.dev-dependencies]
+pytest = "^7.1.2"
+autopep8 = "^1.6.0"
+pylint = "^2.13.9"
+ipykernel = "^6.13.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

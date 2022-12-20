@@ -1,0 +1,710 @@
+# Copyright (c) 2022 Siemens AG Oesterreich
+# SPDX-License-Identifier: MIT
+
+import statistics
+import time
+from textwrap import dedent
+from clorm.clingo import Control
+from clingo import Symbol, Number, Function
+from clorm import Predicate, unify
+from ooasp.config import OOASPConfiguration
+from ooasp.kb import OOASPKnowledgeBase
+from typing import List 
+from copy import copy, deepcopy
+import ooasp.utils as utils
+from typing import List
+
+class State:
+    """
+    Represents a State in the process of an interactive configuration,
+    which saves the partial configuration, the action performed  and the
+    number of objects
+    """
+    def __init__(self, config:OOASPConfiguration,
+                        action:str,
+                        domain_size:int):
+        """
+        Creates a state
+            Parameters:
+                kb: The Knowledge base
+                config: The partial or complete configuration
+                domain_size: The number of objects in the partial configuration
+                action: The action perfored to get the state
+        """
+        self.domain_size = domain_size
+        self.config = config
+        self.action = action
+
+    @classmethod
+    def initial(cls, kb:OOASPKnowledgeBase, config_name:str):
+        """
+        Creates the initial state
+            Parameters:
+                kb: The Knowledge base
+                config_name: The name of the configuration
+        """
+        return cls(OOASPConfiguration(config_name,kb),
+            action="start",
+            domain_size=0)
+
+    def copy(self, action:str, deep_config:bool = False):
+        """
+        Creates a state by copying the state and changing some properties
+            Parameters:
+                action: The action for the new state
+                deep_config: Wether the configuration should be copied in a deep way
+        """
+        if deep_config:
+            config = deepcopy(self.config)
+        else:
+            config = self.config
+        new_state = State(config,action,self.domain_size)
+        return new_state
+
+    def __str__(self)->str:
+        """
+        Returns a string representation of the state
+        """
+        info = {
+        'last action' : self.action,
+        'number of objects' : self.domain_size,
+        'config' : str(self.config)
+        }
+        return utils.pretty_dic(info)
+
+
+class InteractiveConfigurator:
+
+    """
+    Handles the interactive process of a configuration
+        Properties:
+            kb (OOASPKnowledgeBase): The Knowledge base
+            config_name (str): The name of the configuration
+            states (List[State]): The list of all states
+            additional_files (List[str]): The list of additional lp files
+            found_config (OOASPConfig):  The complete configuration found in the browsing
+            brave_config (OOASPConfig):  The brave configuration found with all the options
+            last_size_grounded (int): The last size that was grounded
+    """
+
+    def __init__(self, kb:OOASPKnowledgeBase, config_name:str, additional_files:List=None, additional_prg:str=""):
+        """
+        Creates an interactive configuratior
+            Parameters:
+                kb: The Knowledge base
+                config_name: The name of the configuration
+                additional_files: A list of .lp files to include in the control
+        """
+        self.kb = kb
+        self.config_name = config_name
+        self.states = [State.initial(kb,config_name)]
+        self.additional_files = [] if additional_files is None else additional_files
+        self.additional_prg = additional_prg
+        self._time_grounding = 0
+        self._time_solving = 0
+        self._individual_ground_times = {}
+        self._individual_solve_times = {}
+        self._init_ctl()
+        self.found_config = None
+        self.brave_config = None
+        self.solution_iterator = None
+        self.hdn = None
+
+    def _add_grounding_time(self, time):
+        self._time_grounding+=time
+        self._individual_ground_times[self.domain_size] = time
+    
+    def _add_solving_time(self, time):
+        self._time_solving+=time
+        self._individual_solve_times[self.domain_size] = time
+
+    def _init_ctl(self):
+        """
+        Initializes the control object
+        """
+        self.ctl = Control(["0",
+                "--warn=none",
+                f"-c config_name={self.config_name}",
+                f"-c kb_name={self.kb.name}"])
+        self.ctl.add("base",[],self.kb.fb.asp_str())
+        self.ctl.add("base",[],self.additional_prg)
+        self.ctl.load("./ooasp/encodings/ooasp.lp")
+        for f in self.additional_files:
+            self.ctl.load(f)
+        self._ground([("base",[])])
+        self.last_size_grounded = 0
+
+
+    def __str__(self):
+        s = utils.title('INTERACTIVE CONFIG')
+        d = {
+            'kb' : self.kb.name, 
+            'config' : self.state.config.name,
+            'browsing'  : self.solution_iterator is not None,
+            'found configuration ' : str(self.found_config) is not None
+        }
+        s+= utils.pretty_dic(d)
+        s+= utils.subtitle('Current State')
+        s+= str(self.state)
+
+        return s
+
+    @property
+    def state(self):
+        """
+        The current state of the interactive process
+        """
+        return self.states[-1]
+    
+    @property
+    def config(self):
+        """
+        The current (partial) configuration being constructed
+        """
+        return self.state.config
+
+    @property
+    def domain_size(self):
+        """
+        The size of the domain (How many objects have been created)
+        """
+        return self.state.domain_size
+
+    @property
+    def browsing(self):
+        """
+        If there is a current browsing process through the solutuions
+        """
+        return self.solution_iterator is not None
+
+    @property
+    def history(self)->str:
+        """
+        A string with the history of all executed actions
+        """
+        h = "\n".join([f"{i}. {s.action}" for i, s in enumerate(self.states)])
+        return h
+
+    @property
+    def _statistics(self):
+        self._outdate_models()
+        d ={
+            'Time grounding' : self._time_grounding,
+            'Time solving' : self._time_solving}
+        
+        return  utils.pretty_dic(d)
+
+    def _ground(self, args):
+        start = time.time()
+        self.ctl.ground(args)
+        end = time.time()
+        self._add_grounding_time(end -start)
+
+
+    def _ground_missing(self)->None:
+        """
+        Grounds all missing programs based on the current domain_size
+        """
+        # print("Ground missing")
+        if self.domain_size == self.last_size_grounded:
+            return
+        for s in range(self.last_size_grounded+1,self.domain_size+1):
+            if s>1:
+                self.ctl.release_external(Function("active", [Number(s-1)]))
+            self._ground([("domain",[Number(s)])])
+            self.ctl.assign_external(Function("active", [Number(s)]), True)
+        self.last_size_grounded=s
+
+    def _new_state(self,action:str,deep=False)->State:
+        """
+        Creates a new state
+            Parameters:
+                action: The action string
+                deep: If the config should be deep copyed
+        """
+        next_state = self.state.copy(action, deep_config=deep)
+        self.states.append(next_state)
+        self._outdate_models()
+        return next_state
+
+    def _outdate_models(self)->None:
+        """
+        Outdates all models. This will cancel any browsing process and remove
+        any previously computed options in the brave config
+        """
+        self.brave_config=None
+        self.found_config=None
+        if self.solution_iterator:
+            self.hdn.cancel()
+        self.solution_iterator = None
+
+    def _set_user_externals(self)->None:
+        """
+        Sets all partial configuration as user externals to True.
+        This uses special predicate `user/1`
+        """
+        for f in self.config.editable_facts:
+            self.ctl.assign_external(Function("user",[f.symbol]), True)
+
+    def _falsify_user_externals(self,facts:List)->None:
+        """
+        Makes user externals false for the given facts. This is needed when a 
+        remove action is performed.
+            Parameters:
+                facts: List of clorm predicates to be set to false
+        """
+        for f in facts:
+            self.ctl.assign_external(Function("user",[f.symbol]), False)
+
+    def _add_fact(self, fact:Predicate)->None:
+        """
+        Adds a new fact to the control. The fact is added as part
+        of the program for the current domain size.
+            Parameters:
+                facts: The clorm predicate to be added to the control
+        """
+        self.ctl.add("domain",[str(self.domain_size)],str(fact)+".")
+
+    def _extend_domain(self)->None:
+        """
+        Increases the domain size by one and adds a new domain(object,N) fact to
+        the configuration.
+        """
+        self.state.domain_size+=1
+        self._outdate_models()
+        self.config.add_domain('object',self.state.domain_size)
+
+
+    # --------- Browsing
+
+    def _next_solution(self)->OOASPConfiguration:
+        """
+        Gets the next avaliable solution for the current configuration without increasing the domain size.
+        If there is an ongoing browsing process it will continue ussing
+        the given iterarator, otherwise tt will ground any missing steps and solve.
+        Sets the found configuration based on the next computed model.
+            Returns:
+                The found OOASPConfiguration or None if no solution is found
+        """
+        self._ground_missing()
+
+        if not self.browsing:
+            self.ctl.assign_external(Function("guess"), True)
+            self.ctl.assign_external(Function("check"), True)
+            self.ctl.assign_external(Function("check_partial_cv"), True)
+
+            self._set_user_externals()
+            self.ctl.configuration.solve.enum_mode = 'auto'
+            start = time.time()
+            # print("\n---Calling handle")
+            self.hdn = self.ctl.solve(yield_=True)
+            end = time.time()
+            self._add_solving_time(end -start)
+
+            self.solution_iterator = iter(self.hdn)
+        
+        start = time.time()
+        try:
+            # print("---Calling next")
+            model = next(self.solution_iterator)
+            # print("Done")
+            end = time.time()
+            self._add_solving_time(end -start)
+            found_config = OOASPConfiguration.from_model(self.state.config.name,
+                    self.kb, model)
+            return found_config
+        except StopIteration:
+            # print("Cancel")
+            end = time.time()
+            self._add_solving_time(end -start)
+            self.hdn.cancel()
+            return None
+
+    def _set_config(self,config:OOASPConfiguration):
+        """
+        Sets the current configuration to the given one
+            Parameters:
+                config: The new configuration
+            Throws:
+                Error in case the size of the new configuration is smaller
+        """
+        new_size = config.domain_size
+
+        if new_size < self.domain_size:
+            raise RuntimeError("Can't set a configuration with smaller domain size")
+        self.state.domain_size = new_size
+        self.state.config=config
+
+    def _brave_config_as_options(self) -> dict:
+        """
+        Returns the brave configuration computed as a dictionary with 
+        the options per object
+            Returns:
+                The dictionary with ids of objects as keys and list of dicionaries as value 
+                representing the possible options
+        """
+        if self.brave_config is None:
+            raise RuntimeError("A brave configuration must be computed to get it as optionss")
+        config = self.brave_config
+        user_symbols = config.user_input
+        user_strs = [str(s) for s in user_symbols]
+        user_fb = unify(config.editable_unifiers, user_symbols)
+        options = {}
+        for i in range(1,config.domain_size+1):
+            options[i]=[]
+        
+        for c in config.editable_unifiers:
+            for f in user_fb.query(c).all():
+                if c == config.UNIFIERS.Association:
+                        options[f.object_id1].append(utils.editable_fact_as_remove_action(f,self.brave_config.UNIFIERS))
+                        options[f.object_id2].append(utils.editable_fact_as_remove_action(f,self.brave_config.UNIFIERS))
+                else:
+                    options[f.object_id].append(utils.editable_fact_as_remove_action(f,self.brave_config.UNIFIERS))
+        for c in config.editable_unifiers:
+            for f in config.fb.query(c).all():
+                if str(f) not in user_strs:
+                    if c == config.UNIFIERS.Association:
+                        options[f.object_id1].append(utils.editable_fact_as_select_action(f,self.brave_config.UNIFIERS))
+                        options[f.object_id2].append(utils.editable_fact_as_select_action(f,self.brave_config.UNIFIERS))
+                    else:
+                        options[f.object_id].append(utils.editable_fact_as_select_action(f,self.brave_config.UNIFIERS))
+
+        return options
+
+
+    def _get_options(self)->OOASPConfiguration:
+        """
+        Returns a Configuration where the facts are the union of all stable models
+            Returns:
+                An OOASPConfiguration object with all the options
+        """
+        
+        if self.browsing:
+            raise RuntimeError("Cant get options while browsing")
+        self._ground_missing()
+        self.ctl.assign_external(Function("guess"), True)
+        self.ctl.assign_external(Function("check"), True)
+        self.ctl.assign_external(Function("check_partial_cv"), False)
+        self._set_user_externals()
+        self.ctl.configuration.solve.enum_mode = 'brave'
+        with  self.ctl.solve(yield_=True) as hdn:
+            brave_model = None
+            for model in hdn:
+                brave_model = model
+            if brave_model is None:
+                self.brave_config = None
+                raise RuntimeError("No available options for conflicting configuration")
+            self.brave_config = OOASPConfiguration.from_model(self.state.config.name,
+                    self.kb, brave_model)
+        return self.brave_config
+
+    def _check(self)->bool:
+        """
+        Runs the checks on the current (partial) configuration.
+        The generated cv atoms are added to the current configuration.
+            Returns:
+                True if the current (partial) configuration as no erros, False otherwise
+        """
+        self._ground_missing()
+        self.ctl.assign_external(Function("guess"), False)
+        self.ctl.assign_external(Function("check"), False)
+        self.ctl.assign_external(Function("check_partial_cv"), False)
+        self._set_user_externals()
+        self.ctl.configuration.solve.enum_mode = 'auto'
+        with  self.ctl.solve(yield_=True) as hdn:
+            for model in hdn:
+                # for s in model.symbols(atoms=True):
+                    # print(s)
+                self.state.config = OOASPConfiguration.from_model(self.state.config.name,
+                    self.kb, model)
+                self.config.remove_user()
+
+        return not self.config.has_cv
+
+    def _remove_association(self,assoc_name:str,object_id1:int,object_id2:int)->None:
+        """
+        Removes an association from the configuration
+            Parameters:
+                assoc_name: Name of the association
+                object_id1: Id of the first object
+                object_id1: Id of the second object
+        """
+        fact = self.config.remove_association(assoc_name,object_id1,object_id2)
+
+    def _remove_value(self,object_id:id,attr_name:str)->None:
+        """
+        Removes the value of an attribute for an object
+            Parameters:
+                object_id: Id of the object
+                attr_name: Name of the attribute
+        """
+        removed_facts = self.config.remove_value(object_id,attr_name)
+        self._falsify_user_externals(removed_facts)
+
+    def _remove_leaf(self,object_id:id)->None:
+        """
+        Removes the leaf class selection for an object
+            Parameters:
+                object_id: Id of the object
+        """
+        removed_facts = self.config.remove_leaf(object_id)
+        self._falsify_user_externals(removed_facts)
+
+        
+    #------------- Available functionality
+               
+    def check(self)->None:
+        """
+        Creates a new state.
+        Runs the checks on the current (partial) configuration.
+        The generated cv atoms are added to the current configuration.
+            Returns:
+                True if the current (partial) configuration as no erros, False otherwise
+        """
+        self._new_state("Check current configuration")
+        return self._check()
+    
+    def get_options(self)->None:
+        """
+        Creates a new state.
+        Gets a Configuration where the facts are the union of all stable models.
+            Returns:
+                An OOASPConfiguration object with all the options
+        """
+        found_config = self.found_config
+        self._new_state("Obtaining options")
+        self.found_config=found_config
+        return self._get_options()
+
+    def next_solution(self)->OOASPConfiguration:
+        """
+        Creates a new state.
+        Gets the next avaliable solution for the current configuration without increasing the domain size.
+        If there is an ongoing browsing process it will continue ussing
+        the given iterarator, otherwise tt will ground any missing steps and solve.
+        Sets the found configuration based on the next computed model.
+        The found configuration can be selected as the new one using select_found_configuration
+            Returns:
+                The found OOASPConfiguration or None if no more solutions are found
+        """
+        if not self.browsing:
+            self._new_state("Browse solutions")
+        self.found_config = self._next_solution()
+        if not self.found_config:
+            print("No more solutions")
+        return self.found_config
+
+    def end_browsing(self)->None:
+        """
+        Cancels any browsing process and removes
+        any previously computed options in the brave config
+        """
+        self._outdate_models()
+    
+    
+    # Actions changing the configuration
+
+    def remove_association(self,assoc_name:str,object_id1:int,object_id2:int)->None:
+        """
+        Creates a state with a new configuration.
+        Removes an association from the configuration
+            Parameters:
+                assoc_name: Name of the association
+                object_id1: Id of the first object
+                object_id1: Id of the second object
+        """
+        self._new_state(f"Removed association {object_id1}-{object_id2} via {assoc_name}",deep=True)
+        self._remove_association(assoc_name,object_id1,object_id2)
+
+    def remove_value(self,object_id:int,attr_name:str)->None:
+        """
+        Creates a state with a new configuration.
+        Removes the value of an attribute for an object
+            Parameters:
+                object_id: Id of the object
+                attr_name: Name of the attribute
+        """
+        self._new_state(f"Removed value for {object_id}.{attr_name}",deep=True)
+        self._remove_value(object_id,attr_name)
+
+    def remove_leaf_class(self,object_id:int)->None:
+        """
+        Creates a state with a new configuration.
+        Removes the leaf class selection for an object
+            Parameters:
+                object_id: Id of the object
+        """
+        self._new_state(f"Removed leaf class for {object_id}",deep=True)
+        self._remove_leaf(object_id)
+
+    def select_association(self,assoc_name:str,object_id1:int,object_id2:int)->None:
+        """
+        Creates a state with a new configuration.
+        Selects an association
+            Parameters:
+                assoc_name: Name of the association
+                object_id1: Id of the first object
+                object_id1: Id of the second object
+        """
+        self._new_state(f"Associated {object_id1}-{object_id2} via {assoc_name}",deep=True)
+        self.config.add_association(assoc_name,object_id1,object_id2)
+
+    def select_value(self,object_id:int,attr_name:str,attr_value)->None:
+        """
+        Creates a state with a new configuration.
+        Removes any current selection for the attribute.
+        Selects the value the attribute.
+            Parameters:
+                object_id: Id of the object
+                attr_name: Name of the attribute
+                attr_value: Value of the attribute
+        """
+        self._new_state(f"Set {object_id}.{attr_name}={attr_value}",deep=True)
+        self._remove_value(attr_name,object_id)
+        self.config.add_value(object_id,attr_name,attr_value)
+    
+    def select_leaf_class(self,object_id:int,leaf_class:str)->None:
+        """
+        Creates a state with a new configuration.
+        Removes any current leaf selection for the object.
+        Selects the leaf class for the object.
+            Parameters:
+                object_id: Id of the object
+            Throws:
+                Error in case the leaf_class is not really a leaf
+        """
+        self._new_state(f"Set {object_id} of class {leaf_class}",deep=True)
+        self._remove_leaf(object_id)
+        try:
+            self.config.add_leaf(object_id,leaf_class)
+        except Exception as e:
+            self.states.pop()
+            raise e
+
+
+    def extend_domain(self,num:int=1)->None:
+        """
+        Creates a state with a new configuration.
+        Increases the domain size and adds a new domain(object,N) fact to
+        the configuration.
+            Parameters:
+                num: The number of new objects that will be added
+        """
+        self._new_state(f"Extended domain by {num} ",deep=True)
+        next_num_objects = self.state.domain_size + num
+        for i in range(self.state.domain_size+1,next_num_objects+1):
+            self._extend_domain()
+    
+    def new_leaf(self,leaf_class:str)->None:
+        """
+        Creates a state with a new configuration.
+        Increases the domain size by one and adds a new domain(object,N) fact to
+        Selects the leaf class for the new object
+        the configuration.
+            Parameters:
+                leaf_class: The name of the leaf class
+        """
+        self._new_state(f"Added leaf class {leaf_class}",deep=True)
+        self._extend_domain()
+        try:
+            self.config.add_leaf(self.state.domain_size,leaf_class)
+        except Exception as e:
+            self.states.pop()
+            raise e
+
+    def extend_incrementally(self, domain_limit:int=100)->OOASPConfiguration:
+        """
+        Creates a state with a new configuration.
+        Trys to find a solution for the current domain size, if a solution is
+        found it is returned otherwise it will increase the domain by one
+        and look for solution until one is found.
+        Sets the found configuration based on the next computed model.
+        The found configuration can be selected as the new one using select_found_configuration
+
+        This will affect the Number of object in the current configuration
+        even if the found condiguration is never selected.
+
+            Parameters:
+                domain_limit: The limit size the domain can reach
+            Returns:
+                The found OOASPConfiguration or None if no more solutions are found
+        """
+        self._new_state("Extend incrementally",deep=True)
+        self.found_config = self._next_solution()
+        
+        while self.found_config == None or self.domain_size>domain_limit:
+            self._extend_domain()
+            self.found_config = self._next_solution()
+
+
+        if self.found_config == None:
+            raise RuntimeError(f"No configuration found in the domain limit {domain_limit}")
+
+        return self.found_config
+
+    def select_found_configuration(self)->None:
+        """
+        Selects the configuration found while browsing as the partial configuration.
+        This way the condiguration found can be eddited or extended.
+        """
+        current_found_config = self.found_config
+        if not current_found_config:
+            raise RuntimeError("No configuration found")
+        current_found_config.remove_user()
+        self.set_configuration(current_found_config)
+
+    def set_configuration(self,config:OOASPConfiguration):
+        """
+        Sets the current configuration to a new one
+            Parameters:
+                config: The new configuration
+            Throws:
+                Exception if the domain size of the new configuration
+                is smaller.
+        """
+        self._new_state("Set partial configuration")
+        self._set_config(config)
+
+    #------------- Visualize
+
+    def view_kb(self)->None:
+        """
+        Shows the image of the KB in a jupyter notebook
+        """
+        self.kb.save_png()
+        from IPython.display import Image
+        return Image(f"out/{self.kb.name}.png")
+
+    def view(self)->None:
+        """
+        Shows the image of the configuration in a jupyter notebook
+        """
+        return self.state.config.view()
+
+    def view_found(self)->None:
+        """
+        Shows the image of the found configuration in a jupyter notebook
+        """
+        if not self.found_config:
+            raise RuntimeError("No compleate configuration found")
+        return self.found_config.view()
+
+
+    def show_options(self)->None:
+        """
+        Prints the options for the current configuration.
+        A brave config is computed with get_options it it was not computed already
+        """
+        if self.brave_config is None:
+            self.get_options()
+        opts = self._brave_config_as_options()
+        print("")
+        for k,v in opts.items():
+            print(utils.subtitle(f"Options for object {k}",'PURPLE'))
+            print("\n".join([e['str'] for e in v]))
+
+    def show_history(self)->None:
+        """
+        Prints the hisotry 
+        """
+        print(self.history)
