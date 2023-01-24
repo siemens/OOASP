@@ -255,7 +255,7 @@ ooasp_cv(CONFIG,wrongass,ID,"Wrong for {}",(ID,)) :-
     ooasp_arity(CONFIG,assoc1,1,ID,ARITY,STEP), ARITY!=4.
 ```
 
-This rule is saying that for association `assoc1` any the object `ID` in position `1` should have exactly `4` objects associated. We first notice that this is not using the `new_id`. We can include this by doing:
+This rule is saying that for association `assoc1` the object `ID` in position `1` should have exactly `4` objects associated. We first notice that this is not using the `new_id`. We can include this by doing:
 
 ```prolog
 ooasp_cv(CONFIG,wrongass,new_id,"Wrong for {}",(new_id,)) :- 
