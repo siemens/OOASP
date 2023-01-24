@@ -219,7 +219,7 @@ ooasp_arity(CONFIG, ASSOC, 2, new_id, ARITY, new_id) :-
 
 These rules compute the arity as shown before for the two possible positions of the new ID. The first one for position `1` and the second one for position `2`. Unlike in our previous rule, here, we also include the `new_id` as the last argument of `ooasp_arity`. We do so to identify that this value `ARITY` for the arity is only valid when `new_id` was grounded. This value can be seen as a step.
 
-Next, we include any new associations that this `new_id` might have with previously grounded ids and update their corresponding arity. This is done in the following rules:
+Next, we include any new associations that this `new_id` might have with previously grounded IDs and update their corresponding arity. This is done in the following rules:
 
 ```prolog
 ooasp_arity(CONFIG, ASSOC, 1, ID1, ARITY+1, new_id) :- 
