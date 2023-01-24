@@ -329,9 +329,9 @@ We use here two auxiliary predicates to avoid having to repeat the rule:
   *Example: `ooasp_assoc_limit(V,ass,min,1,racks,10)`:
 	In the association `ass`, each `racks` object must be associated to at least `10` elements*
 
-- **`ooasp_associated_general(CONFIG,ASSOC,OPT,ID1,ID2)`**
-  Object `ID1` appearing in position `OPT` of association `ASSOC` is associated to object `ID2`
-  *Example: `ooasp_associated_general(c1,ass,2,23,10)` object `23` is the class `C2` of association `ass` with object `10`*
+- **`ooasp_associated_general(CONFIG,ASSOC,POS,ID1,ID2)`**
+  Object `ID1` appearing in position `POS` of association `ASSOC` is associated to object `ID2`
+  *Example: `ooasp_associated_general(c1,ass,2,23,10)`: object `23` of the second class of association `ass` is associated with object `10`*
 
 ### Incremental solving 
 
