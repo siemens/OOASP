@@ -146,7 +146,7 @@ The truth value of these externals is defined by the [Interactive Configurator](
 
 ## Multi-shot approach
 
-This approach intends to tackle the bottle neck issue of re-grounding rules multiple times after each change. 
+This approach intends to tackle the bottleneck issue of re-grounding rules multiple times after each change. 
 
 
 
