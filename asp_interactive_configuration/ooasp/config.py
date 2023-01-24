@@ -241,7 +241,7 @@ class  OOASPConfiguration:
     def add_leaf(self,object_id:int, class_name:str)->Predicate:
         """
         Adds a new leaf predicate to the factbase
-            Paramters:
+            Parameters:
                 object_id: The identifier for the object
                 class_name: The class name
             Returns:
