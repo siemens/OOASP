@@ -291,7 +291,7 @@ class  OOASPConfiguration:
     def remove_leaf(self, object_id)->List[Predicate]:
         """
         Removes any leaf predicates from the factbase associated to the object id
-            Paramters:
+            Parameters:
                 object_id: The identifier for the object
             Returns:
                 The list of removed facts
