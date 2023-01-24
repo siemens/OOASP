@@ -52,7 +52,7 @@ class OOASPUI:
 
     def update(self):
         """
-        Uodates the UI based on the current interactive state
+        Updates the UI based on the current interactive state
         """
         self.set_config_image()
         self.set_history()
