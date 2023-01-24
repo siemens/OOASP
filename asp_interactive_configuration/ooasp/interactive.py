@@ -308,7 +308,6 @@ class InteractiveConfigurator:
                     self.kb, model)
             return found_config
         except StopIteration:
-            # print("Cancel")
             end = time.time()
             self._add_solving_time(end -start)
             self.hdn.cancel()
