@@ -248,7 +248,7 @@ If we want to use these accumulative values in another rule there is one more de
 
 **Example**
 
-Image the rule:
+Imagine the rule:
 
 ```prolog
 ooasp_cv(CONFIG,wrongass,ID,"Wrong for {}",(ID,)) :- 
