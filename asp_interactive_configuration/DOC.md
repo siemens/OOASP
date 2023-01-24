@@ -58,7 +58,7 @@ This file also introduces **external atoms** to differentiate the task that will
 	*Check*    |   `false`     |
 	*Options*    |   `true`     |
 
-Although this might seam contra-intuitive, this external should be false for the *Checking* task in order to have the `ooasp_cv` atoms as part of a stable model.
+Although this might seem contra-intuitive, this external should be false for the *Checking* task in order to have the `ooasp_cv` atoms as part of a stable model.
 
 - **`check_partial_cv`**  The check part is active for [partial constraints](#partial-constraints). This refers only to the integrity constraints, however `ooasp_cv` atoms are always derived, regardless of the external values.
   
