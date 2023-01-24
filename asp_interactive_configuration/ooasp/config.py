@@ -247,7 +247,7 @@ class  OOASPConfiguration:
             Returns:
                 The added fact
             Throws:
-                Exception if the class name is not a leaf class
+                Exception if the class of the given name is not a leaf class
         """
         if not self.kb.is_leaf(class_name):
             raise RuntimeError(f"{class_name} is not a leaf class")
