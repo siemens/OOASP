@@ -3,7 +3,6 @@
 
 #program domain(new_id).
 
-%------ Errors into constraints
 :- ooasp_cv(CONFIG,NAME,_,_,_), 
 	ooasp_configuration(_,CONFIG), 
 	not ooasp_partial_cv(NAME), 
