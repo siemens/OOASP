@@ -276,7 +276,7 @@ ooasp_cv(CONFIG,wrongass,new_id,"Wrong for {}",(new_id,)) :-
     ooasp_arity(CONFIG,assoc1,1,new_id,ARITY,new_id), ARITY!=4, active(new_id).
 ```
 
-Since we updated the values of `ooasp_arity` of all previous ids as well, we also need to ground the corresponding rules for those, yielding the rule:
+Since we updated the values of `ooasp_arity` of all previous IDs as well, we also need to ground the corresponding rules for those, yielding the rule:
 
 ```prolog
 ooasp_cv(CONFIG,wrongass,ID,"Wrong for {}",(ID,)) :- 
