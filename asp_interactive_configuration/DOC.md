@@ -137,7 +137,7 @@ The user input corresponds to the current partial configuration `C` that is bein
   The user associated `ID1` and `ID2`
 
 - **`user(ooasp_attribute_value(CONFIG,N,ID,VALUE))`**
-  The user selected a value for object `ID`
+  The user selected value `VALUE` for attribute `N` of object `ID`
 
 The truth value of this externals is defined by the [Interactive Configurator](#interactive-configurator) based on the current (partial) configuration that is being constructed using an object of class [Config](#configuration). 
 
