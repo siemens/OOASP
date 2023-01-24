@@ -191,7 +191,7 @@ ooasp_cv(CONFIG,wrongtypeinassoc,new_id,"Associated by {} but is not of class {}
 
 ### Accumulative values
 
-There are some rules that depend on atoms that are computed an an accumulative way. One of this values is the **arity**. 
+There are some rules that depend on atoms that are computed in an accumulative way. One of this values is the **arity**. 
 
 Consider the following rule:
 
