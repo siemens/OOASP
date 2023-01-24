@@ -613,7 +613,7 @@ class InteractiveConfigurator:
         The found configuration can be selected as the new one using select_found_configuration
 
         This will affect the Number of object in the current configuration
-        even if the found condiguration is never selected.
+        even if the found configuration is never selected.
 
             Parameters:
                 domain_limit: The limit size the domain can reach
