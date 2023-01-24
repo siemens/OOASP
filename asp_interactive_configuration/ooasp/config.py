@@ -1,16 +1,15 @@
 # Copyright (c) 2022 Siemens AG Oesterreich
 # SPDX-License-Identifier: MIT
 
-from operator import imod
 from typing import List
 from types import SimpleNamespace
 from clingo import Model, parse_term
 from clorm.clingo import Control
-from clorm import Symbol, Predicate, ConstantField, IntegerField, FactBase, RawField, refine_field, parse_fact_files, Raw, StringField, unify
+from clorm import Symbol, Predicate, ConstantField, IntegerField, FactBase, RawField, refine_field, Raw, StringField
 from clingraph.orm import Factbase
 from clingraph.graphviz import compute_graphs, render
 from .kb import OOASPKnowledgeBase
-from copy import deepcopy, copy
+from copy import deepcopy
 import ooasp.utils as utils
 
 
