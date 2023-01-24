@@ -261,7 +261,7 @@ class  OOASPConfiguration:
         Adds a new attribute value predicate to the factbase
             Parameters:
                 object_id: The identifier for the object
-                attr_name: The name od the attribute
+                attr_name: The name of the attribute
                 attr_value: The value od the attribute
             Returns:
                 The added fact
