@@ -131,7 +131,7 @@ The user input corresponds to the current partial configuration `C` that is bein
 **Externals**
 
 - **`user(ooasp_isa_leaf(CONFIG,LEAFCLASS,ID))`**
-  The user assigned a leaf class to an object `ID`
+  The user assigned leaf class `LEAFCLASS` to object `ID`
 
 - **`user(ooasp_associated(CONFIG,ASSOC,ID1,ID2))`**
   The user associated `ID1` and `ID2`
