@@ -62,11 +62,12 @@ Although this might seam contra-intuitive, this external should be false for the
 
 - **`check_partial_cv`**  The check part is active for [partial constraints](#partial-constraints). This refers only to the integrity constrains, however `ooasp_cv` atoms are always derived, regardless of the external values.
   
-Task |  Value |
------|---------
-*Complete*     |   `true`     |
-*Check*    |   `false`     |
-*Options*    |   `false`     |
+	Value of this external for the different tasks:
+	Task |  Value |
+	-----|---------
+	*Complete*     |   `true`     |
+	*Check*    |   `false`     |
+	*Options*    |   `false`     |
 
 
 ### Auxiliary predicates
