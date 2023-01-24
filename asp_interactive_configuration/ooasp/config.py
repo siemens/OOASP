@@ -320,7 +320,7 @@ class  OOASPConfiguration:
 
     def remove_association(self, assoc_name:str, object_id1:int, object_id2:int)->List[Predicate]:
         """
-        Removes the the association from the factbase
+        Removes the association from the fact base
             Paramters:
                 assoc_name: Name of the association
                 object_id1: Id of the first object
