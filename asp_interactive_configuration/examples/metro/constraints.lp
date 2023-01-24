@@ -88,7 +88,7 @@ ooasp_cv(CONFIG,new_id,special_seats_color_mustbe_red,"special_seats_color_mustb
 
 %*
 deactivated because of performance
-ooas_cv(C,nrpassengers_neq_nrseats_plus_standingroom,W,"{} nr_passengers {} = nr_seats {} = standingroom {}",(new_id,W,NRPASSENGERS,NRSEATS,STANDINGROOM)):-
+ooasp_cv(C,nrpassengers_neq_nrseats_plus_standingroom,W,"{} nr_passengers {} = nr_seats {} = standingroom {}",(new_id,W,NRPASSENGERS,NRSEATS,STANDINGROOM)):-
     active(new_id),
     ooasp_attribute_value(C,nr_seats,W,NRSEATS),
     ooasp_attribute_value(C,standing_room,W,STANDINGROOM),    
