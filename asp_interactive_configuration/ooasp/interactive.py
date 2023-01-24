@@ -471,8 +471,8 @@ class InteractiveConfigurator:
         """
         Creates a new state.
         Gets the next avaliable solution for the current configuration without increasing the domain size.
-        If there is an ongoing browsing process it will continue ussing
-        the given iterarator, otherwise tt will ground any missing steps and solve.
+        If there is an ongoing browsing process it will continue using
+        the given iterator, otherwise it will ground any missing steps and solve.
         Sets the found configuration based on the next computed model.
         The found configuration can be selected as the new one using select_found_configuration
             Returns:
