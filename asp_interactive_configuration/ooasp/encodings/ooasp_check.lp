@@ -52,7 +52,7 @@ ooasp_cv(CONFIG,lowerbound,ID1,"Lowerbound for association {} not reached: {}",(
 	active(new_id).
 
 
-%--- Associations are only allowed to something instanciated
+%--- Associations are only allowed to something instantiated
 
 ooasp_cv(CONFIG,no_instance_for_association,new_id,"Associated by {} to {} but not is not instantiated",(ASSOC,ID2)) :- 
 	ooasp_associated(CONFIG,ASSOC,new_id,ID2),
