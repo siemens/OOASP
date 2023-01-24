@@ -4,8 +4,8 @@
 #program domain(new_id).
 
 
-% ooasp_arity(CONFIG, ASSOC, OPT, N, ARITY, STEP)
-% arity of node N for association as class C(OPT) is ARITY in step STEP
+% ooasp_arity(CONFIG, ASSOC, POS, N, ARITY, STEP)
+% arity of association ASSOC for object N of class at position POS is ARITY in step STEP
 
 % Arity computed using agregate only for new id
 ooasp_arity(CONFIG, ASSOC, 1, new_id, ARITY, new_id) :-
