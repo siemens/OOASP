@@ -47,5 +47,3 @@ ooasp_attribute_enum(metro_v1,seat,seat_color,white).
 ooasp_attribute(metro_v1,handrail,handrail_type,str).
 ooasp_attribute_enum(metro_v1,handrail,handrail_type,standard).
 ooasp_attribute_enum(metro_v1,handrail,handrail_type,premium).
-
-% constraints
