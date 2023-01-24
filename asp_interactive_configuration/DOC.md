@@ -324,10 +324,10 @@ Notice that, as before, this rule must consider the `active(new_id)` to define i
 
 We use here two auxiliary predicates to avoid having to repeat the rule:
 
-- **`ooasp_assoc_limit(V,ASSOC,max,OPT,C,CMAX)`**
-  The association `ASSOC` has a maximum limit of `MAX` when an object of class `C` is of class type `OPT`, where `OPT` is `1` or `2` .
-  *Example: `ooasp_assoc_limit(V,ass,min,1,racks,10)`
-	The association `ass` must be from a `racks` element as class `C1` to at least `10` elements*
+- **`ooasp_assoc_limit(V,ASSOC,max,POS,C,CMAX)`**
+  The association `ASSOC` has a maximum limit of `CMAX` for objects of class `C` at `POS`, where `POS` is `1` or `2` and refers to one end of the association (1: left end, 2: right end).
+  *Example: `ooasp_assoc_limit(V,ass,min,1,racks,10)`:
+	In the association `ass`, each `racks` object must be associated to at least `10` elements*
 
 - **`ooasp_associated_general(CONFIG,ASSOC,OPT,ID1,ID2)`**
   Object `ID1` appearing in position `OPT` of association `ASSOC` is associated to object `ID2`
