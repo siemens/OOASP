@@ -337,7 +337,7 @@ class InteractiveConfigurator:
                 representing the possible options
         """
         if self.brave_config is None:
-            raise RuntimeError("A brave configuration must be computed to get it as optionss")
+            raise RuntimeError("A brave configuration must be computed to get it as options")
         config = self.brave_config
         user_symbols = config.user_input
         user_strs = [str(s) for s in user_symbols]
