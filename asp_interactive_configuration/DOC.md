@@ -322,7 +322,7 @@ ooasp_cv(CONFIG,upperbound,ID1,"Upperbound wrong",(new_id)):-
 
 Notice that, as before, this rule must consider the `active(new_id)` to define in which step the constraint is violated. The count, however, does not depend on the `new_id`. 
 
-We use here two axillary predicates to avoid having to repeat the rule:
+We use here two auxiliary predicates to avoid having to repeat the rule:
 
 - **`ooasp_assoc_limit(V,ASSOC,max,OPT,C,CMAX)`**
   The association `ASSOC` has a maximum limit of `MAX` when an object of class `C` is of class type `OPT`, where `OPT` is `1` or `2` .
