@@ -244,7 +244,7 @@ These rules update the values like a counter without using `#count`. Note that t
 
 #### Using accumulative values
 
-If we want to use this accumulative values in another rule there is one more detail to consider. 
+If we want to use these accumulative values in another rule there is one more detail to consider. 
 
 **Example**
 
