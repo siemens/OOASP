@@ -51,11 +51,12 @@ This file also introduces **external atoms** to differentiate the task that will
 
 - **`check`**  The check part is active for [complete constraints](#complete-constraints). This refers only to the integrity constrains, however `ooasp_cv` atoms are always derived, regardless of the external values.
   
-Task |  Value |
------|---------
-*Complete*     |   `true`     |
-*Check*    |   `false`     |
-*Options*    |   `true`     |
+	Value of this external for the different tasks:
+	Task |  Value |
+	-----|---------
+	*Complete*     |   `true`     |
+	*Check*    |   `false`     |
+	*Options*    |   `true`     |
 
 Although this might seam contra-intuitive, this external should be false for the *Checking* task in order to have the `ooasp_cv` atoms as part of a stable model.
 
