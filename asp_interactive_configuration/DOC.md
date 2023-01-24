@@ -7,7 +7,7 @@ SPDX-License-Identifier: MIT
 
 ### Knowledge Base
 
-The Knowledge Bases are handled using the `KB` class in [ooasp/kb.py](ooasp/kb.py). This class provides usefully functionality to load, edit, and visualize Knowledge Bases. The string representation of the objects of this class are ASP facts.
+The Knowledge Bases are handled using the `OOASPKnowledgeBase` class in [ooasp/kb.py](ooasp/kb.py). This class provides useful functionality to load, edit, and visualize Knowledge Bases. The string representation of the objects of this class are ASP facts.
 
 ### Configuration
 
