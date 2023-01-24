@@ -301,7 +301,6 @@ class InteractiveConfigurator:
         
         start = time.time()
         try:
-            # print("---Calling next")
             model = next(self.solution_iterator)
             # print("Done")
             end = time.time()
