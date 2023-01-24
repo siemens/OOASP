@@ -36,7 +36,7 @@ All encodings are put together using a single file:
 
 - [ooasp/encodings/ooasp.lp](ooasp/encodings/ooasp.lp)
 
-This file also introduces **external atoms** to differentiate the task that will be performed without the need for re-grounding. The truth value of those atoms will be defined eternally inside the [Interactive Configurator](#interactive-configurator).
+This file also introduces **external atoms** to differentiate the task that will be performed without the need for re-grounding. The truth value of those atoms will be defined externally inside the [Interactive Configurator](#interactive-configurator).
 
 **Externals**
 
