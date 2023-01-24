@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 import ipywidgets as widgets
-from ipywidgets import Button, HBox, VBox, Label, Layout,GridspecLayout, HTML
+from ipywidgets import Button, VBox, Label, Layout,GridspecLayout, HTML
 from IPython.display import display, Image
 
 def basic_layout():
