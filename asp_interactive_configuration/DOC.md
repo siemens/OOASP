@@ -42,11 +42,12 @@ This file also introduces **external atoms** to differentiate the task that will
 
 - **`guess`**  The [guessing](#guess) part is active. This external is used instead of the old predicate [`ooasp_configure`](../ooasp/ooasp_config.lp).
   
-Task |  Value |
------|---------
-*Complete*     |   `true`     |
-*Check*    |   `false`     |
-*Options*    |   `true`     |
+	Value of this external for the different tasks:
+	Task |  Value |
+	-----|---------
+	*Complete*     |   `true`     |
+	*Check*    |   `false`     |
+	*Options*    |   `true`     |
 
 - **`check`**  The check part is active for [complete constraints](#complete-constraints). This refers only to the integrity constrains, however `ooasp_cv` atoms are always derived, regardless of the external values.
   
