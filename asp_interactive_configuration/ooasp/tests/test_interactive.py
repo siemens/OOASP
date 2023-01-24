@@ -2,10 +2,8 @@
 # SPDX-License-Identifier: MIT
 
 import pytest
-from clorm.clingo import Control
 from clingo import parse_term
 from ooasp.kb import OOASPKnowledgeBase
-from ooasp.config import OOASPConfiguration
 from ooasp.interactive import InteractiveConfigurator
 
 def test_interactive_extend_browse():
