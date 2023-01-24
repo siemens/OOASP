@@ -80,7 +80,7 @@ Auxiliary predicates used for both Knowledge Bases and Configurations can be fou
 
 ### Guess
 
-The guessing section contains all choices to decide the leaf class of an object, the associations, and the values. Note that the guessing is **grounded incrementally** (See [multi-shot](#multi-shot-approach)).
+The guessing section contains all choices to decide the class of an object, the associations, and the values. Note that the guessing is **grounded incrementally** (See [multi-shot](#multi-shot-approach)).
 
 - [ooasp/encodings/ooasp_guess.lp](ooasp/encodings/ooasp_guess.lp)
 
