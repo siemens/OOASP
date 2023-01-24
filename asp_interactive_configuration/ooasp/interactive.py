@@ -203,7 +203,6 @@ class InteractiveConfigurator:
         """
         Grounds all missing programs based on the current domain_size
         """
-        # print("Ground missing")
         if self.domain_size == self.last_size_grounded:
             return
         for s in range(self.last_size_grounded+1,self.domain_size+1):
