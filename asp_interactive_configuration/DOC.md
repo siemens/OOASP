@@ -26,7 +26,7 @@ The following tasks correspond to the only points of the interactive process whe
 
 1. *Complete:* Getting a complete configuration extending `C`.
 2. *Check:* Checking `C` for errors.
-3. *Options:* Obtaining all possible leafs for the objects, values for the attributes and associations to complete `C`. 
+3. *Options:* Obtaining all possible classes for the objects, values for the attributes, and associations to complete `C`. 
 
 
 ----
