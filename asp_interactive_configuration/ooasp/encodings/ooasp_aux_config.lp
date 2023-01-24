@@ -18,9 +18,9 @@ ooasp_isa(CONFIG,SUPER,new_id) :-
     ooasp_subclass(V,SUB,SUPER).
 
 % Auxiliary predicate to avoid duplicated rules
-% ooasp_associated_general(CONFIG,ASSOC,OPT,ID1,ID2)
-%    Object ID1 apearing in position OPT of association ASSOC is associated to object ID2
-%    ooasp_associated_general(c1,ass,2,23,10) object 23 is the class C2 of association ass with object 10
+% ooasp_associated_general(CONFIG,ASSOC,POS,ID1,ID2)
+%    Object ID1 apearing in position POS of association ASSOC is associated to object ID2
+%    Example: ooasp_associated_general(c1,ass,2,23,10): : object 23 of the second class of association ass is associated with object 10
 
 ooasp_associated_general(CONFIG,ASSOC,1,ID1,new_id) :-
 	ooasp_associated(CONFIG,ASSOC,ID1,new_id).
