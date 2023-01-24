@@ -406,8 +406,6 @@ class InteractiveConfigurator:
         self.ctl.configuration.solve.enum_mode = 'auto'
         with  self.ctl.solve(yield_=True) as hdn:
             for model in hdn:
-                # for s in model.symbols(atoms=True):
-                    # print(s)
                 self.state.config = OOASPConfiguration.from_model(self.state.config.name,
                     self.kb, model)
                 self.config.remove_user()
