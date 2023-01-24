@@ -172,7 +172,7 @@ This rule will be grounded for a `new_id`, since this value appears in the head 
 
 ##### Example (Multiple positions)
 
-In this example we want to generate the constraint violations when an association is not of the right class, using on predicate `ooasp_associated(CONFIG,ASSOC,ID1,ID2)`. We must notice that our `new_id` could be either of the two values `ID1` or `ID2`, this means that we need two rules considering both cases.
+In this example we want to generate the constraint violations when an association is not of the right class, using predicate `ooasp_associated(CONFIG,ASSOC,ID1,ID2)`. We must notice that our `new_id` could be either of the two values `ID1` or `ID2`, this means that we need two rules considering both cases.
 
 ```prolog
 ooasp_cv(CONFIG,wrongtypeinassoc,new_id,"Associated by {} but is not of class {}",(ASSOC,C1)) :-
