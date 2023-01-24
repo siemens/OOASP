@@ -3,7 +3,6 @@
 
 from ooasp.interactive import InteractiveConfigurator
 from ooasp.kb import OOASPKnowledgeBase
-from time import time
 
 def test_racks_constraints_element():
     """ test element constraints """
