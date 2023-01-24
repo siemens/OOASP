@@ -22,9 +22,6 @@ def subtitle(s,color='CYAN'):
 
 def pretty_dic(d):
     s = (json.dumps(d, indent=4))
-    # s = ""
-    # for k,v in d.items():
-    #     s += COLORS['GREY'] + k + " : " + str(v) + COLORS['NORMAL'] + "\n"
     return COLORS['GREY'] + s + COLORS['NORMAL'] + "\n"
 
 def red(s):
