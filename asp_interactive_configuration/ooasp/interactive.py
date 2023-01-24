@@ -50,7 +50,7 @@ class State:
         Creates a state by copying the state and changing some properties
             Parameters:
                 action: The action for the new state
-                deep_config: Wether the configuration should be copied in a deep way
+                deep_config: Whether the configuration should be copied in a deep way
         """
         if deep_config:
             config = deepcopy(self.config)
