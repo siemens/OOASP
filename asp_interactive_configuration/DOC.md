@@ -239,7 +239,7 @@ ooasp_arity(CONFIG, ASSOC, 2, ID2, ARITY, new_id) :-
 	not ooasp_associated(CONFIG,ASSOC, new_id, ID2).
 ```
 
-These rules update the values like a counter without using `#count`. Note that the last argument of the `ooasp_arity` is `new_id`, serving two proposes: first, to identify that this is a valid arity for that moment, and second to ensure that this is a new head that hasn't been grounded before.
+These rules update the values like a counter without using `#count`. Note that the last argument of the `ooasp_arity` is `new_id`, serving two purposes: first, to identify that this is a valid arity for that moment, and second to ensure that this is a new head that hasn't been grounded before.
 
 
 #### Using accumulative values
