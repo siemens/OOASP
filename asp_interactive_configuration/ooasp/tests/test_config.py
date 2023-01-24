@@ -1,7 +1,6 @@
 # Copyright (c) 2022 Siemens AG Oesterreich
 # SPDX-License-Identifier: MIT
 
-from clorm.clingo import Control
 from ooasp.kb import OOASPKnowledgeBase
 from ooasp.config import OOASPConfiguration
 
