@@ -199,7 +199,7 @@ Consider the following rule:
 arity(new_id,ASSOC,ARITY):- ARITY = #count{ID2:ooasp_assoc(V,ASSOC,new_id,_,_,ID2,_,_)}.
 ```
 
-This rule will gather the number of objects that `new_id` is associated to in association `ASSOC`. While this is correct at the moment you ground `new_id` this value will not longer be correct when new identifiers are grounded. This is because they are were not part of the aggregate `#count` calculated before. Therefore, associations of `new_id` with any `ID>new_id` will not be counted. 
+This rule will gather the number of objects that `new_id` is associated to in association `ASSOC`. While this is correct at the moment you ground `new_id` this value will no longer be correct when new identifiers are grounded. This is because they were not part of the aggregate `#count` calculated before. Therefore, associations of `new_id` with any `ID>new_id` will not be counted. 
 
 In order to fix this issue we calculate the arity as follows:
 
