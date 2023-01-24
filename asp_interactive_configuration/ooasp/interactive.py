@@ -293,7 +293,6 @@ class InteractiveConfigurator:
             self._set_user_externals()
             self.ctl.configuration.solve.enum_mode = 'auto'
             start = time.time()
-            # print("\n---Calling handle")
             self.hdn = self.ctl.solve(yield_=True)
             end = time.time()
             self._add_solving_time(end -start)
