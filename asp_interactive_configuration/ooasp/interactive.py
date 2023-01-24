@@ -562,7 +562,7 @@ class InteractiveConfigurator:
             Parameters:
                 object_id: Id of the object
             Throws:
-                Error in case the leaf_class is not really a leaf
+                Error in case the leaf_class is not really a leaf class
         """
         self._new_state(f"Set {object_id} of class {leaf_class}",deep=True)
         self._remove_leaf(object_id)
