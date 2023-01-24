@@ -141,7 +141,7 @@ class  OOASPConfiguration:
     @property
     def domain_size(self)->int:
         """
-        The domain size, it is computing by couting the nomber of objects in the factbase.
+        The domain size, it is computed by counting the number of objects in the fact base.
         """
         return self.fb.query(self.UNIFIERS.Domain).select(self.UNIFIERS.Domain.object_id).count()
 
