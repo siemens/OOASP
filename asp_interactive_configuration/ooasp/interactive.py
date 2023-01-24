@@ -258,7 +258,7 @@ class InteractiveConfigurator:
         Adds a new fact to the control. The fact is added as part
         of the program for the current domain size.
             Parameters:
-                facts: The clorm predicate to be added to the control
+                fact: The clorm predicate to be added to the control
         """
         self.ctl.add("domain",[str(self.domain_size)],str(fact)+".")
 
