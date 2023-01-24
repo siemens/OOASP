@@ -1,16 +1,14 @@
 # Copyright (c) 2022 Siemens AG Oesterreich
 # SPDX-License-Identifier: MIT
 
-import statistics
 import time
-from textwrap import dedent
 from clorm.clingo import Control
-from clingo import Symbol, Number, Function
+from clingo import Number, Function
 from clorm import Predicate, unify
 from ooasp.config import OOASPConfiguration
 from ooasp.kb import OOASPKnowledgeBase
 from typing import List 
-from copy import copy, deepcopy
+from copy import deepcopy
 import ooasp.utils as utils
 from typing import List
 
