@@ -259,7 +259,7 @@ class  OOASPConfiguration:
     def add_value(self, object_id:int, attr_name:str, attr_value)->Predicate:
         """
         Adds a new attribute value predicate to the factbase
-            Paramters:
+            Parameters:
                 object_id: The identifier for the object
                 attr_name: The name od the attribute
                 attr_value: The value od the attribute
