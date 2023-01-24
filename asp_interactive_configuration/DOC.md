@@ -40,7 +40,7 @@ This file also introduces **external atoms** to differentiate the task that will
 
 **Externals**
 
-- **`guess`**  The [guessing](#guess) part is active. This external is used instead of the old predicate `ooasp_configure`.
+- **`guess`**  The [guessing](#guess) part is active. This external is used instead of the old predicate [`ooasp_configure`](../ooasp/ooasp_config.lp).
   
 Task |  Value |
 -----|---------
