@@ -16,7 +16,7 @@ poetry install
 
 The files corresponding to the current version are in [`ooasp`](ooasp).
 
-The package usage and new features are showcased in the jupyter notebooks inside the folder [`usage`](usage)
+The package usage and new features are showcased in the jupyter notebooks inside the folder [`usage`](usage).
 
 ## Documentation
 
