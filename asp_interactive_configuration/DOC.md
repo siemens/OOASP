@@ -91,7 +91,7 @@ Constraints will be **grounded incrementally** (See [multi-shot](#multi-shot-app
 
 - [ooasp/encodings/ooasp_check.lp](ooasp/encodings/ooasp_check.lp)
   
-Constraints are defined using predicate:
+Constraints are defined using the `ooasp_cv/5` predicate:
 
 **`ooasp_cv(CONFIG,CV_NAME,OBJECT,STR,ARGS)`**
 - `CONFIG`: The name of the configuration
