@@ -17,7 +17,7 @@ Furthermore, it can serve as container for partial configurations, complete conf
 
 ### Interactive Configurator
 
-The interactive Configurator API provides all functionality to create a configuration interactively. This is done by constructing an `InteractiveConfigurator` class from [ooasp/interactive.py](ooasp/interactive.py). The process is done in a [multi shot](#multi-shot-approach) way.
+The interactive Configurator API provides all functionality to create a configuration interactively. This is done by calling the methods provided by the `InteractiveConfigurator` class from [ooasp/interactive.py](ooasp/interactive.py). The process is done in a [multi-shot](#multi-shot-approach) way.
 
 
 #### Tasks
