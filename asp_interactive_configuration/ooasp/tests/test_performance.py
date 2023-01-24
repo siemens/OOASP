@@ -3,7 +3,6 @@
 
 from ooasp.interactive import InteractiveConfigurator
 from ooasp.kb import OOASPKnowledgeBase
-from time import time
 
 def test_solve_multiple_elements():
     """ create elements and solve under 30 seconds """
