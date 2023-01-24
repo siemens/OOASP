@@ -228,7 +228,7 @@ class  OOASPConfiguration:
     def add_domain(self, class_name:str, object_id:int)->Predicate:
         """
         Adds a new domain fact `ooasp_domain`
-            Paramters:
+            Parameters:
                 class_name: The class name for the ooasp_domain predicate
                 object_id: The identifier
             Returns:
