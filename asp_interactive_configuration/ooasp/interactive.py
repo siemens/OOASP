@@ -27,7 +27,7 @@ class State:
                 kb: The Knowledge base
                 config: The partial or complete configuration
                 domain_size: The number of objects in the partial configuration
-                action: The action perfored to get the state
+                action: The action performed to get the state
         """
         self.domain_size = domain_size
         self.config = config
