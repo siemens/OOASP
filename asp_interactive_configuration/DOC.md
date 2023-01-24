@@ -335,5 +335,5 @@ We use here two auxiliary predicates to avoid having to repeat the rule:
 
 ### Incremental solving 
 
-This multi shot encoding can directly be used for incremental solving. With this idea we can ground for id `1` and try to find a configuration using Task 1 *Complete*, if there is no complete configuration (returns UNSAT) with this many object, we ground for the next object `2` and repeat the process until we have a satisfiable answer. 
+This multi-shot encoding can directly be used for incremental solving. With this idea we can ground for id `1` and try to find a configuration using Task 1 *Complete*, if there is no complete configuration (returns UNSAT) with this number of objects, we ground for the next object `2` and repeat the process until we have a satisfiable answer. 
 
