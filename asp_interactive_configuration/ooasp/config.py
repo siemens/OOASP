@@ -304,7 +304,7 @@ class  OOASPConfiguration:
 
     def remove_value(self, object_id:id, attr_name:str)->List[Predicate]:
         """
-        Removes any exisitng values for the given attribute of an object in the factbase
+        Removes any existing values for the given attribute of an object in the fact base
             Paramters:
                 object_id: The identifier for the object
                 attr_name: The name od the attribute
