@@ -307,7 +307,7 @@ class  OOASPConfiguration:
         Removes any existing values for the given attribute of an object in the fact base
             Parameters:
                 object_id: The identifier for the object
-                attr_name: The name od the attribute
+                attr_name: The name of the attribute
             Returns:
                 The list of removed facts
         """
