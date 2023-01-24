@@ -102,7 +102,7 @@ Constraints are defined using the `ooasp_cv/5` predicate:
 
 
 
-**Domain specific constrains** are defined by the user in a different file, which can be provided when the [Interactive Configurator](#interactive-configurator) is created. Note that these will also be **grounded incrementally** (See [multi-shot](#multi-shot-approach)).
+**Domain specific constraints** are defined by the user in a different file, which can be provided when the [Interactive Configurator](#interactive-configurator) is created. Note that these will also be **grounded incrementally** (see [multi-shot](#multi-shot-approach)).
 
 #### Complete constraints
 
