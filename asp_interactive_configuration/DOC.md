@@ -309,7 +309,7 @@ ooasp_partial_cv(wrongass_lower).
 
 #### Efficiency
 
-Even though the explanation above corresponds to a correct solution, it is not efficient. Generally speaking, using the computed value of an aggregate such as `#count` in the head of the rule accounts for additional grounding. Ideally, this value should be used only in the body of the rule. This observations leads us to a more efficient solution, where the aggregate is used directly in the constraint. 
+Even though the explanation above corresponds to a correct solution, it is not efficient. Generally speaking, using the computed value of an aggregate such as `#count` in the head of the rule accounts for additional grounding. Ideally, this value should be used only in the body of the rule. This observation leads us to a more efficient solution, where the aggregate is used directly in the constraint. 
 
 ```prolog
 ooasp_cv(CONFIG,upperbound,ID1,"Upperbound wrong",(new_id)):-
