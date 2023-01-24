@@ -150,7 +150,7 @@ This approach intends to tackle the bottleneck issue of re-grounding rules multi
 
 
 
-The rules are grounded for every new object that is introduced in an incremental way. All encodings that starting with the directive `#program domain(new_id).` will be grounded when a new object is introduced into the configuration. This new object will have the id `new_id`.
+The rules are grounded for every new object that is introduced in an incremental way. The subprogram starting with the directive `#program domain(new_id).`, which is split among several encoding files, will be grounded when a new object is introduced into the configuration. This new object will have the id `new_id`.
 
 ### Tips
 When using this approach we must make sure that rules are grounded just once. 
