@@ -11,7 +11,7 @@ The Knowledge Bases are handled using the `KB` class in [ooasp/kb.py](ooasp/kb.p
 
 ### Configuration
 
-The Configurations are handled using the `Config` class in [ooasp/config.py](ooasp/config.py). This class provides usefully functionality to load, edit, and visualize Knowledge Bases.
+The Configurations are handled using the `OOASPConfiguration` class in [ooasp/config.py](ooasp/config.py). This class provides useful functionality to load, edit, and visualize Configurations.
 Furthermore, it can serve as container for partial configurations, complete configurations, configuration checks and available options for a configuration.  The string representation of the objects of this class are ASP facts.
 
 
