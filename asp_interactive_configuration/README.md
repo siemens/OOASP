@@ -4,7 +4,7 @@ SPDX-License-Identifier: MIT
 # Interactive Configuration with ASP
 
 
-Prototype for interactive configuration using ASP initially developed by Susana Hahn (Potassco Solutions) as part of a collaboration between Potassco Solutions and Siemens T.
+Prototype for interactive configuration using ASP initially developed by Susana Hahn (Potassco Solutions) as part of a collaboration between Potassco Solutions and Siemens.
 
 ## Installation
 ```
