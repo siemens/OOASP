@@ -302,7 +302,6 @@ class InteractiveConfigurator:
         start = time.time()
         try:
             model = next(self.solution_iterator)
-            # print("Done")
             end = time.time()
             self._add_solving_time(end -start)
             found_config = OOASPConfiguration.from_model(self.state.config.name,
