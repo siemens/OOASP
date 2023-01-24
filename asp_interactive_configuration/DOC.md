@@ -117,7 +117,7 @@ Those constraints that may be violated in the current (partial) configuration bu
 
 *For example: Lower-bound constraints, missing value for an attribute.*
 
-Partial constraints are ignored when using brave reasoning in order to get all possible options for values and associations. They are only checked when the external `ooasp_partial_cv` is true. Nonetheless, the constraint violation atoms `ooasp_cv` for this constrains will still appear when checking the configuration for errors. 
+Partial constraints are ignored when using brave reasoning in order to get all possible options for values and associations. They are only checked when the external `ooasp_partial_cv` is true. Nonetheless, the constraint violation atoms `ooasp_cv` for these constraints will still appear when checking the configuration for errors. 
 
 Partial constraints are defined using predicate `ooasp_partial_cv(CV_NAME)`, where `CV_NAME` is the name of the constraint violation appearing as the second argument of predicate `ooasp_cv`.
 
