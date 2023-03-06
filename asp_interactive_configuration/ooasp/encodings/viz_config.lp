@@ -15,19 +15,25 @@ attr(graph, config, (label,1), Config):-ooasp_configuration(KB,Config).
 
 % Objects without class as Nodes
 domain_node(Class,Object_id) :- ooasp_domain(_,Class,Object_id), not ooasp_isa_leaf(_,_,Object_id).
-node(Object_id) :- domain_node(_,Object_id).
-attr(node, Object_id,  (label,-1), @record_label(Class_name,Object_id)):- domain_node(Class_name,Object_id).
-attr(node, Object_id, (label,1), @record_end()):- domain_node(Class_name,Object_id).
-attr(node, Object_id, style, "filled"):- domain_node(_,Object_id).
+leaf_node(Class,Object_id) :- ooasp_isa_leaf(_,Class,Object_id), ooasp_class(_,Class).
+any_node(Class,Object_id):- domain_node(Class,Object_id).
+any_node(Class,Object_id):- leaf_node(Class,Object_id).
+node(Object_id) :- any_node(_,Object_id).
+
+% All nodes
+attr(node, Object_id, label, @concat("<<TABLE BORDER='0' CELLBORDER='1' CELLSPACING='0' CELLPADDING='1'>",
+                                        "<TR><TD><B>{{class}} ({{id}})</B></TD></TR><TR><TD ALIGN='right'> ",
+                                        "{% set attr = attr|default({}) %}{% for k, v in attr.items() %}{{v}} {% endfor %}",
+                                        "</TD></TR></TABLE>>")):- any_node(_,Object_id).
+attr(node, Object_id,  (label,class), @stringify(Class_name)):- any_node(Class_name,Object_id).
+attr(node, Object_id,  (label,id), Object_id):- any_node(Class_name,Object_id).
+attr(node, Object_id, style, "filled"):- any_node(_,Object_id).
+
+% Domain nodes
 attr(node, Object_id, fillcolor, "#E7D5EA"):- domain_node(_,Object_id).
 attr(node, Object_id, color, "black"):- domain_node(_,Object_id).
 
-% Objects instanciated 
-leaf_node(Class,Object_id) :- ooasp_isa_leaf(_,Class,Object_id), ooasp_leafclass(_,Class).
-node(Object_id) :- leaf_node(Class,Object_id).
-attr(node, Object_id, (label,-1), @record_label(Class_name,Object_id)):- leaf_node(Class_name,Object_id).
-attr(node, Object_id, (label,1), @record_end()):- leaf_node(Class_name,Object_id).
-attr(node, T, style, "filled"):- leaf_node(_,T).
+% Leaf nodes
 attr(node, T, fillcolor, "#D2D2E0"):- leaf_node(_,T).
 
 % Node border
@@ -40,10 +46,10 @@ attr(node, T, hight, 0):- node(T).
 attr(node, Object_id, fontcolor, "#0DB144"):- user(ooasp_isa_leaf(_,Class,Object_id)).
 
 % Add arguments to nodes
-attr(node, Object_id, label, @argument_str(Attr_name,Value,"black")):- 
+attr(node, Object_id, (label,attr,Attr_name), @argument_str(Attr_name,Value,"black")):-
     ooasp_attribute_value(_,Attr_name,Object_id,Value),
     not user(ooasp_attribute_value(_,Attr_name,Object_id,Value)).
-attr(node, Object_id, label, @argument_str(Attr_name,Value,"#0DB144")):- 
+attr(node, Object_id, (label,attr,Attr_name), @argument_str(Attr_name,Value,"#0DB144")):-
     ooasp_attribute_value(_,Attr_name,Object_id,Value),
     user(ooasp_attribute_value(_,Attr_name,Object_id,Value)).
 
@@ -64,18 +70,5 @@ def argument_str(name,type,color):
     s = f"<FONT COLOR='{color.string}'>" + str(name) + " = " + "<I> "+ str(type)  + "</I></FONT><br ALIGN='left'/> "
     return String(s)
 
-def node_title(name,object_id):
-    str_name = str(name)[0].upper() + str(name)[1:]
-    title = str_name.replace("_"," ")
-    s = f"{title} ({str(object_id)})"
-    return String(s)
-
-def record_label(name,object_id):
-    title = node_title(name,object_id).string
-    s = f"<<TABLE BORDER='0' CELLBORDER='1' CELLSPACING='0' CELLPADDING='1'><TR><TD ><B>{title}</B></TD></TR><TR><TD ALIGN='right'>"
-    return String(s)
-
-def record_end():
-    return String("</TD></TR></TABLE>>")
 #end.
 

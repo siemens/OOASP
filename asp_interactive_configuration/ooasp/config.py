@@ -8,6 +8,7 @@ from clorm.clingo import Control
 from clorm import Symbol, Predicate, ConstantField, IntegerField, FactBase, RawField, refine_field, Raw, StringField
 from clingraph.orm import Factbase
 from clingraph.graphviz import compute_graphs, render
+from clingraph.clingo_utils import ClingraphContext
 from .kb import OOASPKnowledgeBase
 from copy import deepcopy
 import ooasp.utils as utils
@@ -47,7 +48,7 @@ class  OOASPConfiguration:
         """
         Sets the clorm Unifiers based on the name to filter out any other predicates in the program.
         """
-        
+
         NameField = refine_field(ConstantField,[self.name])
         class ConfigObject(Predicate):
             class Meta:
@@ -90,7 +91,7 @@ class  OOASPConfiguration:
             class_name=ConstantField
             object_id=IntegerField
 
-        
+
         class CV(Predicate):
             class Meta:
                 name = "ooasp_cv"
@@ -107,7 +108,7 @@ class  OOASPConfiguration:
 
             predicate=RawField
 
-        
+
         self.UNIFIERS = SimpleNamespace(
                 AttributeValue=AttributeValue,
                 Association=Association,
@@ -136,7 +137,7 @@ class  OOASPConfiguration:
         The list of all unifiers classes
         """
         return self.UNIFIERS.__dict__.values()
-    
+
     @property
     def domain_size(self)->int:
         """
@@ -236,7 +237,7 @@ class  OOASPConfiguration:
         fact = self.UNIFIERS.Domain(class_name=class_name,object_id=object_id)
         self.fb.add(fact)
         return fact
-    
+
     def add_leaf(self,object_id:int, class_name:str)->Predicate:
         """
         Adds a new leaf predicate to the factbase
@@ -367,7 +368,7 @@ class  OOASPConfiguration:
         ctl.load("./ooasp/encodings/ooasp_aux_kb.lp")
         ctl.add("base",[],self.fb.asp_str())
         ctl.add("base",[],self.kb.fb.asp_str())
-        ctl.ground([("base", [])])
+        ctl.ground([("base", [])],ClingraphContext())
         ctl.solve(on_model=lambda m: fbs.append(Factbase.from_model(m,default_graph="config")))
         graphs = compute_graphs(fbs[0])
         render(graphs,format="png",name_format=self.name,directory=directory)
