@@ -9,7 +9,9 @@ def test_racks_constraints_element():
     racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb.lp")
     iconf = InteractiveConfigurator(racks_kb,"i1",["./examples/racks/constraints.lp"])
     iconf.new_leaf("elementA")
+    print(iconf)
     iconf.check()
+    print(iconf)
     assert len(iconf.config.constraint_violations)==2
     assert "lowerbound" in str(iconf.config.constraint_violations)
     assert "customlowerbound" in str(iconf.config.constraint_violations)
@@ -57,7 +59,7 @@ def test_racks_constraints_rack():
     assert len(iconf.config.constraint_violations)==4
     assert "rackdoublelowerbound" in str(iconf.config.constraint_violations)
 
-    
+
 def test_racks_constraints_associations():
     """ test assoc constraints """
     racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb.lp")
@@ -95,7 +97,7 @@ def test_racks_constraints_moduleII_requires_moduleV():
     iconf.check()
     assert len(iconf.config.constraint_violations)==3
     assert "moduleII_requires_moduleV" not in str(iconf.config.constraint_violations)
-    
+
     racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb.lp")
     iconf = InteractiveConfigurator(racks_kb,"i1",["./examples/racks/constraints.lp"])
     iconf.new_leaf("frame")
@@ -117,7 +119,7 @@ def test_solve_elements():
     """ solve one instance of each element type"""
     racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb.lp")
     element_configuration_size = { "elementA":7, "elementB":9, "elementC":9,"elementD":10}
-    for element_type in element_configuration_size.keys():     
+    for element_type in element_configuration_size.keys():
         iconf = InteractiveConfigurator(racks_kb,"i1",["./examples/racks/constraints.lp"])
         iconf.new_leaf(element_type)
         config = iconf.extend_incrementally()
@@ -126,4 +128,3 @@ def test_solve_elements():
 
 
 
-    

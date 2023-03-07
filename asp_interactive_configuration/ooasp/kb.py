@@ -20,7 +20,7 @@ class  OOASPKnowledgeBase:
             UNIFIERS (Namespace): All clorm unifiers (classes) used to link objects with predicates
     """
 
-    def __init__(self, name:str):
+    def __init__(self, name:str, simplifyed_encodings=False):
         """
         Creates a knowledge base
             Parameters:
@@ -29,7 +29,8 @@ class  OOASPKnowledgeBase:
         self.name:str = name
         self.set_unifiers()
         self.fb = FactBase()
-   
+        self.simplifyed_encodings = simplifyed_encodings
+
     def set_unifiers(self):
         """
         Sets the clorm Unifiers based on the name to filter out any other KB defined in the program
@@ -170,7 +171,10 @@ class  OOASPKnowledgeBase:
         """
         ctl = Control()
         fbs = []
-        ctl.load("./ooasp/encodings/viz_kb.lp")
+        if self.simplifyed_encodings:
+            ctl.load("./ooasp/encodings_simple/viz_kb.lp")
+        else:
+            ctl.load("./ooasp/encodings/viz_kb.lp")
         ctl.add("base",[],self.fb.asp_str())
         ctl.ground([("base", [])])
         ctl.solve(on_model=lambda m: fbs.append(Factbase.from_model(m,default_graph="kb")))
