@@ -7,6 +7,7 @@ from clingo import Control
 from clorm import Predicate, ConstantField, IntegerField, FactBase, refine_field, parse_fact_files
 from clingraph.orm import Factbase
 from clingraph.graphviz import compute_graphs, render
+from clingraph.clingo_utils import ClingraphContext
 
 # pylint: disable=missing-class-docstring
 # pylint: disable=too-few-public-methods
@@ -176,7 +177,7 @@ class  OOASPKnowledgeBase:
         else:
             ctl.load("./ooasp/encodings/viz_kb.lp")
         ctl.add("base",[],self.fb.asp_str())
-        ctl.ground([("base", [])])
+        ctl.ground([("base", [])],ClingraphContext())
         ctl.solve(on_model=lambda m: fbs.append(Factbase.from_model(m,default_graph="kb")))
         graphs = compute_graphs(fbs[0])
         render(graphs,format="png",name_format=self.name,directory=directory)
