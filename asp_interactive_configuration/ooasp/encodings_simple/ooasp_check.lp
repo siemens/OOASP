@@ -86,50 +86,50 @@ ooasp_cv(wrongtypeinassoc,new_id,"Associated by {} but is not of class {}",(ASSO
 %--- (USER INPUT) Attribute value must belong to instance class
 
 ooasp_cv(no_instance_for_attribute,new_id,"Attribute {} not of selected class",(ATTR,)) :-
-	ooasp_attribute(C1,ATTR,T),
-	ooasp_attribute_value(ATTR,new_id,VALUE),
+	ooasp_attr(C1,ATTR,T),
+	ooasp_attr_value(ATTR,new_id,VALUE),
 	not ooasp_isa(C1,new_id).
 
 %--- (USER INPUT) Attribute value must belong to instance
 
 ooasp_cv(no_instance_for_attribute,new_id,"Value for {} assigned but instanciated",(ATTR,)) :-
-	ooasp_attribute_value(ATTR,new_id,VALUE),
+	ooasp_attr_value(ATTR,new_id,VALUE),
 	not ooasp_isa(_,new_id).
 
 %--- (USER INPUT) Missing atribute value
 ooasp_cv(no_value,new_id,"Missing value for {}",(ATTR,)) :-
-	 ooasp_attribute(C,ATTR,T),
-	 ooasp_attribute_hasdomain(C,ATTR),
+	 ooasp_attr(C,ATTR,T),
+	 ooasp_attr_hasdomain(C,ATTR),
 	 ooasp_isa(C,new_id),
-	 not ooasp_attribute_value(ATTR,new_id,_).
+	 not ooasp_attr_value(ATTR,new_id,_).
 
 %--- (USER INPUT) Atribute value not from domain
 ooasp_cv(value_not_domain,new_id,"Value {} for {} not from domain",(VALUE,ATTR)) :-
-	 ooasp_attribute(C,ATTR,T),
-	 ooasp_attribute_hasdomain(C,ATTR),
+	 ooasp_attr(C,ATTR,T),
+	 ooasp_attr_hasdomain(C,ATTR),
 	 ooasp_isa(C,new_id),
-	 ooasp_attribute_value(ATTR,new_id,VALUE),
-	 not ooasp_attribute_enum(C,ATTR,VALUE).
+	 ooasp_attr_value(ATTR,new_id,VALUE),
+	 not ooasp_attr_enum(C,ATTR,VALUE).
 
 %--- (USER INPUT) Multiple values for a value
 ooasp_cv(conflicting_values,new_id,"Multiple values for {}: {},{}",(ATTR,V1,V2)) :-
-	 ooasp_attribute(C,ATTR,T),
-	 ooasp_attribute_value(ATTR,new_id,V1),
-	 ooasp_attribute_value(ATTR,new_id,V2),
+	 ooasp_attr(C,ATTR,T),
+	 ooasp_attr_value(ATTR,new_id,V1),
+	 ooasp_attr_value(ATTR,new_id,V2),
 	 V1<V2.
 
 %--- (USER INPUT) Value outside range
 ooasp_cv(value_outside_of_range,new_id,"Value for {} outside range {}<{}",(ATTR,VALUE,MIN)) :-
-	 ooasp_attribute(C,ATTR,T),
+	 ooasp_attr(C,ATTR,T),
 	 ooasp_isa(C,new_id),
-	 ooasp_attribute_value(ATTR,new_id,VALUE),
-	 ooasp_attribute_minInclusive(C,ATTR,MIN),
+	 ooasp_attr_value(ATTR,new_id,VALUE),
+	 ooasp_attr_minInclusive(C,ATTR,MIN),
 	 VALUE<MIN.
 
 ooasp_cv(value_outside_of_range,new_id,"Value for {} outside range {}>{}",(ATTR,VALUE,MAX)) :-
-	 ooasp_attribute(C,ATTR,T),
+	 ooasp_attr(C,ATTR,T),
 	 ooasp_isa(C,new_id),
-	 ooasp_attribute_value(ATTR,new_id,VALUE),
-	 ooasp_attribute_maxInclusive(C,ATTR,MAX),
+	 ooasp_attr_value(ATTR,new_id,VALUE),
+	 ooasp_attr_maxInclusive(C,ATTR,MAX),
 	 VALUE>MAX.
 

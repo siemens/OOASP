@@ -9,9 +9,7 @@ def test_racks_constraints_element():
     racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb.lp")
     iconf = InteractiveConfigurator(racks_kb,"i1",["./examples/racks/constraints.lp"])
     iconf.new_leaf("elementA")
-    print(iconf)
     iconf.check()
-    print(iconf)
     assert len(iconf.config.constraint_violations)==2
     assert "lowerbound" in str(iconf.config.constraint_violations)
     assert "customlowerbound" in str(iconf.config.constraint_violations)

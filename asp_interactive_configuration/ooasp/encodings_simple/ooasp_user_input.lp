@@ -19,11 +19,11 @@
 	ooasp_domain(C,ID1),
 	ooasp_assoc(ASSOC,C1,C1MIN,C1MAX,C2,C2MIN,C2MAX).
 
-#external user(ooasp_attribute_value(N,new_id,VALUE)):
-	ooasp_attribute_enum(C,N,VALUE),
-	ooasp_attribute(C,N,T).
+#external user(ooasp_attr_value(N,new_id,V)):
+	ooasp_attr_enum(C,N,V),
+	ooasp_attr(C,N,T).
 
 ooasp_isa_leaf(LEAFCLASS,new_id) :- user(ooasp_isa_leaf(LEAFCLASS,new_id)).
 ooasp_associated(ASSOC,new_id,ID2) :- user(ooasp_associated(ASSOC,new_id,ID2)).
 ooasp_associated(ASSOC,ID1,new_id) :- user(ooasp_associated(ASSOC,ID1,new_id)).
-ooasp_attribute_value(N,new_id,VALUE) :- user(ooasp_attribute_value(N,new_id,VALUE)).
+ooasp_attr_value(N,new_id,V) :- user(ooasp_attr_value(N,new_id,V)).

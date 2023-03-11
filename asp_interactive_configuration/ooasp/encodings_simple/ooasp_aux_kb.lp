@@ -9,19 +9,19 @@ ooasp_subclass(SUB,SUPER2) :-
     ooasp_subclass(SUPER1,SUPER2).
 
 % derive domain for boolean attributes
-ooasp_attribute_enum(C,N,"true") :-
-    ooasp_attribute(C,N,"boolean").
-ooasp_attribute_enum(C,N,"false") :-
-    ooasp_attribute(C,N,"boolean").
+ooasp_attr_enum(C,N,"true") :-
+    ooasp_attr(C,N,"boolean").
+ooasp_attr_enum(C,N,"false") :-
+    ooasp_attr(C,N,"boolean").
 
 % true, if attribute has domain
-ooasp_attribute_hasdomain(C,N) :-
-    ooasp_attribute_enum(C,N,D).
+ooasp_attr_hasdomain(C,N) :-
+    ooasp_attr_enum(C,N,D).
 
-ooasp_attribute_enum(C,N,MIN..MAX):-
-    ooasp_attribute(C,N,int),
-    ooasp_attribute_minInclusive(C,N,MIN),
-    ooasp_attribute_maxInclusive(C,N,MAX).
+ooasp_attr_enum(C,N,MIN..MAX):-
+    ooasp_attr(C,N,int),
+    ooasp_attr_minInclusive(C,N,MIN),
+    ooasp_attr_maxInclusive(C,N,MAX).
 
 % leafclasses are classes without subclasses
 ooasp_leafclass(C) :-

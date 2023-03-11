@@ -47,11 +47,11 @@ attr(node, Object_id, fontcolor, "#0DB144"):- user(ooasp_isa_leaf(Class,Object_i
 
 % Add arguments to nodes
 attr(node, Object_id, (label,attr,Attr_name), @argument_str(Attr_name,Value,"black")):-
-    ooasp_attribute_value(Attr_name,Object_id,Value),
-    not user(ooasp_attribute_value(Attr_name,Object_id,Value)).
+    ooasp_attr_value(Attr_name,Object_id,Value),
+    not user(ooasp_attr_value(Attr_name,Object_id,Value)).
 attr(node, Object_id, (label,attr,Attr_name), @argument_str(Attr_name,Value,"#0DB144")):-
-    ooasp_attribute_value(Attr_name,Object_id,Value),
-    user(ooasp_attribute_value(Attr_name,Object_id,Value)).
+    ooasp_attr_value(Attr_name,Object_id,Value),
+    user(ooasp_attr_value(Attr_name,Object_id,Value)).
 
 
 % Associations
