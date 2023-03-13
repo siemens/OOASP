@@ -26,17 +26,18 @@
 	guess.
 
 % Attributes
-1 { ooasp_attr_value(N,new_id,VALUE):ooasp_attr_enum(C,N,VALUE) } 1 :-
+1 { ooasp_attr_value(A,new_id,V):
+		ooasp_attr_enum(C,A,V) } 1 :-
 	ooasp_isa(C,new_id),
-	ooasp_attr(C,N,T),
-	ooasp_attr_hasdomain(C,N),
+	ooasp_attr(C,A,T),
+	ooasp_attr_hasdomain(C,A),
 	guess.
 
 % TODO: this rule is only used if MAX-MIN < 30
-1 { ooasp_attr_value(ATTR,new_id,VALUE):VALUE=MIN..MAX } 1:-
-	ooasp_attr(C,ATTR,T),
+1 { ooasp_attr_value(A,new_id,V):V=MIN..MAX } 1:-
+	ooasp_attr(C,A,T),
 	ooasp_isa(C,new_id),
-	ooasp_attr_minInclusive(C,ATTR,MIN),
-	ooasp_attr_maxInclusive(C,ATTR,MAX),
+	ooasp_attr_minInclusive(C,A,MIN),
+	ooasp_attr_maxInclusive(C,A,MAX),
 	%(MAX-MIN)<30,
 	guess.

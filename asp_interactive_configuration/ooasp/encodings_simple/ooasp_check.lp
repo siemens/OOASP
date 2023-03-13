@@ -33,17 +33,20 @@ ooasp_cv(notinstanceofsubclass,new_id,"Has two leaf classes {} and {}",(C1,C2)) 
 
 %--- Association bounds
 
-ooasp_cv(upperbound,ID1,"Upperbound for association {} exceeded: {}",(ASSOC,CMAX,new_id)):-
-	ooasp_assoc_limit(ASSOC,max,OPT,C,CMAX),
+ooasp_cv(upperbound,ID1,
+  "Upperbound for association {} exceeded: {}",
+  (A,CMAX,new_id)):-
+	ooasp_assoc_limit(A,max,OPT,C,CMAX),
 	ooasp_isa(C,ID1),
-	#count { ID2:ooasp_associated_general(ASSOC,OPT,ID1,ID2) } > CMAX,
+	#count{ID2:ooasp_ass_gen(A,OPT,ID1,ID2)}
+		> CMAX,
 	active(new_id).
 
 
 ooasp_cv(lowerbound,ID1,"Lowerbound for association {} not reached: {}",(ASSOC,CMIN,new_id)):-
 	ooasp_assoc_limit(ASSOC,min,OPT,C,CMIN),
 	ooasp_isa(C,ID1),
-	#count { ID2:ooasp_associated_general(ASSOC,OPT,ID1,ID2) } < CMIN,
+	#count { ID2:ooasp_ass_gen(ASSOC,OPT,ID1,ID2) } < CMIN,
 	active(new_id).
 
 

@@ -11,19 +11,23 @@
 	ooasp_domain(C,new_id),
 	ooasp_subclass(LEAFCLASS,C).
 
-#external user(ooasp_associated(ASSOC,new_id,ID2)):
+#external user(ooasp_associated(AS,new_id,ID2)):
 	ooasp_domain(C,ID2),
-	ooasp_assoc(ASSOC,C1,C1MIN,C1MAX,C2,C2MIN,C2MAX).
+	ooasp_assoc(AS,C1,C1MIN,C1MAX,C2,C2MIN,C2MAX).
 
-#external user(ooasp_associated(ASSOC,ID1,new_id)):
+#external user(ooasp_associated(AS,ID1,new_id)):
 	ooasp_domain(C,ID1),
-	ooasp_assoc(ASSOC,C1,C1MIN,C1MAX,C2,C2MIN,C2MAX).
+	ooasp_assoc(AS,C1,C1MIN,C1MAX,C2,C2MIN,C2MAX).
 
-#external user(ooasp_attr_value(N,new_id,V)):
-	ooasp_attr_enum(C,N,V),
-	ooasp_attr(C,N,T).
+#external user(ooasp_attr_value(A,new_id,V)):
+	ooasp_attr_enum(C,A,V),
+	ooasp_attr(C,A,T).
 
-ooasp_isa_leaf(LEAFCLASS,new_id) :- user(ooasp_isa_leaf(LEAFCLASS,new_id)).
-ooasp_associated(ASSOC,new_id,ID2) :- user(ooasp_associated(ASSOC,new_id,ID2)).
-ooasp_associated(ASSOC,ID1,new_id) :- user(ooasp_associated(ASSOC,ID1,new_id)).
-ooasp_attr_value(N,new_id,V) :- user(ooasp_attr_value(N,new_id,V)).
+ooasp_isa_leaf(LEAFCLASS,new_id) :-
+	user(ooasp_isa_leaf(LEAFCLASS,new_id)).
+ooasp_associated(AS,new_id,ID2) :-
+	user(ooasp_associated(AS,new_id,ID2)).
+ooasp_associated(AS,ID1,new_id) :-
+	user(ooasp_associated(AS,ID1,new_id)).
+ooasp_attr_value(A,new_id,V) :-
+	user(ooasp_attr_value(A,new_id,V)).
