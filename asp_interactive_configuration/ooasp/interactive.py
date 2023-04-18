@@ -85,7 +85,7 @@ class InteractiveConfigurator:
             last_size_grounded (int): The last size that was grounded
     """
 
-    def __init__(self, kb:OOASPKnowledgeBase, config_name:str, additional_files:List=None, additional_prg:str="", simplifyed_encodings=False):
+    def __init__(self, kb:OOASPKnowledgeBase, config_name:str, additional_files:List=None, additional_prg:str="", simplified_encodings=False):
         """
         Creates an interactive configuratior
             Parameters:
@@ -102,7 +102,7 @@ class InteractiveConfigurator:
         self._time_solving = 0
         self._individual_ground_times = {}
         self._individual_solve_times = {}
-        self.simplifyed_encodings = simplifyed_encodings
+        self.simplified_encodings = simplified_encodings
         self._init_ctl()
         self.found_config = None
         self.brave_config = None
@@ -128,7 +128,7 @@ class InteractiveConfigurator:
                 f"-c kb_name={self.kb.name}"])
         self.ctl.add("base",[],self.kb.fb.asp_str())
         self.ctl.add("base",[],self.additional_prg)
-        if self.simplifyed_encodings:
+        if self.simplified_encodings:
             self.ctl.load("./ooasp/encodings_simple/ooasp.lp")
         else:
             self.ctl.load("./ooasp/encodings/ooasp.lp")

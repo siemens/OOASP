@@ -24,7 +24,7 @@ class  OOASPConfiguration:
             UNIFIERS (Namespace): All clorm unifiers (classes) used to link objects with predicates
     """
 
-    def __init__(self, name:str, kb: OOASPKnowledgeBase, simplifyed_encodings=False):
+    def __init__(self, name:str, kb: OOASPKnowledgeBase, simplified_encodings=False):
         """
         Creates a possibly partial configuration
             Parameters:
@@ -33,7 +33,7 @@ class  OOASPConfiguration:
         """
         self.name:str = name
         self.kb:str = kb
-        self.simplifyed_encodings = simplifyed_encodings
+        self.simplified_encodings = simplified_encodings
         self.set_unifiers()
         self.fb = FactBase()
 
@@ -55,7 +55,7 @@ class  OOASPConfiguration:
             class Meta:
                 name = "ooasp_configobject"
 
-            if not self.simplifyed_encodings:
+            if not self.simplified_encodings:
                 config=NameField(default=self.name)
             class_name=ConstantField
             object_id=IntegerField
@@ -63,7 +63,7 @@ class  OOASPConfiguration:
         class Leaf(Predicate):
             class Meta:
                 name = "ooasp_isa_leaf"
-            if not self.simplifyed_encodings:
+            if not self.simplified_encodings:
                 config=NameField(default=self.name)
             class_name=ConstantField
             object_id=IntegerField
@@ -73,7 +73,7 @@ class  OOASPConfiguration:
                 name = "ooasp_attribute_value"
 
 
-            if not self.simplifyed_encodings:
+            if not self.simplified_encodings:
                 config=NameField(default=self.name)
             attr_name=ConstantField
             object_id=IntegerField
@@ -83,7 +83,7 @@ class  OOASPConfiguration:
             class Meta:
                 name = "ooasp_associated"
 
-            if not self.simplifyed_encodings:
+            if not self.simplified_encodings:
                 config=NameField(default=self.name)
             assoc_name=ConstantField
             object_id1=IntegerField
@@ -93,7 +93,7 @@ class  OOASPConfiguration:
             class Meta:
                 name = "ooasp_domain"
 
-            if not self.simplifyed_encodings:
+            if not self.simplified_encodings:
                 config=NameField(default=self.name)
             class_name=ConstantField
             object_id=IntegerField
@@ -103,7 +103,7 @@ class  OOASPConfiguration:
             class Meta:
                 name = "ooasp_cv"
 
-            if not self.simplifyed_encodings:
+            if not self.simplified_encodings:
                 config=NameField(default=self.name)
             name=ConstantField
             object_id=IntegerField
@@ -372,7 +372,7 @@ class  OOASPConfiguration:
         """
         ctl = Control(['--warn=none'])
         fbs = []
-        if self.simplifyed_encodings:
+        if self.simplified_encodings:
             ctl.load("./ooasp/encodings_simple/viz_config.lp")
             ctl.load("./ooasp/encodings_simple/ooasp_aux_kb.lp")
         else:

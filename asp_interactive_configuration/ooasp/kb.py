@@ -21,7 +21,7 @@ class  OOASPKnowledgeBase:
             UNIFIERS (Namespace): All clorm unifiers (classes) used to link objects with predicates
     """
 
-    def __init__(self, name:str, simplifyed_encodings=False):
+    def __init__(self, name:str, simplified_encodings=False):
         """
         Creates a knowledge base
             Parameters:
@@ -30,7 +30,7 @@ class  OOASPKnowledgeBase:
         self.name:str = name
         self.set_unifiers()
         self.fb = FactBase()
-        self.simplifyed_encodings = simplifyed_encodings
+        self.simplified_encodings = simplified_encodings
 
     def set_unifiers(self):
         """
@@ -172,7 +172,7 @@ class  OOASPKnowledgeBase:
         """
         ctl = Control()
         fbs = []
-        if self.simplifyed_encodings:
+        if self.simplified_encodings:
             ctl.load("./ooasp/encodings_simple/viz_kb.lp")
         else:
             ctl.load("./ooasp/encodings/viz_kb.lp")
