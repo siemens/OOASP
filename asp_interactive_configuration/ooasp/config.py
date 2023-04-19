@@ -8,6 +8,7 @@ from clorm.clingo import Control
 from clorm import Symbol, Predicate, ConstantField, IntegerField, FactBase, RawField, refine_field, Raw, StringField
 from clingraph.orm import Factbase
 from clingraph.graphviz import compute_graphs, render
+from clingraph.clingo_utils import ClingraphContext
 from .kb import OOASPKnowledgeBase
 from copy import deepcopy
 import ooasp.utils as utils
@@ -23,7 +24,7 @@ class  OOASPConfiguration:
             UNIFIERS (Namespace): All clorm unifiers (classes) used to link objects with predicates
     """
 
-    def __init__(self, name:str, kb: OOASPKnowledgeBase):
+    def __init__(self, name:str, kb: OOASPKnowledgeBase, simplified_encodings=False):
         """
         Creates a possibly partial configuration
             Parameters:
@@ -32,6 +33,7 @@ class  OOASPConfiguration:
         """
         self.name:str = name
         self.kb:str = kb
+        self.simplified_encodings = simplified_encodings
         self.set_unifiers()
         self.fb = FactBase()
 
@@ -47,20 +49,22 @@ class  OOASPConfiguration:
         """
         Sets the clorm Unifiers based on the name to filter out any other predicates in the program.
         """
-        
+
         NameField = refine_field(ConstantField,[self.name])
         class ConfigObject(Predicate):
             class Meta:
                 name = "ooasp_configobject"
 
-            config=NameField(default=self.name)
+            if not self.simplified_encodings:
+                config=NameField(default=self.name)
             class_name=ConstantField
             object_id=IntegerField
 
         class Leaf(Predicate):
             class Meta:
-             name = "ooasp_isa_leaf"
-            config=NameField(default=self.name)
+                name = "ooasp_isa_leaf"
+            if not self.simplified_encodings:
+                config=NameField(default=self.name)
             class_name=ConstantField
             object_id=IntegerField
 
@@ -68,7 +72,9 @@ class  OOASPConfiguration:
             class Meta:
                 name = "ooasp_attribute_value"
 
-            config=NameField(default=self.name)
+
+            if not self.simplified_encodings:
+                config=NameField(default=self.name)
             attr_name=ConstantField
             object_id=IntegerField
             attr_value=RawField
@@ -77,7 +83,8 @@ class  OOASPConfiguration:
             class Meta:
                 name = "ooasp_associated"
 
-            config=NameField(default=self.name)
+            if not self.simplified_encodings:
+                config=NameField(default=self.name)
             assoc_name=ConstantField
             object_id1=IntegerField
             object_id2=IntegerField
@@ -86,16 +93,18 @@ class  OOASPConfiguration:
             class Meta:
                 name = "ooasp_domain"
 
-            config=NameField(default=self.name)
+            if not self.simplified_encodings:
+                config=NameField(default=self.name)
             class_name=ConstantField
             object_id=IntegerField
 
-        
+
         class CV(Predicate):
             class Meta:
                 name = "ooasp_cv"
 
-            config=NameField(default=self.name)
+            if not self.simplified_encodings:
+                config=NameField(default=self.name)
             name=ConstantField
             object_id=IntegerField
             info=StringField
@@ -107,7 +116,7 @@ class  OOASPConfiguration:
 
             predicate=RawField
 
-        
+
         self.UNIFIERS = SimpleNamespace(
                 AttributeValue=AttributeValue,
                 Association=Association,
@@ -136,7 +145,7 @@ class  OOASPConfiguration:
         The list of all unifiers classes
         """
         return self.UNIFIERS.__dict__.values()
-    
+
     @property
     def domain_size(self)->int:
         """
@@ -236,7 +245,7 @@ class  OOASPConfiguration:
         fact = self.UNIFIERS.Domain(class_name=class_name,object_id=object_id)
         self.fb.add(fact)
         return fact
-    
+
     def add_leaf(self,object_id:int, class_name:str)->Predicate:
         """
         Adds a new leaf predicate to the factbase
@@ -363,11 +372,16 @@ class  OOASPConfiguration:
         """
         ctl = Control(['--warn=none'])
         fbs = []
-        ctl.load("./ooasp/encodings/viz_config.lp")
-        ctl.load("./ooasp/encodings/ooasp_aux_kb.lp")
+        if self.simplified_encodings:
+            ctl.load("./ooasp/encodings_simple/viz_config.lp")
+            ctl.load("./ooasp/encodings_simple/ooasp_aux_kb.lp")
+        else:
+            ctl.load("./ooasp/encodings/viz_config.lp")
+            ctl.load("./ooasp/encodings/ooasp_aux_kb.lp")
+
         ctl.add("base",[],self.fb.asp_str())
         ctl.add("base",[],self.kb.fb.asp_str())
-        ctl.ground([("base", [])])
+        ctl.ground([("base", [])],ClingraphContext())
         ctl.solve(on_model=lambda m: fbs.append(Factbase.from_model(m,default_graph="config")))
         graphs = compute_graphs(fbs[0])
         render(graphs,format="png",name_format=self.name,directory=directory)

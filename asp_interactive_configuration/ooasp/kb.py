@@ -7,6 +7,7 @@ from clingo import Control
 from clorm import Predicate, ConstantField, IntegerField, FactBase, refine_field, parse_fact_files
 from clingraph.orm import Factbase
 from clingraph.graphviz import compute_graphs, render
+from clingraph.clingo_utils import ClingraphContext
 
 # pylint: disable=missing-class-docstring
 # pylint: disable=too-few-public-methods
@@ -20,7 +21,7 @@ class  OOASPKnowledgeBase:
             UNIFIERS (Namespace): All clorm unifiers (classes) used to link objects with predicates
     """
 
-    def __init__(self, name:str):
+    def __init__(self, name:str, simplified_encodings=False):
         """
         Creates a knowledge base
             Parameters:
@@ -29,7 +30,8 @@ class  OOASPKnowledgeBase:
         self.name:str = name
         self.set_unifiers()
         self.fb = FactBase()
-   
+        self.simplified_encodings = simplified_encodings
+
     def set_unifiers(self):
         """
         Sets the clorm Unifiers based on the name to filter out any other KB defined in the program
@@ -170,9 +172,12 @@ class  OOASPKnowledgeBase:
         """
         ctl = Control()
         fbs = []
-        ctl.load("./ooasp/encodings/viz_kb.lp")
+        if self.simplified_encodings:
+            ctl.load("./ooasp/encodings_simple/viz_kb.lp")
+        else:
+            ctl.load("./ooasp/encodings/viz_kb.lp")
         ctl.add("base",[],self.fb.asp_str())
-        ctl.ground([("base", [])])
+        ctl.ground([("base", [])],ClingraphContext())
         ctl.solve(on_model=lambda m: fbs.append(Factbase.from_model(m,default_graph="kb")))
         graphs = compute_graphs(fbs[0])
         render(graphs,format="png",name_format=self.name,directory=directory)

@@ -7,7 +7,7 @@ from clingo import Number, Function
 from clorm import Predicate, unify
 from ooasp.config import OOASPConfiguration
 from ooasp.kb import OOASPKnowledgeBase
-from typing import List 
+from typing import List
 from copy import deepcopy
 import ooasp.utils as utils
 from typing import List
@@ -85,7 +85,7 @@ class InteractiveConfigurator:
             last_size_grounded (int): The last size that was grounded
     """
 
-    def __init__(self, kb:OOASPKnowledgeBase, config_name:str, additional_files:List=None, additional_prg:str=""):
+    def __init__(self, kb:OOASPKnowledgeBase, config_name:str, additional_files:List=None, additional_prg:str="", simplified_encodings=False):
         """
         Creates an interactive configuratior
             Parameters:
@@ -102,16 +102,18 @@ class InteractiveConfigurator:
         self._time_solving = 0
         self._individual_ground_times = {}
         self._individual_solve_times = {}
+        self.simplified_encodings = simplified_encodings
         self._init_ctl()
         self.found_config = None
         self.brave_config = None
         self.solution_iterator = None
         self.hdn = None
 
+
     def _add_grounding_time(self, time):
         self._time_grounding+=time
         self._individual_ground_times[self.domain_size] = time
-    
+
     def _add_solving_time(self, time):
         self._time_solving+=time
         self._individual_solve_times[self.domain_size] = time
@@ -126,7 +128,10 @@ class InteractiveConfigurator:
                 f"-c kb_name={self.kb.name}"])
         self.ctl.add("base",[],self.kb.fb.asp_str())
         self.ctl.add("base",[],self.additional_prg)
-        self.ctl.load("./ooasp/encodings/ooasp.lp")
+        if self.simplified_encodings:
+            self.ctl.load("./ooasp/encodings_simple/ooasp.lp")
+        else:
+            self.ctl.load("./ooasp/encodings/ooasp.lp")
         for f in self.additional_files:
             self.ctl.load(f)
         self._ground([("base",[])])
@@ -136,7 +141,7 @@ class InteractiveConfigurator:
     def __str__(self):
         s = utils.title('INTERACTIVE CONFIG')
         d = {
-            'kb' : self.kb.name, 
+            'kb' : self.kb.name,
             'config' : self.state.config.name,
             'browsing'  : self.solution_iterator is not None,
             'found configuration ' : str(self.found_config) is not None
@@ -153,7 +158,7 @@ class InteractiveConfigurator:
         The current state of the interactive process
         """
         return self.states[-1]
-    
+
     @property
     def config(self):
         """
@@ -189,7 +194,7 @@ class InteractiveConfigurator:
         d ={
             'Time grounding' : self._time_grounding,
             'Time solving' : self._time_solving}
-        
+
         return  utils.pretty_dic(d)
 
     def _ground(self, args):
@@ -245,7 +250,7 @@ class InteractiveConfigurator:
 
     def _falsify_user_externals(self,facts:List)->None:
         """
-        Makes user externals false for the given facts. This is needed when a 
+        Makes user externals false for the given facts. This is needed when a
         remove action is performed.
             Parameters:
                 facts: List of clorm predicates to be set to false
@@ -298,7 +303,7 @@ class InteractiveConfigurator:
             self._add_solving_time(end -start)
 
             self.solution_iterator = iter(self.hdn)
-        
+
         start = time.time()
         try:
             model = next(self.solution_iterator)
@@ -330,10 +335,10 @@ class InteractiveConfigurator:
 
     def _brave_config_as_options(self) -> dict:
         """
-        Returns the brave configuration computed as a dictionary with 
+        Returns the brave configuration computed as a dictionary with
         the options per object
             Returns:
-                The dictionary with ids of objects as keys and list of dicionaries as value 
+                The dictionary with ids of objects as keys and list of dicionaries as value
                 representing the possible options
         """
         if self.brave_config is None:
@@ -345,7 +350,7 @@ class InteractiveConfigurator:
         options = {}
         for i in range(1,config.domain_size+1):
             options[i]=[]
-        
+
         for c in config.editable_unifiers:
             for f in user_fb.query(c).all():
                 if c == config.UNIFIERS.Association:
@@ -371,7 +376,7 @@ class InteractiveConfigurator:
             Returns:
                 An OOASPConfiguration object with all the options
         """
-        
+
         if self.browsing:
             raise RuntimeError("Cant get options while browsing")
         self._ground_missing()
@@ -441,9 +446,9 @@ class InteractiveConfigurator:
         removed_facts = self.config.remove_leaf(object_id)
         self._falsify_user_externals(removed_facts)
 
-        
+
     #------------- Available functionality
-               
+
     def check(self)->None:
         """
         Creates a new state.
@@ -454,7 +459,7 @@ class InteractiveConfigurator:
         """
         self._new_state("Check current configuration")
         return self._check()
-    
+
     def get_options(self)->None:
         """
         Creates a new state.
@@ -491,8 +496,8 @@ class InteractiveConfigurator:
         any previously computed options in the brave config
         """
         self._outdate_models()
-    
-    
+
+
     # Actions changing the configuration
 
     def remove_association(self,assoc_name:str,object_id1:int,object_id2:int)->None:
@@ -553,7 +558,7 @@ class InteractiveConfigurator:
         self._new_state(f"Set {object_id}.{attr_name}={attr_value}",deep=True)
         self._remove_value(attr_name,object_id)
         self.config.add_value(object_id,attr_name,attr_value)
-    
+
     def select_leaf_class(self,object_id:int,leaf_class:str)->None:
         """
         Creates a state with a new configuration.
@@ -585,7 +590,7 @@ class InteractiveConfigurator:
         next_num_objects = self.state.domain_size + num
         for i in range(self.state.domain_size+1,next_num_objects+1):
             self._extend_domain()
-    
+
     def new_leaf(self,leaf_class:str)->None:
         """
         Creates a state with a new configuration.
@@ -622,7 +627,7 @@ class InteractiveConfigurator:
         """
         self._new_state("Extend incrementally",deep=True)
         self.found_config = self._next_solution()
-        
+
         while self.found_config == None or self.domain_size>domain_limit:
             self._extend_domain()
             self.found_config = self._next_solution()
@@ -696,6 +701,6 @@ class InteractiveConfigurator:
 
     def show_history(self)->None:
         """
-        Prints the hisotry 
+        Prints the hisotry
         """
         print(self.history)

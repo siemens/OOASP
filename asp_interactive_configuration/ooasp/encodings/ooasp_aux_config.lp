@@ -12,7 +12,7 @@ ooasp_domain(CONFIG,object,new_id):-ooasp_configuration(_,CONFIG).
 ooasp_isa(CONFIG,LEAFCLASS,new_id) :-
     ooasp_isa_leaf(CONFIG,LEAFCLASS,new_id).
 
-ooasp_isa(CONFIG,SUPER,new_id) :- 
+ooasp_isa(CONFIG,SUPER,new_id) :-
     ooasp_configuration(V,CONFIG),
     ooasp_isa(CONFIG,SUB,new_id),
     ooasp_subclass(V,SUB,SUPER).

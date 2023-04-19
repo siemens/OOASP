@@ -8,7 +8,7 @@ def test_solve_multiple_elements():
     """ create elements and solve under 30 seconds """
 
     racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb.lp")
-    iconf = InteractiveConfigurator(racks_kb,"i1",["./examples/racks/constraints.lp"])    
+    iconf = InteractiveConfigurator(racks_kb,"i1",["./examples/racks/constraints.lp"])
     # current limit
     nr_of_elements = 18
     for i in range(nr_of_elements):
@@ -22,7 +22,7 @@ def test_solve_multiple_racks_incremental():
     """ create elements and solve under 30 seconds """
 
     racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb.lp")
-    iconf = InteractiveConfigurator(racks_kb,"i1",["./examples/racks/constraints.lp"])    
+    iconf = InteractiveConfigurator(racks_kb,"i1",["./examples/racks/constraints.lp"])
     # current limit
     nr_of_racks = 3
     for i in range(nr_of_racks):
