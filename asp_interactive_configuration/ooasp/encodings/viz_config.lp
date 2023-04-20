@@ -10,6 +10,7 @@ attr(graph, config, splines, ortho).
 attr(graph, config, nodesep, "1").
 attr(graph, config, rankdir, "TB").
 attr(graph, config, fontsize, 20).
+attr(graph, config, fontname, "Arial").
 attr(graph, config, (label,0), "Configuration "):-ooasp_configuration(KB,Config).
 attr(graph, config, (label,1), Config):-ooasp_configuration(KB,Config).
 
@@ -42,6 +43,7 @@ attr(node, T, margin, 0):- node(T).
 attr(node, T, width, 0):- node(T).
 attr(node, T, hight, 0):- node(T).
 
+attr(node, Object_id, fontname, "Arial"):- ooasp_isa_leaf(_,Class,Object_id).
 % User selections in green
 attr(node, Object_id, fontcolor, "#0DB144"):- user(ooasp_isa_leaf(_,Class,Object_id)).
 
@@ -57,6 +59,7 @@ attr(node, Object_id, (label,attr,Attr_name), @argument_str(Attr_name,Value,"#0D
 % Associations
 edge((Object_id1,Object_id2)) :-ooasp_associated(_,Name,Object_id1,Object_id2).
 
+attr(edge, (Object_id1,Object_id2), fontname, "Arial") :- ooasp_associated(_,Name,Object_id1,Object_id2).
 attr(edge, (Object_id1,Object_id2), xlabel, Name) :- ooasp_associated(_,Name,Object_id1,Object_id2).
 attr(edge, (Object_id1,Object_id2), color, "#0DB144") :- user(ooasp_associated(_,Name,Object_id1,Object_id2)).
 attr(edge, (Object_id1,Object_id2), fontcolor, "#0DB144") :- user(ooasp_associated(_,Name,Object_id1,Object_id2)).

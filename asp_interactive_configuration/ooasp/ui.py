@@ -10,7 +10,7 @@ def basic_layout():
 
 def wraped_label(text):
     return HTML(value="<style>p{word-wrap: break-word ;color:red}</style> <p>" + text+"</p>")
-    
+
 
 class OOASPUI:
     """
@@ -142,21 +142,22 @@ class OOASPUI:
         """
         self.browse.children= tuple([self.title('Browse')])
 
-            
+
     def set_extend(self):
         """
         Sets the extend domain section
         """
         extend_domain = Button(description='Add new object',button_style='info')
         extend_domain.on_click(self.call_and_update(self.button_wrapper('extend_domain')))
-        dropdown = widgets.Dropdown(
-            options=['']+self.iconf.kb.leafs,
-            value='',
-            description='Add new leaf',
-            disabled=False
-        )
-        dropdown.observe(self.call_and_update(self.add_leaf))
-        self.extend.children= tuple([self.title('Extend'), extend_domain,dropdown])
+        # dropdown = widgets.Dropdown(
+        #     options=['']+self.iconf.kb.leafs,
+        #     value='',
+        #     description='Add new leaf',
+        #     disabled=False
+        # )
+        # dropdown.observe(self.call_and_update(self.add_leaf))
+        # self.extend.children= tuple([self.title('Extend'), extend_domain,dropdown])
+        self.extend.children= tuple([self.title('Extend'), extend_domain])
 
 
     def set_edit(self):
@@ -185,7 +186,7 @@ class OOASPUI:
             )
             dropdown.observe(self.call_and_update(self.do_edit))
             dropdowns.append(dropdown)
-            
+
 
         self.edit.children= tuple([self.title('Edit')] + dropdowns)
 
@@ -202,7 +203,7 @@ class OOASPUI:
         next_solution.on_click(self.call_and_update(self.button_wrapper('next_solution')))
         end_browsing = Button(description='End browsing',syle='danger')
         end_browsing.on_click(self.call_and_update(self.button_wrapper('end_browsing')))
-        
+
         self.browse.children= tuple([self.title('Browse'), incremental,next_solution,select_found,end_browsing])
 
 
