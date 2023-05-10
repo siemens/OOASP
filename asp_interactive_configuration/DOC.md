@@ -49,7 +49,7 @@ This file also introduces **external atoms** to differentiate the task that will
 	*Check*    |   `false`     |
 	*Options*    |   `true`     |
 
-- **`check`**  The check part is active for [complete constraints](#complete-constraints). This refers only to the integrity constrains, however `ooasp_cv` atoms are always derived, regardless of the external values.
+- **`check`**  The check part is active for [permanent constraints](#permanent-constraints). This refers only to the integrity constrains, however `ooasp_cv` atoms are always derived, regardless of the external values.
 
 	Value of this external for the different tasks:
 	Task |  Value |
@@ -60,7 +60,7 @@ This file also introduces **external atoms** to differentiate the task that will
 
 Although this might seem contra-intuitive, this external should be false for the *Checking* task in order to have the `ooasp_cv` atoms as part of a stable model.
 
-- **`check_partial_cv`**  The check part is active for [partial constraints](#partial-constraints). This refers only to the integrity constraints, however `ooasp_cv` atoms are always derived, regardless of the external values.
+- **`check_potential_cv`**  The check part is active for [potential constraints](#potential-constraints). This refers only to the integrity constraints, however `ooasp_cv` atoms are always derived, regardless of the external values.
 
 	Value of this external for the different tasks:
 	Task |  Value |
@@ -95,7 +95,7 @@ Constraints are defined using the `ooasp_cv/5` predicate:
 
 **`ooasp_cv(CONFIG,CV_NAME,OBJECT,STR,ARGS)`**
 - `CONFIG`: The name of the configuration
-- `CV_NAME`: The name of the constraint. Should be unique, as it is used for defining partial constraints
+- `CV_NAME`: The name of the constraint. Should be unique, as it is used for defining potential constraints
 - `OBJECT`: The identifier of the object to which this constraint violation refers to. This is used to better visualize constraints and to allow incremental grounding.
 - `STR`: A string describing the constraint. It can use place holders `{}`, which are filled with the arguments in `ARGS`.
 - `ARGS`: A tuple with the arguments to format `STR`. Note that tuples with a single element need to be written as `(ARG,)`
@@ -106,7 +106,7 @@ Constraints are defined using the `ooasp_cv/5` predicate:
 
 #### Complete constraints
 
-Those constrains that can not longer be corrected by adding new values and associations. These constraints will make a configuration invalid and thus, are not provided as options for the user. By default all constraints are considered of this type, unless stated otherwise (see below [Partial constraints](#partial-constraints)).
+Those constrains that can not longer be corrected by adding new values and associations. These constraints will make a configuration invalid and thus, are not provided as options for the user. By default all constraints are considered of this type, unless stated otherwise (see below [potential constraints](#potential-constraints)).
 
 *For example: Upper-bound constraints or assigning an invalid value.*
 
@@ -117,9 +117,9 @@ Those constraints that may be violated in the current (partial) configuration bu
 
 *For example: Lower-bound constraints, missing value for an attribute.*
 
-Partial constraints are ignored when using brave reasoning in order to get all possible options for values and associations. They are only checked when the external `ooasp_partial_cv` is true. Nonetheless, the constraint violation atoms `ooasp_cv` for these constraints will still appear when checking the configuration for errors.
+Partial constraints are ignored when using brave reasoning in order to get all possible options for values and associations. They are only checked when the external `ooasp_potential_cv` is true. Nonetheless, the constraint violation atoms `ooasp_cv` for these constraints will still appear when checking the configuration for errors.
 
-Partial constraints are defined using predicate `ooasp_partial_cv(CV_NAME)`, where `CV_NAME` is the name of the constraint violation appearing as the second argument of predicate `ooasp_cv`.
+Partial constraints are defined using predicate `ooasp_potential_cv(CV_NAME)`, where `CV_NAME` is the name of the constraint violation appearing as the second argument of predicate `ooasp_cv`.
 
 
 ### User input
@@ -290,7 +290,7 @@ ooasp_cv(CONFIG,wrongass,ID,"Wrong for {}",(ID,new_object)) :-
     ooasp_arity(CONFIG,assoc1,1,ID,ARITY,new_object), ARITY!=4, active(new_object).
 ```
 
-Lastly, we might notice that this constraint is actually considering two different requirements: `ASSOC>=4` and `ASSOC<=4`. Where the first one is a [Partial Constraint](#partial-constraints) since having just `3` associations can still be completed into an accepting configuration, whereas `ASSOC<=4` is a [Complete Constraint](#complete-constraints) since having more than `4` values can not longer be complected into a valid configuration.
+Lastly, we might notice that this constraint is actually considering two different requirements: `ASSOC>=4` and `ASSOC<=4`. Where the first one is a [Partial Constraint](#potential-constraints) since having just `3` associations can still be completed into an accepting configuration, whereas `ASSOC<=4` is a [Complete Constraint](#permanent-constraints) since having more than `4` values can not longer be complected into a valid configuration.
 
 Therefore, we arrive at our final rules:
 
@@ -304,7 +304,7 @@ ooasp_cv(CONFIG,wrongass_upper,ID,"Wrong > for {}",(ID,new_object)) :-
 Where the following fact must also included:
 
 ```prolog
-ooasp_partial_cv(wrongass_lower).
+ooasp_potential_cv(wrongass_lower).
 ```
 
 #### Efficiency

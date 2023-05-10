@@ -10,11 +10,11 @@ assoc1_constraint(element_modules,elementB,2,moduleII).
 assoc1_constraint(element_modules,elementC,3,moduleIII).
 assoc1_constraint(element_modules,elementD,4,moduleIV).
 
-ooasp_partial_cv(customlowerbound).
-ooasp_partial_cv(racksinglelowerbound).
-ooasp_partial_cv(rackdoublelowerbound).
-ooasp_partial_cv(module_requires_element).
-ooasp_partial_cv(moduleII_requires_moduleV).
+ooasp_potential_cv(customlowerbound).
+ooasp_potential_cv(racksinglelowerbound).
+ooasp_potential_cv(rackdoublelowerbound).
+ooasp_potential_cv(module_requires_element).
+ooasp_potential_cv(moduleII_requires_moduleV).
 
 #program domain(new_object).
 

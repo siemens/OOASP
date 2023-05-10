@@ -293,7 +293,7 @@ class InteractiveConfigurator:
         if not self.browsing:
             self.ctl.assign_external(Function("guess"), True)
             self.ctl.assign_external(Function("check"), True)
-            self.ctl.assign_external(Function("check_partial_cv"), True)
+            self.ctl.assign_external(Function("check_potential_cv"), True)
 
             self._set_user_externals()
             self.ctl.configuration.solve.enum_mode = 'auto'
@@ -382,7 +382,7 @@ class InteractiveConfigurator:
         self._ground_missing()
         self.ctl.assign_external(Function("guess"), True)
         self.ctl.assign_external(Function("check"), True)
-        self.ctl.assign_external(Function("check_partial_cv"), False)
+        self.ctl.assign_external(Function("check_potential_cv"), False)
         self._set_user_externals()
         self.ctl.configuration.solve.enum_mode = 'brave'
         with  self.ctl.solve(yield_=True) as hdn:
@@ -406,7 +406,7 @@ class InteractiveConfigurator:
         self._ground_missing()
         self.ctl.assign_external(Function("guess"), False)
         self.ctl.assign_external(Function("check"), False)
-        self.ctl.assign_external(Function("check_partial_cv"), False)
+        self.ctl.assign_external(Function("check_potential_cv"), False)
         self._set_user_externals()
         self.ctl.configuration.solve.enum_mode = 'auto'
         with  self.ctl.solve(yield_=True) as hdn:

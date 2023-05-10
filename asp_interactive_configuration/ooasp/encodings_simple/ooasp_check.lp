@@ -3,16 +3,16 @@
 
 #program domain(new_object).
 
-:- ooasp_cv(NAME,_,_,_),
-	not ooasp_partial_cv(NAME),
+:- ooasp_cv(CV,_,_,_),
+	not ooasp_potential_cv(CV),
 	check.
-:- ooasp_cv(NAME,_,_,_),
-	ooasp_partial_cv(NAME),
-	check_partial_cv,
+:- ooasp_cv(CV,_,_,_),
+	ooasp_potential_cv(CV),
+	check_potential_cv,
 	check.
 
-ooasp_partial_cv(lowerbound).
-ooasp_partial_cv(no_value).
+ooasp_potential_cv(lowerbound).
+ooasp_potential_cv(no_value).
 
 % ooasp_cv(NAME,OBEJCT,STR,ARGS)
 %=======================================
@@ -88,51 +88,51 @@ ooasp_cv(wrongtypeinassoc,new_object,"Associated by {} but is not of class {}",(
 
 %--- (USER INPUT) Attribute value must belong to instance class
 
-ooasp_cv(no_instance_for_attribute,new_object,"Attribute {} not of selected class",(ATTR,)) :-
-	ooasp_attr(C1,ATTR,T),
-	ooasp_attr_value(ATTR,new_object,VALUE),
+ooasp_cv(no_instance_for_attribute,new_object,"Attribute {} not of selected class",(A,)) :-
+	ooasp_attr(C1,A,T),
+	ooasp_attr_value(A,new_object,V),
 	not ooasp_isa(C1,new_object).
 
 %--- (USER INPUT) Attribute value must belong to instance
 
-ooasp_cv(no_instance_for_attribute,new_object,"Value for {} assigned but instanciated",(ATTR,)) :-
-	ooasp_attr_value(ATTR,new_object,VALUE),
+ooasp_cv(no_instance_for_attribute,new_object,"Value for {} assigned but instanciated",(A,)) :-
+	ooasp_attr_value(A,new_object,V),
 	not ooasp_isa(_,new_object).
 
 %--- (USER INPUT) Missing atribute value
-ooasp_cv(no_value,new_object,"Missing value for {}",(ATTR,)) :-
-	 ooasp_attr(C,ATTR,T),
-	 ooasp_attr_hasdomain(C,ATTR),
+ooasp_cv(no_value,new_object,"Missing value for {}",(A,)) :-
+	 ooasp_attr(C,A,T),
+	 ooasp_attr_hasdomain(C,A),
 	 ooasp_isa(C,new_object),
-	 not ooasp_attr_value(ATTR,new_object,_).
+	 not ooasp_attr_value(A,new_object,_).
 
 %--- (USER INPUT) Atribute value not from domain
-ooasp_cv(value_not_domain,new_object,"Value {} for {} not from domain",(VALUE,ATTR)) :-
-	 ooasp_attr(C,ATTR,T),
-	 ooasp_attr_hasdomain(C,ATTR),
+ooasp_cv(value_not_domain,new_object,"Value {} for {} not from domain",(V,A)) :-
+	 ooasp_attr(C,A,T),
+	 ooasp_attr_hasdomain(C,A),
 	 ooasp_isa(C,new_object),
-	 ooasp_attr_value(ATTR,new_object,VALUE),
-	 not ooasp_attr_enum(C,ATTR,VALUE).
+	 ooasp_attr_value(A,new_object,V),
+	 not ooasp_attr_enum(C,A,V).
 
 %--- (USER INPUT) Multiple values for a value
-ooasp_cv(conflicting_values,new_object,"Multiple values for {}: {},{}",(ATTR,V1,V2)) :-
-	 ooasp_attr(C,ATTR,T),
-	 ooasp_attr_value(ATTR,new_object,V1),
-	 ooasp_attr_value(ATTR,new_object,V2),
+ooasp_cv(conflicting_values,new_object,"Multiple values for {}: {},{}",(A,V1,V2)) :-
+	 ooasp_attr(C,A,T),
+	 ooasp_attr_value(A,new_object,V1),
+	 ooasp_attr_value(A,new_object,V2),
 	 V1<V2.
 
 %--- (USER INPUT) Value outside range
-ooasp_cv(value_outside_of_range,new_object,"Value for {} outside range {}<{}",(ATTR,VALUE,MIN)) :-
-	 ooasp_attr(C,ATTR,T),
+ooasp_cv(value_outside_of_range,new_object,"Value for {} outside range {}<{}",(A,V,MIN)) :-
+	 ooasp_attr(C,A,T),
 	 ooasp_isa(C,new_object),
-	 ooasp_attr_value(ATTR,new_object,VALUE),
-	 ooasp_attr_minInclusive(C,ATTR,MIN),
-	 VALUE<MIN.
+	 ooasp_attr_value(A,new_object,V),
+	 ooasp_attr_minInclusive(C,A,MIN),
+	 V<MIN.
 
-ooasp_cv(value_outside_of_range,new_object,"Value for {} outside range {}>{}",(ATTR,VALUE,MAX)) :-
-	 ooasp_attr(C,ATTR,T),
+ooasp_cv(value_outside_of_range,new_object,"Value for {} outside range {}>{}",(A,V,MAX)) :-
+	 ooasp_attr(C,A,T),
 	 ooasp_isa(C,new_object),
-	 ooasp_attr_value(ATTR,new_object,VALUE),
-	 ooasp_attr_maxInclusive(C,ATTR,MAX),
-	 VALUE>MAX.
+	 ooasp_attr_value(A,new_object,V),
+	 ooasp_attr_maxInclusive(C,A,MAX),
+	 V>MAX.
 

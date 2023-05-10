@@ -5,16 +5,16 @@
 
 :- ooasp_cv(CONFIG,NAME,_,_,_),
 	ooasp_configuration(_,CONFIG),
-	not ooasp_partial_cv(NAME),
+	not ooasp_potential_cv(NAME),
 	check.
 :- ooasp_cv(CONFIG,NAME,_,_,_),
 	ooasp_configuration(_,CONFIG),
-	ooasp_partial_cv(NAME),
-	check_partial_cv,
+	ooasp_potential_cv(NAME),
+	check_potential_cv,
 	check.
 
-ooasp_partial_cv(lowerbound).
-ooasp_partial_cv(no_value).
+ooasp_potential_cv(lowerbound).
+ooasp_potential_cv(no_value).
 
 % ooasp_cv(CONFIG,NAME,OBEJCT,STR,ARGS)
 %=======================================

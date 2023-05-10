@@ -16,11 +16,11 @@
 	ooasp_assoc(AS,C1,C1MIN,C1MAX,C2,C2MIN,C2MAX).
 
 #external user(ooasp_associated(AS,ID1,new_object)):
-	ooasp_domain(C,ID1),
+	ooasp_domain(C,ID1),%TODO, is this really needed?
 	ooasp_assoc(AS,C1,C1MIN,C1MAX,C2,C2MIN,C2MAX).
 
 #external user(ooasp_attr_value(A,new_object,V)):
-	ooasp_attr_enum(C,A,V),
+	ooasp_attr_enum(C,A,V),%TODO, maybe then remove the C if the A is unique
 	ooasp_attr(C,A,T).
 
 ooasp_isa_leaf(LEAFCLASS,new_object) :-
