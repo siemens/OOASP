@@ -5,7 +5,7 @@
 
 :- ooasp_cv(CV,_,_,_),
 	not ooasp_potential_cv(CV),
-	check.
+	check_permanent_cv.
 :- ooasp_cv(CV,_,_,_),
 	ooasp_potential_cv(CV),
 	check_potential_cv,

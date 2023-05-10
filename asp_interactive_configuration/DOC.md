@@ -49,7 +49,7 @@ This file also introduces **external atoms** to differentiate the task that will
 	*Check*    |   `false`     |
 	*Options*    |   `true`     |
 
-- **`check`**  The check part is active for [permanent constraints](#permanent-constraints). This refers only to the integrity constrains, however `ooasp_cv` atoms are always derived, regardless of the external values.
+- **`check_permanent_cv`**  The check part is active for [permanent constraints](#permanent-constraints). This refers only to the integrity constrains, however `ooasp_cv` atoms are always derived, regardless of the external values.
 
 	Value of this external for the different tasks:
 	Task |  Value |

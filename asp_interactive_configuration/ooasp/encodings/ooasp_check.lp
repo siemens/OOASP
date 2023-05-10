@@ -6,12 +6,11 @@
 :- ooasp_cv(CONFIG,NAME,_,_,_),
 	ooasp_configuration(_,CONFIG),
 	not ooasp_potential_cv(NAME),
-	check.
+	check_permanent_cv.
 :- ooasp_cv(CONFIG,NAME,_,_,_),
 	ooasp_configuration(_,CONFIG),
 	ooasp_potential_cv(NAME),
-	check_potential_cv,
-	check.
+	check_potential_cv.
 
 ooasp_potential_cv(lowerbound).
 ooasp_potential_cv(no_value).
