@@ -104,7 +104,7 @@ Constraints are defined using the `ooasp_cv/5` predicate:
 
 **Domain specific constraints** are defined by the user in a different file, which can be provided when the [Interactive Configurator](#interactive-configurator) is created. Note that these will also be **grounded incrementally** (see [multi-shot](#multi-shot-approach)).
 
-#### Complete constraints
+#### Permanent constraints
 
 Those constrains that can not longer be corrected by adding new values and associations. These constraints will make a configuration invalid and thus, are not provided as options for the user. By default all constraints are considered of this type, unless stated otherwise (see below [potential constraints](#potential-constraints)).
 
