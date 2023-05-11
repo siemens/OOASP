@@ -4,18 +4,18 @@
 #program base.
 
 % transitive closure
-ooasp_subclass(V,SUB,SUPER2) :- 
+ooasp_subclass(V,SUB,SUPER2) :-
     ooasp_subclass(V,SUB,SUPER1),
     ooasp_subclass(V,SUPER1,SUPER2).
 
 % derive domain for boolean attributes
-ooasp_attribute_enum(V,C,N,"true") :- 
+ooasp_attribute_enum(V,C,N,"true") :-
     ooasp_attribute(V,C,N,"boolean").
-ooasp_attribute_enum(V,C,N,"false") :- 
+ooasp_attribute_enum(V,C,N,"false") :-
     ooasp_attribute(V,C,N,"boolean").
 
 % true, if attribute has domain
-ooasp_attribute_hasdomain(V,C,N) :- 
+ooasp_attribute_hasdomain(V,C,N) :-
     ooasp_attribute_enum(V,C,N,D).
 
 ooasp_attribute_enum(V,C,N,MIN..MAX):-

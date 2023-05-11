@@ -6,17 +6,17 @@ from clingo import parse_term
 from ooasp.kb import OOASPKnowledgeBase
 from ooasp.interactive import InteractiveConfigurator
 
-def test_interactive_extend_browse():
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb.lp")
-    iconf = InteractiveConfigurator(racks_kb,"i1")
+def test_s_interactive_extend_browse():
+    racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb_simple.lp",True)
+    iconf = InteractiveConfigurator(racks_kb,"i1",simplified_encodings=True)
     iconf.extend_domain(5)
     assert iconf.domain_size == 5
     found = iconf.next_solution()
     assert found
-    assert "ooasp_domain(i1,object,1)." in iconf.config.fb.asp_str()
-    assert "ooasp_domain(i1,object,3)." in iconf.config.fb.asp_str()
-    assert "ooasp_domain(i1,object,4)." in iconf.config.fb.asp_str()
-    assert "ooasp_domain(i1,object,5)." in iconf.config.fb.asp_str()
+    assert "ooasp_domain(object,1)." in iconf.config.fb.asp_str()
+    assert "ooasp_domain(object,3)." in iconf.config.fb.asp_str()
+    assert "ooasp_domain(object,4)." in iconf.config.fb.asp_str()
+    assert "ooasp_domain(object,5)." in iconf.config.fb.asp_str()
     found = iconf.next_solution()
     assert found
     q = found.associations
@@ -25,55 +25,55 @@ def test_interactive_extend_browse():
     assert len(q)==4
 
 
-def test_interactive_add_leaf_non_leafclass():
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb.lp")
-    iconf = InteractiveConfigurator(racks_kb,"i1")
+def test_s_interactive_add_leaf_non_leafclass():
+    racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb_simple.lp",True)
+    iconf = InteractiveConfigurator(racks_kb,"i1",simplified_encodings=True)
 
     with pytest.raises(Exception) as e_info:
         iconf.new_leaf('module')
     assert iconf.domain_size == 0
 
-def test_interactive_add_leaf_extend_browse():
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb.lp")
-    iconf = InteractiveConfigurator(racks_kb,"i1")
+def test_s_interactive_add_leaf_extend_browse():
+    racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb_simple.lp",True)
+    iconf = InteractiveConfigurator(racks_kb,"i1",simplified_encodings=True)
 
     iconf.new_leaf('frame')
     found = iconf.next_solution()
     assert not found
-    assert parse_term("ooasp_isa_leaf(i1,frame,1)") in  iconf.state.config.assumptions
+    assert parse_term("ooasp_isa_leaf(frame,1)") in  iconf.state.config.assumptions
     assert iconf.domain_size == 1
 
     iconf.extend_domain(4)
     assert iconf.domain_size == 5
     found = iconf.next_solution()
     assert found
-    assert "ooasp_domain(i1,object,1)." in iconf.config.fb.asp_str()
-    assert "ooasp_isa_leaf(i1,frame,1)." in iconf.config.fb.asp_str()
-    assert "ooasp_domain(i1,object,3)." in iconf.config.fb.asp_str()
-    assert "ooasp_domain(i1,object,4)." in iconf.config.fb.asp_str()
-    assert "ooasp_domain(i1,object,5)." in iconf.config.fb.asp_str()
+    assert "ooasp_domain(object,1)." in iconf.config.fb.asp_str()
+    assert "ooasp_isa_leaf(frame,1)." in iconf.config.fb.asp_str()
+    assert "ooasp_domain(object,3)." in iconf.config.fb.asp_str()
+    assert "ooasp_domain(object,4)." in iconf.config.fb.asp_str()
+    assert "ooasp_domain(object,5)." in iconf.config.fb.asp_str()
     found = iconf.next_solution()
 
 
-def test_interactive_extend_incrementally():
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb.lp")
-    iconf = InteractiveConfigurator(racks_kb,"i1")
+def test_s_interactive_extend_incrementally():
+    racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb_simple.lp",True)
+    iconf = InteractiveConfigurator(racks_kb,"i1",simplified_encodings=True)
     iconf.new_leaf('frame')
     found = iconf.extend_incrementally()
     assert found
     assert iconf.domain_size == 5
-    assert "ooasp_domain(i1,object,1)." in iconf.config.fb.asp_str()
-    assert "ooasp_isa_leaf(i1,frame,1)." in iconf.config.fb.asp_str()
-    assert "ooasp_domain(i1,object,3)." in iconf.config.fb.asp_str()
-    assert "ooasp_domain(i1,object,4)." in iconf.config.fb.asp_str()
-    assert "ooasp_domain(i1,object,5)." in iconf.config.fb.asp_str()
+    assert "ooasp_domain(object,1)." in iconf.config.fb.asp_str()
+    assert "ooasp_isa_leaf(frame,1)." in iconf.config.fb.asp_str()
+    assert "ooasp_domain(object,3)." in iconf.config.fb.asp_str()
+    assert "ooasp_domain(object,4)." in iconf.config.fb.asp_str()
+    assert "ooasp_domain(object,5)." in iconf.config.fb.asp_str()
     found = iconf.next_solution()
     assert found
     assert len(iconf.states)==3
 
-def test_interactive_select_full():
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb.lp")
-    iconf = InteractiveConfigurator(racks_kb,"i1")
+def test_s_interactive_select_full():
+    racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb_simple.lp",True)
+    iconf = InteractiveConfigurator(racks_kb,"i1",simplified_encodings=True)
     iconf.new_leaf('frame')
     found = iconf.extend_incrementally()
     assert found
@@ -84,11 +84,11 @@ def test_interactive_select_full():
     for f in found.fb:
         assert str(f) in found_new.fb.asp_str()
 
-    assert "ooasp_isa_leaf(i1,frame,6)." in found_new.fb.asp_str()
+    assert "ooasp_isa_leaf(frame,6)." in found_new.fb.asp_str()
 
-def test_interactive_check():
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb.lp")
-    iconf = InteractiveConfigurator(racks_kb,"i1")
+def test_s_interactive_ccheck():
+    racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb_simple.lp",True)
+    iconf = InteractiveConfigurator(racks_kb,"i1",simplified_encodings=True)
     iconf.check()
     assert len(iconf.config.constraint_violations) == 0
     iconf.new_leaf('frame')
@@ -96,17 +96,17 @@ def test_interactive_check():
     iconf.new_leaf('frame')
     iconf.check()
     assert len(iconf.config.constraint_violations) == 6
-    assert 'ooasp_cv(i1,lowerbound,1,"Lowerbound for association {} not reached: {}",(rack_frames,1,3)).' in iconf.state.config.fb.asp_str()
-    assert 'ooasp_cv(i1,lowerbound,2,"Lowerbound for association {} not reached: {}",(rack_frames,1,3)).' in iconf.state.config.fb.asp_str()
-    assert 'ooasp_cv(i1,lowerbound,3,"Lowerbound for association {} not reached: {}",(rack_frames,1,3)).' in iconf.state.config.fb.asp_str()
-    assert 'ooasp_cv(i1,no_value,1,"Missing value for {}",(frame_position,))' in iconf.state.config.fb.asp_str()
-    assert 'ooasp_cv(i1,no_value,2,"Missing value for {}",(frame_position,))' in iconf.state.config.fb.asp_str()
-    assert 'ooasp_cv(i1,no_value,3,"Missing value for {}",(frame_position,))' in iconf.state.config.fb.asp_str()
+    assert 'ooasp_cv(lowerbound,1,"Lowerbound for association {} not reached: {}",(rack_frames,1,3)).' in iconf.state.config.fb.asp_str()
+    assert 'ooasp_cv(lowerbound,2,"Lowerbound for association {} not reached: {}",(rack_frames,1,3)).' in iconf.state.config.fb.asp_str()
+    assert 'ooasp_cv(lowerbound,3,"Lowerbound for association {} not reached: {}",(rack_frames,1,3)).' in iconf.state.config.fb.asp_str()
+    assert 'ooasp_cv(no_value,1,"Missing value for {}",(frame_position,))' in iconf.state.config.fb.asp_str()
+    assert 'ooasp_cv(no_value,2,"Missing value for {}",(frame_position,))' in iconf.state.config.fb.asp_str()
+    assert 'ooasp_cv(no_value,3,"Missing value for {}",(frame_position,))' in iconf.state.config.fb.asp_str()
 
 
-def test_interactive_check_custom_cv():
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb.lp")
-    iconf = InteractiveConfigurator(racks_kb,"i1",["./examples/racks/constraints.lp"])
+def test_s_interactive_check_custom_cv():
+    racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb_simple.lp",True)
+    iconf = InteractiveConfigurator(racks_kb,"i1",["./examples/racks/constraints_simple.lp"],simplified_encodings=True)
     iconf.check()
     assert len(iconf.config.constraint_violations) == 0
     iconf.new_leaf('frame')
@@ -116,13 +116,13 @@ def test_interactive_check_custom_cv():
     iconf.new_leaf('frame')
     iconf.select_association('rack_frames',5,6)
     iconf.check()
-    assert 'ooasp_cv(i1,racksingleupperbound,5,"Rack singles should be associated to 4 frames ",(6,)).' in iconf.state.config.fb.asp_str()
+    assert 'ooasp_cv(racksingleupperbound,5,"Rack singles should be associated to 4 frames ",(6,)).' in iconf.state.config.fb.asp_str()
 
 
 
-def test_interactive_select():
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb.lp")
-    iconf = InteractiveConfigurator(racks_kb,"i1",["./examples/racks/constraints.lp"])
+def test_s_interactive_select():
+    racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb_simple.lp",True)
+    iconf = InteractiveConfigurator(racks_kb,"i1",["./examples/racks/constraints_simple.lp"],simplified_encodings=True)
     iconf.extend_domain(1)
     iconf.select_leaf_class(1,'frame')
     leafs = iconf.config.leafs
@@ -136,7 +136,7 @@ def test_interactive_select():
     assert leafs[0].class_name=='rackDouble'
     found = iconf.extend_incrementally()
     assert found.domain_size == 9
-    assert "ooasp_isa_leaf(i1,rackDouble,1)." in found.fb.asp_str()
+    assert "ooasp_isa_leaf(rackDouble,1)." in found.fb.asp_str()
     iconf.select_found_configuration()
     passed = iconf.check()
     assert passed
@@ -149,16 +149,16 @@ def test_interactive_select():
 
 
 
-def test_options():
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb.lp")
-    iconf = InteractiveConfigurator(racks_kb,"i1",["./examples/racks/constraints.lp"])
+def test_s_options():
+    racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb_simple.lp",True)
+    iconf = InteractiveConfigurator(racks_kb,"i1",["./examples/racks/constraints_simple.lp"],simplified_encodings=True)
     iconf.extend_domain(1)
 
     brave_conf = iconf.get_options()
     conf_str = brave_conf.fb.asp_str()
     leafs = ["frame", "moduleI", "moduleII", "moduleIII", "moduleIV", "moduleV", "elementA", "elementB", "elementC", "elementD", "rackSingle", "rackDouble"]
     for l in leafs:
-        assert f"ooasp_isa_leaf(i1,{l},1)." in conf_str
+        assert f"ooasp_isa_leaf({l},1)." in conf_str
     iconf.extend_domain(1)
     iconf.select_leaf_class(1,'frame')
     iconf.select_value(1,'frame_position',4)
@@ -166,7 +166,6 @@ def test_options():
     opts = iconf._brave_config_as_options()
     opt = [o['str'] for x in opts.values() for o in x]
     assert 1 in opts
-
     assert "remove_leaf_class(1)" in opt
     assert "remove_value(1, 'frame_position')" in opt
     assert "select_association('rack_frames', 2, 1)" in opt
@@ -204,9 +203,7 @@ def test_options():
     assert "remove_association('rack_frames', 2, 1)" in opt
 
 
-def test_json():
+def test_s_json():
 
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb.lp")
-    print(racks_kb)
-    iconf = InteractiveConfigurator(racks_kb,"i1",["./examples/racks/constraints.lp"])
-    print(iconf)
+    racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb_simple.lp",True)
+    iconf = InteractiveConfigurator(racks_kb,"i1",["./examples/racks/constraints_simple.lp"],simplified_encodings=True)

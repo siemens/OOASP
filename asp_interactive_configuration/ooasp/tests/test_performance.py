@@ -15,6 +15,9 @@ def test_solve_multiple_elements():
         iconf.new_leaf("elementA")
     iconf.extend_domain(nr_of_elements + 5)
     config = iconf.next_solution()
+    iconf.check()
+
+
     assert len(config.constraint_violations)==0
     assert iconf._time_grounding+iconf._time_solving < 30
 
@@ -23,12 +26,12 @@ def test_solve_multiple_racks_incremental():
 
     racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb.lp")
     iconf = InteractiveConfigurator(racks_kb,"i1",["./examples/racks/constraints.lp"])
-    # current limit
     nr_of_racks = 3
     for i in range(nr_of_racks):
         iconf.new_leaf("rackSingle")
     config = iconf.extend_incrementally()
     print(iconf._statistics)
+    config.save_png("out/c.png")
     assert len(config.constraint_violations)==0
     assert iconf._time_grounding+iconf._time_solving < 30
 
