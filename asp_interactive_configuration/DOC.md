@@ -111,15 +111,15 @@ Those constrains that can not longer be corrected by adding new values and assoc
 *For example: Upper-bound constraints or assigning an invalid value.*
 
 
-#### Partial constraints
+#### Potential constraints
 
 Those constraints that may be violated in the current (partial) configuration but can become satisfied at a later stage of the configuration process.
 
 *For example: Lower-bound constraints, missing value for an attribute.*
 
-Partial constraints are ignored when using brave reasoning in order to get all possible options for values and associations. They are only checked when the external `ooasp_potential_cv` is true. Nonetheless, the constraint violation atoms `ooasp_cv` for these constraints will still appear when checking the configuration for errors.
+Potential constraints are ignored when using brave reasoning in order to get all possible options for values and associations. They are only checked when the external `ooasp_potential_cv` is true. Nonetheless, the constraint violation atoms `ooasp_cv` for these constraints will still appear when checking the configuration for errors.
 
-Partial constraints are defined using predicate `ooasp_potential_cv(CV_NAME)`, where `CV_NAME` is the name of the constraint violation appearing as the second argument of predicate `ooasp_cv`.
+Potential constraints are defined using predicate `ooasp_potential_cv(CV_NAME)`, where `CV_NAME` is the name of the constraint violation appearing as the second argument of predicate `ooasp_cv`.
 
 
 ### User input
@@ -290,7 +290,7 @@ ooasp_cv(CONFIG,wrongass,ID,"Wrong for {}",(ID,new_object)) :-
     ooasp_arity(CONFIG,assoc1,1,ID,ARITY,new_object), ARITY!=4, active(new_object).
 ```
 
-Lastly, we might notice that this constraint is actually considering two different requirements: `ASSOC>=4` and `ASSOC<=4`. Where the first one is a [Partial Constraint](#potential-constraints) since having just `3` associations can still be completed into an accepting configuration, whereas `ASSOC<=4` is a [Complete Constraint](#permanent-constraints) since having more than `4` values can not longer be complected into a valid configuration.
+Lastly, we might notice that this constraint is actually considering two different requirements: `ASSOC>=4` and `ASSOC<=4`. Where the first one is a [Potential Constraint](#potential-constraints) since having just `3` associations can still be completed into an accepting configuration, whereas `ASSOC<=4` is a [Permanent Constraint](#permanent-constraints) since having more than `4` values can not longer be complected into a valid configuration.
 
 Therefore, we arrive at our final rules:
 
