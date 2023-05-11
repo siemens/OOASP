@@ -43,6 +43,7 @@ class  OOASPConfiguration:
         memo[id(self)] = result
         for k, v in self.__dict__.items():
             setattr(result, k, deepcopy(v, memo))
+
         return result
 
     def set_unifiers(self):
@@ -70,7 +71,11 @@ class  OOASPConfiguration:
 
         class AttributeValue(Predicate):
             class Meta:
-                name = "ooasp_attribute_value"
+                if not self.simplified_encodings:
+                    name = "ooasp_attribute_value"
+                else:
+                    name = "ooasp_attr_value"
+
 
 
             if not self.simplified_encodings:
@@ -127,7 +132,7 @@ class  OOASPConfiguration:
                 User=User)
 
     @classmethod
-    def from_model(cls, name:str, kb: OOASPKnowledgeBase, model:Model):
+    def from_model(cls, name:str, kb: OOASPKnowledgeBase, model:Model, simplified_encodings=False):
         """
         Creates a configuration from a clingo model
             Parameters:
@@ -135,7 +140,7 @@ class  OOASPConfiguration:
                 kb: The knowledge base
                 model: The clingo model
         """
-        config= cls(name=name, kb = kb)
+        config= cls(name=name, kb = kb,simplified_encodings=simplified_encodings)
         config.fb = model.facts(unifier=config.unifiers_list,atoms=True,shown=True)
         return config
 

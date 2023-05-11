@@ -8,8 +8,7 @@
 	check_permanent_cv.
 :- ooasp_cv(CV,_,_,_),
 	ooasp_potential_cv(CV),
-	check_potential_cv,
-	check.
+	check_potential_cv.
 
 ooasp_potential_cv(lowerbound).
 ooasp_potential_cv(no_value).
@@ -38,7 +37,7 @@ ooasp_cv(upperbound,ID1,
   (A,CMAX,new_object)):-
 	ooasp_assoc_limit(A,max,OPT,C,CMAX),
 	ooasp_isa(C,ID1),
-	#count{ID2:ooasp_ass_gen(A,OPT,ID1,ID2)}
+	#count{ID2:ooasp_assoc_gen(A,OPT,ID1,ID2)}
 		> CMAX,
 	active(new_object).
 
@@ -46,7 +45,7 @@ ooasp_cv(upperbound,ID1,
 ooasp_cv(lowerbound,ID1,"Lowerbound for association {} not reached: {}",(ASSOC,CMIN,new_object)):-
 	ooasp_assoc_limit(ASSOC,min,OPT,C,CMIN),
 	ooasp_isa(C,ID1),
-	#count { ID2:ooasp_ass_gen(ASSOC,OPT,ID1,ID2) } < CMIN,
+	#count { ID2:ooasp_assoc_gen(ASSOC,OPT,ID1,ID2) } < CMIN,
 	active(new_object).
 
 

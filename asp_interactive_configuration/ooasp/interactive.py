@@ -34,14 +34,14 @@ class State:
         self.action = action
 
     @classmethod
-    def initial(cls, kb:OOASPKnowledgeBase, config_name:str):
+    def initial(cls, kb:OOASPKnowledgeBase, config_name:str, simplified_encodings:bool=False):
         """
         Creates the initial state
             Parameters:
                 kb: The Knowledge base
                 config_name: The name of the configuration
         """
-        return cls(OOASPConfiguration(config_name,kb),
+        return cls(OOASPConfiguration(config_name,kb,simplified_encodings),
             action="start",
             domain_size=0)
 
@@ -95,7 +95,7 @@ class InteractiveConfigurator:
         """
         self.kb = kb
         self.config_name = config_name
-        self.states = [State.initial(kb,config_name)]
+        self.states = [State.initial(kb,config_name,simplified_encodings=simplified_encodings)]
         self.additional_files = [] if additional_files is None else additional_files
         self.additional_prg = additional_prg
         self._time_grounding = 0
@@ -291,10 +291,9 @@ class InteractiveConfigurator:
         self._ground_missing()
 
         if not self.browsing:
-            self.ctl.assign_external(Function("guess"), True)
+            self.ctl.assign_external(Function("guess") , True)
             self.ctl.assign_external(Function("check_permanent_cv"), True)
             self.ctl.assign_external(Function("check_potential_cv"), True)
-
             self._set_user_externals()
             self.ctl.configuration.solve.enum_mode = 'auto'
             start = time.time()
@@ -310,7 +309,7 @@ class InteractiveConfigurator:
             end = time.time()
             self._add_solving_time(end -start)
             found_config = OOASPConfiguration.from_model(self.state.config.name,
-                    self.kb, model)
+                    self.kb, model, self.simplified_encodings)
             return found_config
         except StopIteration:
             end = time.time()
@@ -393,7 +392,7 @@ class InteractiveConfigurator:
                 self.brave_config = None
                 raise RuntimeError("No available options for conflicting configuration")
             self.brave_config = OOASPConfiguration.from_model(self.state.config.name,
-                    self.kb, brave_model)
+                    self.kb, brave_model, simplified_encodings=self.simplified_encodings)
         return self.brave_config
 
     def _check(self)->bool:
@@ -412,7 +411,7 @@ class InteractiveConfigurator:
         with  self.ctl.solve(yield_=True) as hdn:
             for model in hdn:
                 self.state.config = OOASPConfiguration.from_model(self.state.config.name,
-                    self.kb, model)
+                    self.kb, model, simplified_encodings=self.simplified_encodings)
                 self.config.remove_user()
 
         return not self.config.has_cv

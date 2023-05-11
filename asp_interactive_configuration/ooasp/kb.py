@@ -28,9 +28,9 @@ class  OOASPKnowledgeBase:
                 name: The name of the knowledge base
         """
         self.name:str = name
+        self.simplified_encodings = simplified_encodings
         self.set_unifiers()
         self.fb = FactBase()
-        self.simplified_encodings = simplified_encodings
 
     def set_unifiers(self):
         """
@@ -42,25 +42,29 @@ class  OOASPKnowledgeBase:
         class KBName(Predicate):
             class Meta:
                 name = "ooasp_kb"
-            kb=NameField
+            if not self.simplified_encodings:
+                kb=NameField
 
         class Class(Predicate):
             class Meta:
                 name = "ooasp_class"
-            kb=NameField
+            if not self.simplified_encodings:
+                kb=NameField
             name=ConstantField
 
         class SubClass(Predicate):
             class Meta:
                 name = "ooasp_subclass"
-            kb=NameField
+            if not self.simplified_encodings:
+                kb=NameField
             sub_class=ConstantField
             super_class=ConstantField
 
         class Assoc(Predicate):
             class Meta:
                 name = "ooasp_assoc"
-            kb=NameField
+            if not self.simplified_encodings:
+                kb=NameField
             name= ConstantField
             class1=ConstantField
             min1=IntegerField
@@ -74,32 +78,48 @@ class  OOASPKnowledgeBase:
 
         class Attr(Predicate):
             class Meta:
-                name = "ooasp_attribute"
-            kb=NameField
+                if not self.simplified_encodings:
+                    name = "ooasp_attribute"
+                else:
+                    name = "ooasp_attr"
+            if not self.simplified_encodings:
+                kb=NameField
             class_name=ConstantField
             name=ConstantField
             type=TypeField
 
         class AttrMin(Predicate):
             class Meta:
-                name = "ooasp_attribute_minInclusive"
-            kb=NameField
+                if not self.simplified_encodings:
+                    name = "ooasp_attribute_minInclusive"
+                else:
+                    name = "ooasp_attr_minInclusive"
+            if not self.simplified_encodings:
+                kb=NameField
             class_name=ConstantField
             name=ConstantField
             val=IntegerField
 
         class AttrMax(Predicate):
             class Meta:
-                name = "ooasp_attribute_maxInclusive"
-            kb=NameField
+                if not self.simplified_encodings:
+                    name = "ooasp_attribute_maxInclusive"
+                else:
+                    name = "ooasp_attr_maxInclusive"
+            if not self.simplified_encodings:
+                kb=NameField
             class_name=ConstantField
             name=ConstantField
             val=IntegerField
 
         class AttrEnum(Predicate):
             class Meta:
-                name = "ooasp_attribute_enum"
-            kb=NameField
+                if not self.simplified_encodings:
+                    name = "ooasp_attribute_enum"
+                else:
+                    name = "ooasp_attr_enum"
+            if not self.simplified_encodings:
+                kb=NameField
             class_name=ConstantField
             name=ConstantField
             val=ConstantField
@@ -139,11 +159,11 @@ class  OOASPKnowledgeBase:
         self.fb.update(fb)
 
     @classmethod
-    def from_file(cls, name:str, file_path:str):
+    def from_file(cls, name:str, file_path:str, simplified_encodings=False):
         """
         Creates a knowledge base from a file
         """
-        kb = cls(name)
+        kb = cls(name,simplified_encodings)
         kb.load_facts_from_file(file_path)
         return kb
 
