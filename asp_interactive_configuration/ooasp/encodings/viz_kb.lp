@@ -20,7 +20,7 @@ attr(node, Class_name, label, @concat("<<TABLE BORDER='0' CELLBORDER='1' CELLSPA
                                         "{% set attr = attr|default({}) %}{% for k, v in attr.items() %}{{v}} {% endfor %}",
                                         "</TD></TR></TABLE>>")):- ooasp_class(_,Class_name).
 attr(node,Class_name,(label,attr,Name),@argument_str(Name,Type)):-ooasp_attribute(_,Class_name,Name,Type).
-attr(node,Class_name,(label,class),Class_name):-ooasp_class(_,Class_name).
+attr(node,Class_name,(label,class),@stringify(Class_name,true)):-ooasp_class(_,Class_name).
 attr(node, T, style, "filled"):- node(T).
 attr(node, T, fillcolor, "#FFFFCE"):- node(T).
 attr(node, T, color, "black"):- node(T).
