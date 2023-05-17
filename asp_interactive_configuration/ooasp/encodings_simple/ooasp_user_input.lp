@@ -20,8 +20,7 @@
 	ooasp_assoc(AS,C1,C1MIN,C1MAX,C2,C2MIN,C2MAX).
 
 #external user(ooasp_attr_value(A,new_object,V)):
-	ooasp_attr_enum(C,A,V),%TODO, maybe then remove the C if the A is unique
-	ooasp_attr(C,A,T).
+	ooasp_attr_enum(_,A,V).
 
 ooasp_isa_leaf(LEAFCLASS,new_object) :-
 	user(ooasp_isa_leaf(LEAFCLASS,new_object)).
