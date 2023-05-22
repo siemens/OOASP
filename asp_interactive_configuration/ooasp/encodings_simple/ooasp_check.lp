@@ -101,14 +101,14 @@ ooasp_cv(no_instance_for_attribute,new_object,"Value for {} assigned but instanc
 %--- (USER INPUT) Missing atribute value
 ooasp_cv(no_value,new_object,"Missing value for {}",(A,)) :-
 	 ooasp_attr(C,A,T),
-	 ooasp_attr_hasdomain(C,A),
+	 ooasp_attr_enum(C,A,_),
 	 ooasp_isa(C,new_object),
 	 not ooasp_attr_value(A,new_object,_).
 
 %--- (USER INPUT) Atribute value not from domain
 ooasp_cv(value_not_domain,new_object,"Value {} for {} not from domain",(V,A)) :-
 	 ooasp_attr(C,A,T),
-	 ooasp_attr_hasdomain(C,A),
+	 ooasp_attr_enum(C,A,_),
 	 ooasp_isa(C,new_object),
 	 ooasp_attr_value(A,new_object,V),
 	 not ooasp_attr_enum(C,A,V).
