@@ -30,7 +30,7 @@
 		ooasp_attr_enum(C,A,V) } 1 :-
 	ooasp_isa(C,new_object),
 	ooasp_attr(C,A,T),
-	ooasp_attr_hasdomain(C,A),
+	ooasp_attr_enum(C,A,_),
 	guess.
 
 % TODO: this rule is only used if MAX-MIN < 30
