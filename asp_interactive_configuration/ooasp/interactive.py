@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 import time
+from importlib import resources
 from clorm.clingo import Control
 from clingo import Number, Function
 from clorm import Predicate, unify
@@ -11,6 +12,8 @@ from typing import List
 from copy import deepcopy
 import ooasp.utils as utils
 from typing import List
+import ooasp.encodings
+import ooasp.encodings_simple
 
 class State:
     """
@@ -129,9 +132,11 @@ class InteractiveConfigurator:
         self.ctl.add("base",[],self.kb.fb.asp_str())
         self.ctl.add("base",[],self.additional_prg)
         if self.simplified_encodings:
-            self.ctl.load("./ooasp/encodings_simple/ooasp.lp")
+            path = resources.files(ooasp.encodings_simple).joinpath("ooasp.lp")
+            self.ctl.load(str(path))
         else:
-            self.ctl.load("./ooasp/encodings/ooasp.lp")
+            path = resources.files(ooasp.encodings).joinpath("ooasp.lp")
+            self.ctl.load(str(path))
         for f in self.additional_files:
             self.ctl.load(f)
         self._ground([("base",[])])

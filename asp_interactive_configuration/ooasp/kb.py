@@ -1,6 +1,7 @@
 # Copyright (c) 2022 Siemens AG Oesterreich
 # SPDX-License-Identifier: MIT
 
+from importlib import resources
 from typing import List
 from types import SimpleNamespace
 from clingo import Control
@@ -8,6 +9,8 @@ from clorm import Predicate, ConstantField, IntegerField, FactBase, refine_field
 from clingraph.orm import Factbase
 from clingraph.graphviz import compute_graphs, render
 from clingraph.clingo_utils import ClingraphContext
+import ooasp.encodings
+import ooasp.encodings_simple
 
 # pylint: disable=missing-class-docstring
 # pylint: disable=too-few-public-methods
@@ -193,9 +196,11 @@ class  OOASPKnowledgeBase:
         ctl = Control()
         fbs = []
         if self.simplified_encodings:
-            ctl.load("./ooasp/encodings_simple/viz_kb.lp")
+            path = resources.files(ooasp.encodings_simple).joinpath("viz_kb.lp")
+            ctl.load(str(path))
         else:
-            ctl.load("./ooasp/encodings/viz_kb.lp")
+            path = resources.files(ooasp.encodings).joinpath("viz_kb.lp")
+            ctl.load(str(path))
         ctl.add("base",[],self.fb.asp_str())
         ctl.ground([("base", [])],ClingraphContext())
         ctl.solve(on_model=lambda m: fbs.append(Factbase.from_model(m,default_graph="kb")))

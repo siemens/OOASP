@@ -1,6 +1,7 @@
 # Copyright (c) 2022 Siemens AG Oesterreich
 # SPDX-License-Identifier: MIT
 
+from importlib import resources
 from typing import List
 from types import SimpleNamespace
 from clingo import Model, parse_term
@@ -12,6 +13,8 @@ from clingraph.clingo_utils import ClingraphContext
 from .kb import OOASPKnowledgeBase
 from copy import deepcopy
 import ooasp.utils as utils
+import ooasp.encodings
+import ooasp.encodings_simple
 
 
 class  OOASPConfiguration:
@@ -32,7 +35,7 @@ class  OOASPConfiguration:
                 kb: The Knowledge base
         """
         self.name:str = name
-        self.kb:str = kb
+        self.kb = kb
         self.simplified_encodings = simplified_encodings
         self.set_unifiers()
         self.fb = FactBase()
@@ -378,11 +381,15 @@ class  OOASPConfiguration:
         ctl = Control(['--warn=none'])
         fbs = []
         if self.simplified_encodings:
-            ctl.load("./ooasp/encodings_simple/viz_config.lp")
-            ctl.load("./ooasp/encodings_simple/ooasp_aux_kb.lp")
+            path = resources.files(ooasp.encodings_simple).joinpath("viz_config.lp")
+            ctl.load(str(path))
+            path = resources.files(ooasp.encodings_simple).joinpath("ooasp_aux_kb.lp")
+            ctl.load(str(path))
         else:
-            ctl.load("./ooasp/encodings/viz_config.lp")
-            ctl.load("./ooasp/encodings/ooasp_aux_kb.lp")
+            path = resources.files(ooasp.encodings).joinpath("viz_config.lp")
+            ctl.load(str(path))
+            path = resources.files(ooasp.encodings).joinpath("ooasp_aux_kb.lp")
+            ctl.load(str(path))
 
         ctl.add("base",[],self.fb.asp_str())
         ctl.add("base",[],self.kb.fb.asp_str())
