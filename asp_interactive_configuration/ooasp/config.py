@@ -13,8 +13,7 @@ from clingraph.clingo_utils import ClingraphContext
 from .kb import OOASPKnowledgeBase
 from copy import deepcopy
 import ooasp.utils as utils
-import ooasp.encodings
-import ooasp.encodings_simple
+import ooasp.settings as settings
 
 
 class  OOASPConfiguration:
@@ -27,7 +26,7 @@ class  OOASPConfiguration:
             UNIFIERS (Namespace): All clorm unifiers (classes) used to link objects with predicates
     """
 
-    def __init__(self, name:str, kb: OOASPKnowledgeBase, simplified_encodings=False):
+    def __init__(self, name:str, kb: OOASPKnowledgeBase):
         """
         Creates a possibly partial configuration
             Parameters:
@@ -36,7 +35,6 @@ class  OOASPConfiguration:
         """
         self.name:str = name
         self.kb = kb
-        self.simplified_encodings = simplified_encodings
         self.set_unifiers()
         self.fb = FactBase()
 
@@ -59,7 +57,7 @@ class  OOASPConfiguration:
             class Meta:
                 name = "ooasp_configobject"
 
-            if not self.simplified_encodings:
+            if settings.include_config:
                 config=NameField(default=self.name)
             class_name=ConstantField
             object_id=IntegerField
@@ -67,21 +65,21 @@ class  OOASPConfiguration:
         class Leaf(Predicate):
             class Meta:
                 name = "ooasp_isa_leaf"
-            if not self.simplified_encodings:
+            if settings.include_config:
                 config=NameField(default=self.name)
             class_name=ConstantField
             object_id=IntegerField
 
         class AttributeValue(Predicate):
             class Meta:
-                if not self.simplified_encodings:
+                if settings.include_config:
                     name = "ooasp_attribute_value"
                 else:
                     name = "ooasp_attr_value"
 
 
 
-            if not self.simplified_encodings:
+            if settings.include_config:
                 config=NameField(default=self.name)
             attr_name=ConstantField
             object_id=IntegerField
@@ -91,7 +89,7 @@ class  OOASPConfiguration:
             class Meta:
                 name = "ooasp_associated"
 
-            if not self.simplified_encodings:
+            if settings.include_config:
                 config=NameField(default=self.name)
             assoc_name=ConstantField
             object_id1=IntegerField
@@ -101,7 +99,7 @@ class  OOASPConfiguration:
             class Meta:
                 name = "ooasp_domain"
 
-            if not self.simplified_encodings:
+            if settings.include_config:
                 config=NameField(default=self.name)
             class_name=ConstantField
             object_id=IntegerField
@@ -111,7 +109,7 @@ class  OOASPConfiguration:
             class Meta:
                 name = "ooasp_cv"
 
-            if not self.simplified_encodings:
+            if settings.include_config:
                 config=NameField(default=self.name)
             name=ConstantField
             object_id=IntegerField
@@ -135,7 +133,7 @@ class  OOASPConfiguration:
                 User=User)
 
     @classmethod
-    def from_model(cls, name:str, kb: OOASPKnowledgeBase, model:Model, simplified_encodings=False):
+    def from_model(cls, name:str, kb: OOASPKnowledgeBase, model:Model):
         """
         Creates a configuration from a clingo model
             Parameters:
@@ -143,7 +141,7 @@ class  OOASPConfiguration:
                 kb: The knowledge base
                 model: The clingo model
         """
-        config= cls(name=name, kb = kb,simplified_encodings=simplified_encodings)
+        config= cls(name=name, kb = kb)
         config.fb = model.facts(unifier=config.unifiers_list,atoms=True,shown=True)
         return config
 
@@ -380,16 +378,10 @@ class  OOASPConfiguration:
         """
         ctl = Control(['--warn=none'])
         fbs = []
-        if self.simplified_encodings:
-            path = resources.files(ooasp.encodings_simple).joinpath("viz_config.lp")
-            ctl.load(str(path))
-            path = resources.files(ooasp.encodings_simple).joinpath("ooasp_aux_kb.lp")
-            ctl.load(str(path))
-        else:
-            path = resources.files(ooasp.encodings).joinpath("viz_config.lp")
-            ctl.load(str(path))
-            path = resources.files(ooasp.encodings).joinpath("ooasp_aux_kb.lp")
-            ctl.load(str(path))
+        path = settings.encodings_path.joinpath("viz_config.lp")
+        ctl.load(str(path))
+        path = settings.encodings_path.joinpath("ooasp_aux_kb.lp")
+        ctl.load(str(path))
 
         ctl.add("base",[],self.fb.asp_str())
         ctl.add("base",[],self.kb.fb.asp_str())

@@ -12,8 +12,7 @@ from typing import List
 from copy import deepcopy
 import ooasp.utils as utils
 from typing import List
-import ooasp.encodings
-import ooasp.encodings_simple
+import ooasp.settings as settings
 
 class State:
     """
@@ -37,14 +36,14 @@ class State:
         self.action = action
 
     @classmethod
-    def initial(cls, kb:OOASPKnowledgeBase, config_name:str, simplified_encodings:bool=False):
+    def initial(cls, kb:OOASPKnowledgeBase, config_name:str):
         """
         Creates the initial state
             Parameters:
                 kb: The Knowledge base
                 config_name: The name of the configuration
         """
-        return cls(OOASPConfiguration(config_name,kb,simplified_encodings),
+        return cls(OOASPConfiguration(config_name,kb),
             action="start",
             domain_size=0)
 
@@ -88,7 +87,7 @@ class InteractiveConfigurator:
             last_size_grounded (int): The last size that was grounded
     """
 
-    def __init__(self, kb:OOASPKnowledgeBase, config_name:str, additional_files:List=None, additional_prg:str="", simplified_encodings=False):
+    def __init__(self, kb:OOASPKnowledgeBase, config_name:str, additional_files:List=None, additional_prg:str=""):
         """
         Creates an interactive configuratior
             Parameters:
@@ -98,14 +97,13 @@ class InteractiveConfigurator:
         """
         self.kb = kb
         self.config_name = config_name
-        self.states = [State.initial(kb,config_name,simplified_encodings=simplified_encodings)]
+        self.states = [State.initial(kb,config_name)]
         self.additional_files = [] if additional_files is None else additional_files
         self.additional_prg = additional_prg
         self._time_grounding = 0
         self._time_solving = 0
         self._individual_ground_times = {}
         self._individual_solve_times = {}
-        self.simplified_encodings = simplified_encodings
         self._init_ctl()
         self.found_config = None
         self.brave_config = None
@@ -131,12 +129,8 @@ class InteractiveConfigurator:
                 f"-c kb_name={self.kb.name}"])
         self.ctl.add("base",[],self.kb.fb.asp_str())
         self.ctl.add("base",[],self.additional_prg)
-        if self.simplified_encodings:
-            path = resources.files(ooasp.encodings_simple).joinpath("ooasp.lp")
-            self.ctl.load(str(path))
-        else:
-            path = resources.files(ooasp.encodings).joinpath("ooasp.lp")
-            self.ctl.load(str(path))
+        file = settings.encodings_path.joinpath("ooasp.lp")
+        self.ctl.load(str(file))
         for f in self.additional_files:
             self.ctl.load(f)
         self._ground([("base",[])])
@@ -317,7 +311,7 @@ class InteractiveConfigurator:
             end = time.time()
             self._add_solving_time(end -start)
             found_config = OOASPConfiguration.from_model(self.state.config.name,
-                    self.kb, model, self.simplified_encodings)
+                    self.kb, model)
             return found_config
         except StopIteration:
             end = time.time()
@@ -400,7 +394,7 @@ class InteractiveConfigurator:
                 self.brave_config = None
                 raise RuntimeError("No available options for conflicting configuration")
             self.brave_config = OOASPConfiguration.from_model(self.state.config.name,
-                    self.kb, brave_model, simplified_encodings=self.simplified_encodings)
+                    self.kb, brave_model)
         return self.brave_config
 
     def _check(self)->bool:
@@ -419,7 +413,7 @@ class InteractiveConfigurator:
         with  self.ctl.solve(yield_=True) as hdn:
             for model in hdn:
                 self.state.config = OOASPConfiguration.from_model(self.state.config.name,
-                    self.kb, model, simplified_encodings=self.simplified_encodings)
+                    self.kb, model)
                 self.config.remove_user()
 
         return not self.config.has_cv

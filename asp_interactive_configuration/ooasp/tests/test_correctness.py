@@ -3,6 +3,14 @@
 
 from ooasp.interactive import InteractiveConfigurator
 from ooasp.kb import OOASPKnowledgeBase
+import pytest
+from importlib import reload
+@pytest.fixture(autouse=True)
+def overwrite_settings():
+    settings = reload(__import__("ooasp").settings)
+    settings.init('basic')
+    yield
+
 
 def test_racks_constraints_element():
     """ test element constraints """

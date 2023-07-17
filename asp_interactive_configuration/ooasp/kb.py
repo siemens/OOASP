@@ -9,9 +9,7 @@ from clorm import Predicate, ConstantField, IntegerField, FactBase, refine_field
 from clingraph.orm import Factbase
 from clingraph.graphviz import compute_graphs, render
 from clingraph.clingo_utils import ClingraphContext
-import ooasp.encodings
-import ooasp.encodings_simple
-
+import ooasp.settings as settings
 # pylint: disable=missing-class-docstring
 # pylint: disable=too-few-public-methods
 
@@ -24,14 +22,13 @@ class  OOASPKnowledgeBase:
             UNIFIERS (Namespace): All clorm unifiers (classes) used to link objects with predicates
     """
 
-    def __init__(self, name:str, simplified_encodings=False):
+    def __init__(self, name:str):
         """
         Creates a knowledge base
             Parameters:
                 name: The name of the knowledge base
         """
         self.name:str = name
-        self.simplified_encodings = simplified_encodings
         self.set_unifiers()
         self.fb = FactBase()
 
@@ -45,20 +42,20 @@ class  OOASPKnowledgeBase:
         class KBName(Predicate):
             class Meta:
                 name = "ooasp_kb"
-            if not self.simplified_encodings:
+            if settings.include_kb:
                 kb=NameField
 
         class Class(Predicate):
             class Meta:
                 name = "ooasp_class"
-            if not self.simplified_encodings:
+            if settings.include_kb:
                 kb=NameField
             name=ConstantField
 
         class SubClass(Predicate):
             class Meta:
                 name = "ooasp_subclass"
-            if not self.simplified_encodings:
+            if settings.include_kb:
                 kb=NameField
             sub_class=ConstantField
             super_class=ConstantField
@@ -66,7 +63,7 @@ class  OOASPKnowledgeBase:
         class Assoc(Predicate):
             class Meta:
                 name = "ooasp_assoc"
-            if not self.simplified_encodings:
+            if settings.include_kb:
                 kb=NameField
             name= ConstantField
             class1=ConstantField
@@ -81,11 +78,11 @@ class  OOASPKnowledgeBase:
 
         class Attr(Predicate):
             class Meta:
-                if not self.simplified_encodings:
+                if settings.include_kb:
                     name = "ooasp_attribute"
                 else:
                     name = "ooasp_attr"
-            if not self.simplified_encodings:
+            if settings.include_kb:
                 kb=NameField
             class_name=ConstantField
             name=ConstantField
@@ -93,11 +90,11 @@ class  OOASPKnowledgeBase:
 
         class AttrMin(Predicate):
             class Meta:
-                if not self.simplified_encodings:
+                if settings.include_kb:
                     name = "ooasp_attribute_minInclusive"
                 else:
                     name = "ooasp_attr_minInclusive"
-            if not self.simplified_encodings:
+            if settings.include_kb:
                 kb=NameField
             class_name=ConstantField
             name=ConstantField
@@ -105,11 +102,11 @@ class  OOASPKnowledgeBase:
 
         class AttrMax(Predicate):
             class Meta:
-                if not self.simplified_encodings:
+                if settings.include_kb:
                     name = "ooasp_attribute_maxInclusive"
                 else:
                     name = "ooasp_attr_maxInclusive"
-            if not self.simplified_encodings:
+            if settings.include_kb:
                 kb=NameField
             class_name=ConstantField
             name=ConstantField
@@ -117,11 +114,11 @@ class  OOASPKnowledgeBase:
 
         class AttrEnum(Predicate):
             class Meta:
-                if not self.simplified_encodings:
+                if settings.include_kb:
                     name = "ooasp_attribute_enum"
                 else:
                     name = "ooasp_attr_enum"
-            if not self.simplified_encodings:
+            if settings.include_kb:
                 kb=NameField
             class_name=ConstantField
             name=ConstantField
@@ -162,11 +159,11 @@ class  OOASPKnowledgeBase:
         self.fb.update(fb)
 
     @classmethod
-    def from_file(cls, name:str, file_path:str, simplified_encodings=False):
+    def from_file(cls, name:str, file_path:str):
         """
         Creates a knowledge base from a file
         """
-        kb = cls(name,simplified_encodings)
+        kb = cls(name)
         kb.load_facts_from_file(file_path)
         return kb
 
@@ -195,12 +192,8 @@ class  OOASPKnowledgeBase:
         """
         ctl = Control()
         fbs = []
-        if self.simplified_encodings:
-            path = resources.files(ooasp.encodings_simple).joinpath("viz_kb.lp")
-            ctl.load(str(path))
-        else:
-            path = resources.files(ooasp.encodings).joinpath("viz_kb.lp")
-            ctl.load(str(path))
+        path = settings.encodings_path.joinpath("viz_kb.lp")
+        ctl.load(str(path))
         ctl.add("base",[],self.fb.asp_str())
         ctl.ground([("base", [])],ClingraphContext())
         ctl.solve(on_model=lambda m: fbs.append(Factbase.from_model(m,default_graph="kb")))

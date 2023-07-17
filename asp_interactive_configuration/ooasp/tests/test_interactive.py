@@ -5,6 +5,13 @@ import pytest
 from clingo import parse_term
 from ooasp.kb import OOASPKnowledgeBase
 from ooasp.interactive import InteractiveConfigurator
+import pytest
+from importlib import reload
+@pytest.fixture(autouse=True)
+def overwrite_settings():
+    settings = reload(__import__("ooasp").settings)
+    settings.init('basic')
+    yield
 
 def test_interactive_extend_browse():
     racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb.lp")
