@@ -197,10 +197,13 @@ class InteractiveConfigurator:
     def _statistics(self):
         self._outdate_models()
         d ={
-            'Time grounding' : self._time_grounding,
-            'Time solving' : self._time_solving}
+            'time-grounding' : self._time_grounding,
+            'time-solving' : self._time_solving,
+            'per-domain-grounding':self._individual_ground_times,
+            'per-domain-solving':self._individual_solve_times
+            }
 
-        return  utils.pretty_dic(d)
+        return d
 
     def _ground(self, args):
         start = time.time()
