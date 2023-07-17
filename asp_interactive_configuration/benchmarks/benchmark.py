@@ -5,7 +5,8 @@ from ooasp.kb import OOASPKnowledgeBase
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-
+from ooasp import settings
+settings.init('paper')
 
 import functools
 import time
@@ -130,8 +131,8 @@ def plot_domain(bm_name, title, name):
 
 # --------- Functions to benchmark
 def new_iconf():
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb.lp")
-    return InteractiveConfigurator(racks_kb,"i1",["./examples/racks/constraints.lp"])
+    racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
+    return InteractiveConfigurator(racks_kb,"i1",[settings.racks_example_constraints])
 
 def extend_solve(ne):
     iconf = new_iconf()
@@ -163,6 +164,7 @@ def options_object(ne):
     # current limit
     iconf.extend_domain(ne)
     iconf.get_options()
+    iconf.show_options()
     return iconf
 
 # --------- Running benchmarks
@@ -196,12 +198,12 @@ def run_options(elements, objects=False):
 
     save_results(results,"options")
 
-# run_extend_solve(elements=[13,14,15,16,17,18])
+run_extend_solve(elements=[13,14,15,16,17,18])
 # run_incremental(elements=[8,9,10])
 run_options(elements=[12,13,14,15,16],objects=True)
 
 plot_gs("options", "Get options")
-# plot_gs("extend_solve", "Single")
+plot_gs("extend_solve", "Single")
 # plot_gs("incremental", "Extend incrementally")
 # plot_domain("incremental", "Extend incrementally (From 9 Elements)","9")
 # plot_domain("incremental", "Incremental (Domain 10)","10")

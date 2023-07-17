@@ -5,6 +5,9 @@ import pytest
 from clingo import parse_term
 from ooasp.kb import OOASPKnowledgeBase
 from ooasp.interactive import InteractiveConfigurator
+from ooasp import settings
+
+
 import pytest
 from importlib import reload
 @pytest.fixture(autouse=True)
@@ -14,7 +17,7 @@ def overwrite_settings():
     yield
 
 def test_interactive_extend_browse():
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb.lp")
+    racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
     iconf = InteractiveConfigurator(racks_kb,"i1")
     iconf.extend_domain(5)
     assert iconf.domain_size == 5
@@ -33,7 +36,7 @@ def test_interactive_extend_browse():
 
 
 def test_interactive_add_leaf_non_leafclass():
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb.lp")
+    racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
     iconf = InteractiveConfigurator(racks_kb,"i1")
 
     with pytest.raises(Exception) as e_info:
@@ -41,7 +44,7 @@ def test_interactive_add_leaf_non_leafclass():
     assert iconf.domain_size == 0
 
 def test_interactive_add_leaf_extend_browse():
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb.lp")
+    racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
     iconf = InteractiveConfigurator(racks_kb,"i1")
 
     iconf.new_leaf('frame')
@@ -63,7 +66,7 @@ def test_interactive_add_leaf_extend_browse():
 
 
 def test_interactive_extend_incrementally():
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb.lp")
+    racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
     iconf = InteractiveConfigurator(racks_kb,"i1")
     iconf.new_leaf('frame')
     found = iconf.extend_incrementally()
@@ -79,7 +82,7 @@ def test_interactive_extend_incrementally():
     assert len(iconf.states)==3
 
 def test_interactive_select_full():
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb.lp")
+    racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
     iconf = InteractiveConfigurator(racks_kb,"i1")
     iconf.new_leaf('frame')
     found = iconf.extend_incrementally()
@@ -94,7 +97,7 @@ def test_interactive_select_full():
     assert "ooasp_isa_leaf(i1,frame,6)." in found_new.fb.asp_str()
 
 def test_interactive_check():
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb.lp")
+    racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
     iconf = InteractiveConfigurator(racks_kb,"i1")
     iconf.check()
     assert len(iconf.config.constraint_violations) == 0
@@ -112,8 +115,8 @@ def test_interactive_check():
 
 
 def test_interactive_check_custom_cv():
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb.lp")
-    iconf = InteractiveConfigurator(racks_kb,"i1",["./examples/racks/constraints.lp"])
+    racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
+    iconf = InteractiveConfigurator(racks_kb,"i1",[settings.racks_example_constraints])
     iconf.check()
     assert len(iconf.config.constraint_violations) == 0
     iconf.new_leaf('frame')
@@ -128,8 +131,8 @@ def test_interactive_check_custom_cv():
 
 
 def test_interactive_select():
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb.lp")
-    iconf = InteractiveConfigurator(racks_kb,"i1",["./examples/racks/constraints.lp"])
+    racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
+    iconf = InteractiveConfigurator(racks_kb,"i1",[settings.racks_example_constraints])
     iconf.extend_domain(1)
     iconf.select_leaf_class(1,'frame')
     leafs = iconf.config.leafs
@@ -157,8 +160,8 @@ def test_interactive_select():
 
 
 def test_options():
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb.lp")
-    iconf = InteractiveConfigurator(racks_kb,"i1",["./examples/racks/constraints.lp"])
+    racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
+    iconf = InteractiveConfigurator(racks_kb,"i1",[settings.racks_example_constraints])
     iconf.extend_domain(1)
 
     brave_conf = iconf.get_options()
@@ -213,7 +216,7 @@ def test_options():
 
 def test_json():
 
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb.lp")
+    racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
     print(racks_kb)
-    iconf = InteractiveConfigurator(racks_kb,"i1",["./examples/racks/constraints.lp"])
+    iconf = InteractiveConfigurator(racks_kb,"i1",[settings.racks_example_constraints])
     print(iconf)

@@ -1,0 +1,52 @@
+{
+    "12": {
+        "time": 0.10176956653594971,
+        "time-solving": 0.0,
+        "time-grounding": 0.07642126083374023,
+        "per-domain-grounding": {
+            "0": 0.0029920339584350586,
+            "12": 0.00615847110748291
+        },
+        "per-domain-solving": {}
+    },
+    "13": {
+        "time": 0.15124499797821045,
+        "time-solving": 0.0,
+        "time-grounding": 0.09014368057250977,
+        "per-domain-grounding": {
+            "0": 0.0035560131072998047,
+            "13": 0.006194353103637695
+        },
+        "per-domain-solving": {}
+    },
+    "14": {
+        "time": 0.12859249114990234,
+        "time-solving": 0.0,
+        "time-grounding": 0.09844434261322021,
+        "per-domain-grounding": {
+            "0": 0.004224896430969238,
+            "14": 0.007082939147949219
+        },
+        "per-domain-solving": {}
+    },
+    "15": {
+        "time": 0.12421905994415283,
+        "time-solving": 0.0,
+        "time-grounding": 0.09751272201538086,
+        "per-domain-grounding": {
+            "0": 0.0032389163970947266,
+            "15": 0.005673408508300781
+        },
+        "per-domain-solving": {}
+    },
+    "16": {
+        "time": 0.13437604904174805,
+        "time-solving": 0.0,
+        "time-grounding": 0.10360848903656006,
+        "per-domain-grounding": {
+            "0": 0.0035480260848999023,
+            "16": 0.005877852439880371
+        },
+        "per-domain-solving": {}
+    }
+}
