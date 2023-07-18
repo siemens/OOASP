@@ -4,9 +4,10 @@ from ooasp.interactive import InteractiveConfigurator
 from ooasp.kb import OOASPKnowledgeBase
 import numpy as np
 import pandas as pd
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 from ooasp import settings
-settings.init('paper')
+settings.init('basic')
 
 import functools
 import time
@@ -87,23 +88,36 @@ def get_results(name="bm"):
 
 # --------- Plotting
 
+import matplotlib.colors as colors
+solving_cm = mpl.colormaps['Pastel2'].resampled(8)
+grounding_cm = mpl.colormaps['Set2'].resampled(8)
 
-def plot_gs(bm_name, title):
+def plot_gs(bm_names, title):
     plt.clf()
-    data_dic = get_results(bm_name)
-    df = pd.DataFrame.from_dict(data_dic, orient="index")
-    df['name']=df.index
-    df=df.reset_index()
-    plt.bar(df.index,df['time'],color='lightsteelblue',width=0.3)
-    plt.bar(df.index,df['time-grounding'],color='tan',width=0.3)
+    dfs = {}
+    width = 0.25
+    for bm_name in bm_names:
+        data_dic = get_results(bm_name)
+        df = pd.DataFrame.from_dict(data_dic, orient="index")
+        df['name']=df.index
+        df=df.reset_index()
+        dfs[bm_name]=df
+    pos = 0
+    for bm_name, df in dfs.items():
+        plt.bar(df.index+(width*pos),df['time'],color=solving_cm(pos),width=width)
+        plt.bar(df.index+(width*pos),df['time-grounding'],color=grounding_cm(pos),width=width)
+        pos+=1
+
     plt.ylabel('Time (sec)')
     plt.xlabel('#elements')
     plt.title(title)
-    plt.legend(['solving','grounding'])
+    legends = []
+    for bm_name in dfs.keys():
+        legends+=[f'solving {bm_name}', f'grounding {bm_name}']
+    plt.legend(legends)
     plt.xticks(df.index,df['name'])
     plt.savefig(f'benchmarks/results/{title}.png')
     # plt.show()
-
 
 
 def plot_domain(bm_name, title, name):
@@ -187,7 +201,7 @@ def run_incremental(elements):
 
     save_results(results,"incremental")
 
-def run_options(elements, objects=False):
+def run_options(elements, objects=False, name = "options"):
     n_runs =2
     results = []
     for r in elements:
@@ -196,14 +210,18 @@ def run_options(elements, objects=False):
         else:
             results.append(BM(n_runs,r,options,ne=r))
 
-    save_results(results,"options")
+    save_results(results,name)
 
-run_extend_solve(elements=[13,14,15,16,17,18])
+# run_extend_solve(elements=[13,14,15,16,17,18])
 # run_incremental(elements=[8,9,10])
-run_options(elements=[12,13,14,15,16],objects=True)
+# run_options(elements=[12,13,14,15,16],objects=True, name="options_basic")
 
-plot_gs("options", "Get options")
-plot_gs("extend_solve", "Single")
+# plot_gs("options_basic", "Get options basic")
+# plot_gs("extend_solve", "Single")
 # plot_gs("incremental", "Extend incrementally")
 # plot_domain("incremental", "Extend incrementally (From 9 Elements)","9")
 # plot_domain("incremental", "Incremental (Domain 10)","10")
+
+
+plot_gs(["basic/options_basic","paper/options_paper"],"Options Normal vs Paper")
+plot_gs(["basic/incremental","paper/incremental"],"Incremental Normal vs Paper")
