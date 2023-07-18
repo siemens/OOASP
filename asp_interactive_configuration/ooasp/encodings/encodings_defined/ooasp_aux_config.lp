@@ -1,12 +1,12 @@
 % Copyright (c) 2022 Siemens AG Oesterreich
 % SPDX-License-Identifier: MIT
 
-#program domain(new_object).
+#program domain(new_object, cls).
 
 #external active(new_object). % Active id for arity constraints
 
 
-ooasp_domain(object,new_object).
+ooasp_domain(cls,new_object).
 
 % Transitive closure for the new id
 ooasp_isa(LEAFCLASS,new_object) :-

@@ -224,6 +224,16 @@ class  OOASPConfiguration:
         input_facts = list(self.fb.query(self.UNIFIERS.User).select(self.UNIFIERS.User.predicate).all())
         return [f.symbol for f in input_facts]
 
+    def domains_from(self, start_domain)->int:
+        """
+        The domain size, it is computed by counting the number of objects in the fact base.
+        """
+        q = self.fb.query(self.UNIFIERS.Domain)
+        q = q.where(self.UNIFIERS.Domain.object_id>start_domain)
+        q = q.select(self.UNIFIERS.Domain.class_name,self.UNIFIERS.Domain.object_id)
+        return list(q.all())
+
+
     def remove_user(self)->None:
         """
         Removes all user predicates from the configuration

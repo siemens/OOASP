@@ -1,7 +1,7 @@
 % Copyright (c) 2022 Siemens AG Oesterreich
 % SPDX-License-Identifier: MIT
 
-#program domain(new_object).
+#program domain(new_object, cls).
 
 :- ooasp_isa_leaf(C1,new_object),
       ooasp_isa_leaf(C2,ID),

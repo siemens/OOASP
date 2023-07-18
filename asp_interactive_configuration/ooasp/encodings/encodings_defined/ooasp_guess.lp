@@ -2,7 +2,7 @@
 % SPDX-License-Identifier: MIT
 
 
-#program domain(new_object).
+#program domain(new_object, cls).
 
 { ooasp_isa_leaf(LEAFCLASS,new_object):
 		ooasp_leafclass(LEAFCLASS),

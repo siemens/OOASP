@@ -212,10 +212,15 @@ class InteractiveConfigurator:
         """
         if self.domain_size == self.last_size_grounded:
             return
-        for s in range(self.last_size_grounded+1,self.domain_size+1):
+        domains = self.config.domains_from(self.last_size_grounded)
+        for cls, s in domains:
             if s>1:
                 self.ctl.release_external(Function("active", [Number(s-1)]))
-            self._ground([("domain",[Number(s)])])
+            if settings.ground_cls:
+                self._ground([("domain",[Number(s),Function(cls, [])])])
+            else:
+                self._ground([("domain",[Number(s)])])
+
             self.ctl.assign_external(Function("active", [Number(s)]), True)
         self.last_size_grounded=s
 
@@ -269,14 +274,14 @@ class InteractiveConfigurator:
         """
         self.ctl.add("domain",[str(self.domain_size)],str(fact)+".")
 
-    def _extend_domain(self)->None:
+    def _extend_domain(self, cls='object')->None:
         """
         Increases the domain size by one and adds a new domain(object,N) fact to
         the configuration.
         """
         self.state.domain_size+=1
         self._outdate_models()
-        self.config.add_domain('object',self.state.domain_size)
+        self.config.add_domain(cls,self.state.domain_size)
 
 
     # --------- Browsing
@@ -579,7 +584,7 @@ class InteractiveConfigurator:
             raise e
 
 
-    def extend_domain(self,num:int=1)->None:
+    def extend_domain(self,num:int=1,cls='object')->None:
         """
         Creates a state with a new configuration.
         Increases the domain size and adds a new domain(object,N) fact to
@@ -590,7 +595,7 @@ class InteractiveConfigurator:
         self._new_state(f"Extended domain by {num} ",deep=True)
         next_num_objects = self.state.domain_size + num
         for i in range(self.state.domain_size+1,next_num_objects+1):
-            self._extend_domain()
+            self._extend_domain(cls=cls)
 
     def new_leaf(self,leaf_class:str)->None:
         """
