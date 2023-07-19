@@ -6,7 +6,7 @@
 
 { ooasp_isa_leaf(LEAFCLASS,new_object):
 		ooasp_leafclass(LEAFCLASS),
-  		ooasp_subclass(LEAFCLASS,C) } 1:-
+  		ooasp_can_be(C,new_object) } 1:-
   	ooasp_domain(C,new_object),
 	guess.
 

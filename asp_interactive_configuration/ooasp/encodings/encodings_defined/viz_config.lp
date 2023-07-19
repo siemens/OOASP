@@ -15,7 +15,7 @@ attr(graph, config, (label,1), Config):-ooasp_configuration(KB,Config).
 
 % Objects without class as Nodes
 domain_node(Class,Object_id) :- ooasp_domain(Class,Object_id), not ooasp_isa_leaf(_,Object_id).
-leaf_node(Class,Object_id) :- ooasp_isa_leaf(Class,Object_id), ooasp_class(_,Class).
+leaf_node(Class,Object_id) :- ooasp_isa_leaf(Class,Object_id), ooasp_class(Class).
 any_node(Class,Object_id):- domain_node(Class,Object_id).
 any_node(Class,Object_id):- leaf_node(Class,Object_id).
 node(Object_id) :- any_node(_,Object_id).
@@ -25,7 +25,7 @@ attr(node, Object_id, label, @concat("<<TABLE BORDER='0' CELLBORDER='1' CELLSPAC
                                         "<TR><TD><B>{{class}} ({{id}})</B></TD></TR><TR><TD ALIGN='right'> ",
                                         "{% set attr = attr|default({}) %}{% for k, v in attr.items() %}{{v}} {% endfor %}",
                                         "</TD></TR></TABLE>>")):- any_node(_,Object_id).
-attr(node, Object_id,  (label,class), @stringify(Class_name)):- any_node(Class_name,Object_id).
+attr(node, Object_id,  (label,class), @stringify(Class_name,true)):- any_node(Class_name,Object_id).
 attr(node, Object_id,  (label,id), Object_id):- any_node(Class_name,Object_id).
 attr(node, Object_id, style, "filled"):- any_node(_,Object_id).
 

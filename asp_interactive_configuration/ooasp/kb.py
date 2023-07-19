@@ -167,6 +167,15 @@ class  OOASPKnowledgeBase:
         kb.load_facts_from_file(file_path)
         return kb
 
+    def direct_superclasses(self, class_name:str)->List:
+        """
+        Gets all the direct superclsses of a class
+            Parameters:
+                class_name: The name of the subclass
+        """
+        SubClass= self.UNIFIERS.SubClass
+        return list(self.fb.query(SubClass).where(SubClass.sub_class == class_name).select(SubClass.super_class).all())
+
     def direct_subclasses(self, class_name:str)->List:
         """
         Gets all the direct subclasses of a class
@@ -175,6 +184,26 @@ class  OOASPKnowledgeBase:
         """
         SubClass= self.UNIFIERS.SubClass
         return list(self.fb.query(SubClass).where(SubClass.super_class == class_name).select(SubClass.sub_class).all())
+
+
+    def associations(self, class_name:str)->List:
+        """
+        Gets all the associations of a class
+            Parameters:
+                class_name: The name of the class
+        """
+        SubClass= self.UNIFIERS.SubClass
+        Assoc= self.UNIFIERS.Assoc
+        super_classes = self.direct_superclasses(class_name)
+        assocs = set()
+        for sc in super_classes:
+            super_assoc = self.associations(sc)
+            assocs.update(super_assoc)
+        left = set(self.fb.query(Assoc).where(Assoc.class1 == class_name).select(Assoc.name, Assoc.class2, Assoc.min2, Assoc.max2).all())
+        right = set(self.fb.query(Assoc).where(Assoc.class2 == class_name).select(Assoc.name, Assoc.class1, Assoc.min1, Assoc.max1).all())
+        assocs.update(left)
+        assocs.update(right)
+        return assocs
 
 
     def is_leaf(self, class_name:str)->bool:

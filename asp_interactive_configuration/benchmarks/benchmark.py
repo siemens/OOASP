@@ -7,7 +7,7 @@ import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from ooasp import settings
-opt = 'basic'
+opt = 'defined'
 settings.init(opt)
 
 import functools
@@ -93,6 +93,7 @@ def extend_solve(ne):
     iconf = new_iconf()
     # current limit
     if opt == 'defined':
+        # TODO fix
         iconf.extend_domain(ne, "elementA")
     else:
         for i in range(ne):
@@ -104,9 +105,15 @@ def extend_solve(ne):
 def incremental(ne):
     iconf = new_iconf()
     # current limit
-    for i in range(ne):
-        iconf.new_leaf("elementA")
-    iconf.extend_incrementally()
+    if opt == 'defined':
+        for i in range(ne):
+            iconf.extend_domain(1, "elementA")
+            iconf.select_leaf_class(i+1, "elementA")
+    else:
+        for i in range(ne):
+            iconf.new_leaf("elementA")
+    found = iconf.extend_incrementally()
+    print(found)
     return iconf
 
 def options(ne):

@@ -234,3 +234,62 @@ def test_s_json():
 
     racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
     iconf = InteractiveConfigurator(racks_kb,"i1",[settings.racks_example_constraints])
+
+
+
+
+def test_normal_extend():
+    racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
+    iconf = InteractiveConfigurator(racks_kb,"i1")
+    iconf.new_leaf('rackSingle')
+    print(iconf)
+    found = iconf.extend_incrementally()
+
+    assert found
+    assert iconf.domain_size == 5
+    assert "ooasp_domain(object,1)." in iconf.config.fb.asp_str()
+    assert "ooasp_isa_leaf(rackSingle,1)." in iconf.config.fb.asp_str()
+    # assert "ooasp_domain(object,3)." in iconf.config.fb.asp_str()
+    # assert "ooasp_domain(object,4)." in iconf.config.fb.asp_str()
+    # assert "ooasp_domain(object,5)." in iconf.config.fb.asp_str()
+    # found = iconf.next_solution()
+    # assert found
+    # assert len(iconf.states)==3
+
+def test_extend_propagate():
+    racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
+    iconf = InteractiveConfigurator(racks_kb,"i1")
+    iconf.extend_domain(1,cls='rackSingle',propagate=True)
+    iconf.select_leaf_class(1, 'rackSingle')
+    conf_str = iconf.config.fb.asp_str()
+    assert 'ooasp_domain(rackSingle,1).' in conf_str
+    assert 'ooasp_domain(frame,2).'  in conf_str
+    assert 'ooasp_domain(frame,3).'  in conf_str
+    assert 'ooasp_domain(frame,4).'  in conf_str
+    assert 'ooasp_domain(frame,5).'  in conf_str
+    print(iconf)
+    found = iconf.next_solution()
+    assert found
+    # found = iconf.extend_incrementally()
+    print(found)
+    conf_str = found.fb.asp_str()
+
+    assert 'ooasp_isa_leaf(rackSingle,1).' in conf_str
+    assert 'ooasp_isa_leaf(frame,2).' in conf_str
+
+    assert 'ooasp_associated(rack_frames,1,2).'  in conf_str
+    assert 'ooasp_associated(rack_frames,1,3).'  in conf_str
+    assert 'ooasp_associated(rack_frames,1,4).'  in conf_str
+    assert 'ooasp_associated(rack_frames,1,5)'  in conf_str
+
+    # iconf = InteractiveConfigurator(racks_kb,"i1")
+    # iconf.extend_domain(1,cls='element',propagate=True)
+    # conf_str = iconf.config.fb.asp_str()
+    # assert 'ooasp_domain(element,1).' in conf_str
+    # assert 'ooasp_domain(module,2).' in conf_str
+    # assert 'ooasp_domain(frame,3).' in conf_str
+    # assert 'ooasp_domain(rack,4).' in conf_str
+    # assert 'ooasp_associated(rack_frames,3,4).' in conf_str
+    # assert 'ooasp_associated(frame_modules,2,3).' in conf_str
+    # assert 'ooasp_associated(element_modules,1,2)' in conf_str
+

@@ -4,13 +4,13 @@
 import pytest
 from ooasp.kb import OOASPKnowledgeBase
 import ooasp.settings as settings
-settings.init('basic')
+settings.init('defined')
 import pytest
 from importlib import reload
 @pytest.fixture(autouse=True)
 def overwrite_settings():
     settings = reload(__import__("ooasp").settings)
-    settings.init('basic')
+    settings.init('defined')
     yield
 
 def test_kb_create():
@@ -40,5 +40,19 @@ def test_kb_is_leaf():
 
 def test_kb_superclasses():
     racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
-    super = racks_kb.direct_superclasses('frame')
-    print(super)
+    assert racks_kb.direct_superclasses('moduleI') == ['module']
+    sub =  racks_kb.direct_subclasses('module')
+    assert 'moduleI' in sub
+    assert 'moduleII' in sub
+    assert 'moduleIII' in sub
+    assert 'moduleIV' in sub
+    assert 'moduleV' in sub
+    assert racks_kb.direct_superclasses('frame') == ['object']
+
+def test_kb_assoc():
+    racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
+    assoc =  racks_kb.associations('module')
+    assoc1 =  racks_kb.associations('moduleI')
+    assert ('frame_modules', 'frame', 1, 1) in assoc
+    assert ('element_modules', 'element', 0, 1) in assoc
+    assert assoc == assoc1

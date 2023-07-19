@@ -214,6 +214,8 @@ class InteractiveConfigurator:
             return
         domains = self.config.domains_from(self.last_size_grounded)
         for cls, s in domains:
+            # print(f"Grounding {cls} {s}")
+            # print([("domain",[Number(s),Function(cls, [])])])
             if s>1:
                 self.ctl.release_external(Function("active", [Number(s-1)]))
             if settings.ground_cls:
@@ -252,7 +254,11 @@ class InteractiveConfigurator:
         Sets all partial configuration as user externals to True.
         This uses special predicate `user/1`
         """
+        # print(self.config.editable_facts)
         for f in self.config.editable_facts:
+            # print("Assigning")
+            # print(Function("user",[f.symbol]))
+            # self.ctl.assign_external(Function("random",[]), True)
             self.ctl.assign_external(Function("user",[f.symbol]), True)
 
     def _falsify_user_externals(self,facts:List)->None:
@@ -274,14 +280,35 @@ class InteractiveConfigurator:
         """
         self.ctl.add("domain",[str(self.domain_size)],str(fact)+".")
 
-    def _extend_domain(self, cls='object')->None:
+    def _create_associations(self, cls:str, object_id:int, ignore_cls:List=None)->None:
+        if ignore_cls is None:
+            ignore_cls = set()
+        assocs = self.config.kb.associations(cls)
+        assocs_added = []
+        for name, class2, min, max in assocs:
+            if name in ignore_cls:
+                continue
+            assocs_added.append(name)
+            for _ in range(min):
+                object_id2 = self._extend_domain(class2,True,assocs_added)
+                # self.config.add_association(name,object_id,object_id2)
+
+
+
+
+    def _extend_domain(self, cls='object',propagate=False, ignore_cls:List=None)->int:
         """
         Increases the domain size by one and adds a new domain(object,N) fact to
         the configuration.
         """
         self.state.domain_size+=1
         self._outdate_models()
-        self.config.add_domain(cls,self.state.domain_size)
+        new_object = self.state.domain_size
+        self.config.add_domain(cls,new_object)
+        if propagate:
+            self._create_associations(cls, new_object,ignore_cls)
+        return new_object
+
 
 
     # --------- Browsing
@@ -313,12 +340,15 @@ class InteractiveConfigurator:
         start = time.time()
         try:
             model = next(self.solution_iterator)
+            # print("found model")
+            # print(model)
             end = time.time()
             self._add_solving_time(end -start)
             found_config = OOASPConfiguration.from_model(self.state.config.name,
                     self.kb, model)
             return found_config
         except StopIteration:
+            # print("No model")
             end = time.time()
             self._add_solving_time(end -start)
             self.hdn.cancel()
@@ -584,7 +614,7 @@ class InteractiveConfigurator:
             raise e
 
 
-    def extend_domain(self,num:int=1,cls='object')->None:
+    def extend_domain(self,num:int=1,cls='object',propagate=False)->None:
         """
         Creates a state with a new configuration.
         Increases the domain size and adds a new domain(object,N) fact to
@@ -595,7 +625,7 @@ class InteractiveConfigurator:
         self._new_state(f"Extended domain by {num} ",deep=True)
         next_num_objects = self.state.domain_size + num
         for i in range(self.state.domain_size+1,next_num_objects+1):
-            self._extend_domain(cls=cls)
+            self._extend_domain(cls=cls,propagate=propagate)
 
     def new_leaf(self,leaf_class:str)->None:
         """

@@ -5,8 +5,10 @@
 
 #external active(new_object). % Active id for arity constraints
 
-
 ooasp_domain(cls,new_object).
+
+ooasp_can_be(cls,new_object):-ooasp_domain(cls,new_object).
+ooasp_can_be(C,new_object):-ooasp_domain(cls,new_object), ooasp_subclass(C,cls).
 
 % Transitive closure for the new id
 ooasp_isa(LEAFCLASS,new_object) :-
