@@ -7,8 +7,10 @@
       ooasp_isa_leaf(C2,ID),
       ID<new_object,
       C1<C2,
-      not user(ooasp_isa_leaf(C1,new_object)),
-      not user(ooasp_isa_leaf(C2,ID)).
+      ooasp_domain(object,new_object),
+      ooasp_domain(object,ID),
+      not user(ooasp_isa(_,new_object)),
+      not user(ooasp_isa(_,ID)).
 
 :- ooasp_isa_leaf(_,new_object),
       not ooasp_isa_leaf(_,ID),

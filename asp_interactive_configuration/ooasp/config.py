@@ -70,6 +70,14 @@ class  OOASPConfiguration:
             class_name=ConstantField
             object_id=IntegerField
 
+        class Object(Predicate):
+            class Meta:
+                name = "ooasp_isa"
+            if settings.include_config:
+                config=NameField(default=self.name)
+            class_name=ConstantField
+            object_id=IntegerField
+
         class AttributeValue(Predicate):
             class Meta:
                 if settings.include_config:
@@ -130,7 +138,8 @@ class  OOASPConfiguration:
                 ConfigObject=ConfigObject,
                 Domain=Domain,
                 CV=CV,
-                User=User)
+                User=User,
+                Object=Object)
 
     @classmethod
     def from_model(cls, name:str, kb: OOASPKnowledgeBase, model:Model):
@@ -169,17 +178,17 @@ class  OOASPConfiguration:
     @property
     def editable_unifiers(self)->List:
         """
-        List of all unifier classes that are editable: Leaf,AttributeValue,Association
+        List of all unifier classes that are editable: Object,AttributeValue,Association
         """
-        return [self.UNIFIERS.Leaf,self.UNIFIERS.AttributeValue,self.UNIFIERS.Association]
+        return [self.UNIFIERS.Object,self.UNIFIERS.AttributeValue,self.UNIFIERS.Association]
 
     @property
     def editable_facts(self)->List[Predicate]:
         """
         The list of all facts in the fact base that are editable.
-        Editable facts are leaf class, attribute value and associations.
+        Editable facts are object class, attribute value and associations.
         """
-        return self.associations + self.leafs + self.attribute_values
+        return self.associations + self.objects + self.attribute_values
 
     @property
     def assumptions(self)->List[Symbol]:
@@ -201,6 +210,13 @@ class  OOASPConfiguration:
         The list of leafs
         """
         return list(self.fb.query(self.UNIFIERS.Leaf).all())
+
+    @property
+    def objects(self)->List[Predicate]:
+        """
+        The list of objects
+        """
+        return list(self.fb.query(self.UNIFIERS.Object).all())
 
     @property
     def constraint_violations(self)->List[Predicate]:
@@ -262,21 +278,21 @@ class  OOASPConfiguration:
         self.fb.add(fact)
         return fact
 
-    def add_leaf(self,object_id:int, class_name:str)->Predicate:
+    def add_object(self,object_id:int, class_name:str)->Predicate:
         """
-        Adds a new leaf predicate to the factbase
+        Adds a new object predicate to the factbase
             Parameters:
                 object_id: The identifier for the object
                 class_name: The class name
             Returns:
                 The added fact
             Throws:
-                Exception if the class of the given name is not a leaf class
+                Exception if the class of the given name is not a object class
         """
-        if not self.kb.is_leaf(class_name):
-            raise RuntimeError(f"{class_name} is not a leaf class")
+        if not self.kb.is_class(class_name):
+            raise RuntimeError(f"{class_name} is not a class")
 
-        fact = self.UNIFIERS.Leaf(class_name=class_name,object_id=object_id)
+        fact = self.UNIFIERS.Object(class_name=class_name,object_id=object_id)
         self.fb.add(fact)
         return fact
 
@@ -312,19 +328,19 @@ class  OOASPConfiguration:
         self.fb.add(fact)
         return fact
 
-    def remove_leaf(self, object_id)->List[Predicate]:
+    def remove_object(self, object_id)->List[Predicate]:
         """
-        Removes any leaf predicates from the factbase associated to the object id
+        Removes any object predicates from the factbase associated to the object id
             Parameters:
                 object_id: The identifier for the object
             Returns:
                 The list of removed facts
         """
-        Leaf = self.UNIFIERS.Leaf
-        q = self.fb.query(Leaf).where(Leaf.object_id == object_id)
-        leafs = list(q.all())
-        self._remove_facts(leafs)
-        return leafs
+        Object = self.UNIFIERS.Object
+        q = self.fb.query(Object).where(Object.object_id == object_id)
+        objects = list(q.all())
+        self._remove_facts(objects)
+        return objects
 
     def remove_value(self, object_id:id, attr_name:str)->List[Predicate]:
         """

@@ -6,15 +6,9 @@
 %--------
 %  Externals for user selections to allow checks of partial rations
 %--------
-#external user(ooasp_isa_leaf(C,new_object)):
-	ooasp_leafclass(C),
+#external user(ooasp_isa(C,new_object)):
 	ooasp_domain(cls,new_object),
-	ooasp_can_be(C,new_object).
-
-% #external user(ooasp_isa_leaf(cls,new_object)):
-	% ooasp_leafclass(cls),
-	% ooasp_domain(cls,new_object).
-
+	ooasp_subclass_ref(C,cls).
 
 #external user(ooasp_associated(AS,new_object,ID2)):
 	ooasp_domain(C,ID2),
@@ -27,8 +21,8 @@
 #external user(ooasp_attr_value(A,new_object,V)):
 	ooasp_attr_enum(_,A,V).
 
-ooasp_isa_leaf(LEAFCLASS,new_object) :-
-	user(ooasp_isa_leaf(LEAFCLASS,new_object)).
+ooasp_isa(C,new_object) :-
+	user(ooasp_isa(C,new_object)).
 ooasp_associated(AS,new_object,ID2) :-
 	user(ooasp_associated(AS,new_object,ID2)).
 ooasp_associated(AS,ID1,new_object) :-

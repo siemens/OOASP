@@ -14,30 +14,38 @@ attr(graph, config, (label,0), "Configuration "):-ooasp_configuration(KB,Config)
 attr(graph, config, (label,1), Config):-ooasp_configuration(KB,Config).
 
 % Objects without class as Nodes
-domain_node(Class,Object_id) :- ooasp_domain(Class,Object_id), not ooasp_isa_leaf(_,Object_id).
+domain_node(Class,Object_id) :- ooasp_domain(Class,Object_id), not ooasp_isa(_,Object_id).
+isa_node(Class,Object_id) :- ooasp_domain(Class,Object_id), ooasp_isa(_,Object_id), not ooasp_isa_leaf(_,Object_id).
 leaf_node(Class,Object_id) :- ooasp_isa_leaf(Class,Object_id), ooasp_class(Class).
 any_node(Class,Object_id):- domain_node(Class,Object_id).
 any_node(Class,Object_id):- leaf_node(Class,Object_id).
+any_node(Class,Object_id):- isa_node(Class,Object_id).
 node(Object_id) :- any_node(_,Object_id).
 
 % All nodes
 attr(node, Object_id, label, @concat("<<TABLE BORDER='0' CELLBORDER='1' CELLSPACING='0' CELLPADDING='1'>",
-                                        "<TR><TD><B>{{class}} ({{id}})</B></TD></TR><TR><TD ALIGN='right'> ",
+                                        "<TR><TD><B><FONT COLOR='{{color}}'>{{class}} ({{id}})</FONT></B></TD></TR><TR><TD ALIGN='right'> ",
                                         "{% set attr = attr|default({}) %}{% for k, v in attr.items() %}{{v}} {% endfor %}",
                                         "</TD></TR></TABLE>>")):- any_node(_,Object_id).
 attr(node, Object_id,  (label,class), @stringify(Class_name,true)):- any_node(Class_name,Object_id).
+attr(node, Object_id,  (label,color), black):- node(Object_id), not domain_node(_,Object_id).
+attr(node, Object_id,  (label,color), grey):- node(Object_id), domain_node(_,Object_id).
 attr(node, Object_id,  (label,id), Object_id):- any_node(Class_name,Object_id).
 attr(node, Object_id, style, "filled"):- any_node(_,Object_id).
 
 % Domain nodes
-attr(node, Object_id, fillcolor, "#E7D5EA"):- domain_node(_,Object_id).
-attr(node, Object_id, color, "black"):- domain_node(_,Object_id).
+attr(node, Object_id, fillcolor, "#C4C4C420"):- domain_node(_,Object_id).
+attr(node, Object_id, color, "#C4C4C4"):- domain_node(_,Object_id).
+
+% Is a nodes
+attr(node, Object_id, fillcolor, "#E7D5EA"):- isa_node(_,Object_id).
+% attr(node, Object_id, color, "black"):- isa_node(_,Object_id).
 
 % Leaf nodes
 attr(node, T, fillcolor, "#D2D2E0"):- leaf_node(_,T).
 
 % Node border
-attr(node, T, color, "black"):- node(T).
+attr(node, T, color, "black"):- node(T), not domain_node(_,T).
 attr(node, T, margin, 0):- node(T).
 attr(node, T, width, 0):- node(T).
 attr(node, T, hight, 0):- node(T).

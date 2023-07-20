@@ -14,6 +14,10 @@ import ooasp.utils as utils
 from typing import List
 import ooasp.settings as settings
 
+def log(x):
+    # print(x)
+    return
+
 class State:
     """
     Represents a State in the process of an interactive configuration,
@@ -214,8 +218,7 @@ class InteractiveConfigurator:
             return
         domains = self.config.domains_from(self.last_size_grounded)
         for cls, s in domains:
-            # print(f"Grounding {cls} {s}")
-            # print([("domain",[Number(s),Function(cls, [])])])
+            log(f"Grounding {cls} {s}")
             if s>1:
                 self.ctl.release_external(Function("active", [Number(s-1)]))
             if settings.ground_cls:
@@ -254,10 +257,10 @@ class InteractiveConfigurator:
         Sets all partial configuration as user externals to True.
         This uses special predicate `user/1`
         """
-        # print(self.config.editable_facts)
+        log(self.config.editable_facts)
         for f in self.config.editable_facts:
-            # print("Assigning")
-            # print(Function("user",[f.symbol]))
+            log("Assigning")
+            log(Function("user",[f.symbol]))
             # self.ctl.assign_external(Function("random",[]), True)
             self.ctl.assign_external(Function("user",[f.symbol]), True)
 
@@ -340,15 +343,15 @@ class InteractiveConfigurator:
         start = time.time()
         try:
             model = next(self.solution_iterator)
-            # print("found model")
-            # print(model)
+            log("found model")
+            log(model)
             end = time.time()
             self._add_solving_time(end -start)
             found_config = OOASPConfiguration.from_model(self.state.config.name,
                     self.kb, model)
             return found_config
         except StopIteration:
-            # print("No model")
+            log("No model")
             end = time.time()
             self._add_solving_time(end -start)
             self.hdn.cancel()
@@ -446,10 +449,15 @@ class InteractiveConfigurator:
         self._set_user_externals()
         self.ctl.configuration.solve.enum_mode = 'auto'
         with  self.ctl.solve(yield_=True) as hdn:
+            sat = False
             for model in hdn:
+                sat = True
+                log(model)
                 self.state.config = OOASPConfiguration.from_model(self.state.config.name,
                     self.kb, model)
                 self.config.remove_user()
+            if not sat:
+                raise RuntimeError("Got UNSAT while checking for cvs")
 
         return not self.config.has_cv
 
@@ -473,13 +481,13 @@ class InteractiveConfigurator:
         removed_facts = self.config.remove_value(object_id,attr_name)
         self._falsify_user_externals(removed_facts)
 
-    def _remove_leaf(self,object_id:id)->None:
+    def _remove_object(self,object_id:id)->None:
         """
-        Removes the leaf class selection for an object
+        Removes the object class selection for an object
             Parameters:
                 object_id: Id of the object
         """
-        removed_facts = self.config.remove_leaf(object_id)
+        removed_facts = self.config.remove_object(object_id)
         self._falsify_user_externals(removed_facts)
 
 
@@ -559,15 +567,15 @@ class InteractiveConfigurator:
         self._new_state(f"Removed value for {object_id}.{attr_name}",deep=True)
         self._remove_value(object_id,attr_name)
 
-    def remove_leaf_class(self,object_id:int)->None:
+    def remove_object_class(self,object_id:int)->None:
         """
         Creates a state with a new configuration.
-        Removes the leaf class selection for an object
+        Removes the object class selection for an object
             Parameters:
                 object_id: Id of the object
         """
-        self._new_state(f"Removed leaf class for {object_id}",deep=True)
-        self._remove_leaf(object_id)
+        self._new_state(f"Removed object class for {object_id}",deep=True)
+        self._remove_object(object_id)
 
     def select_association(self,assoc_name:str,object_id1:int,object_id2:int)->None:
         """
@@ -595,20 +603,20 @@ class InteractiveConfigurator:
         self._remove_value(attr_name,object_id)
         self.config.add_value(object_id,attr_name,attr_value)
 
-    def select_leaf_class(self,object_id:int,leaf_class:str)->None:
+    def select_object_class(self,object_id:int,object_class:str)->None:
         """
         Creates a state with a new configuration.
-        Removes any current leaf selection for the object.
-        Selects the leaf class for the object.
+        Removes any current object selection for the object.
+        Selects the object class for the object.
             Parameters:
                 object_id: Id of the object
             Throws:
-                Error in case the leaf_class is not really a leaf class
+                Error in case the object_class is not really a object class
         """
-        self._new_state(f"Set {object_id} of class {leaf_class}",deep=True)
-        self._remove_leaf(object_id)
+        self._new_state(f"Set {object_id} of class {object_class}",deep=True)
+        self._remove_object(object_id)
         try:
-            self.config.add_leaf(object_id,leaf_class)
+            self.config.add_object(object_id,object_class)
         except Exception as e:
             self.states.pop()
             raise e
@@ -627,19 +635,19 @@ class InteractiveConfigurator:
         for i in range(self.state.domain_size+1,next_num_objects+1):
             self._extend_domain(cls=cls,propagate=propagate)
 
-    def new_leaf(self,leaf_class:str)->None:
+    def new_object(self,object_class:str)->None:
         """
         Creates a state with a new configuration.
         Increases the domain size by one and adds a new domain(object,N) fact to
-        Selects the leaf class for the new object
+        Selects the object class for the new object
         the configuration.
             Parameters:
-                leaf_class: The name of the leaf class
+                object_class: The name of the object class
         """
-        self._new_state(f"Added leaf class {leaf_class}",deep=True)
+        self._new_state(f"Added object class {object_class}",deep=True)
         self._extend_domain()
         try:
-            self.config.add_leaf(self.state.domain_size,leaf_class)
+            self.config.add_object(self.state.domain_size,object_class)
         except Exception as e:
             self.states.pop()
             raise e

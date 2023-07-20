@@ -141,6 +141,15 @@ class  OOASPKnowledgeBase:
         """
         return self.UNIFIERS.__dict__.values()
 
+
+    @property
+    def classes(self)->List[Predicate]:
+        """
+        A list of all classes. Computed via queries to the Factbase
+        """
+        q = self.fb.query(self.UNIFIERS.Class).select(self.UNIFIERS.Class.name).all()
+        return set(q)
+
     @property
     def leafs(self)->List[Predicate]:
         """
@@ -214,6 +223,13 @@ class  OOASPKnowledgeBase:
         """
         return len(self.direct_subclasses(class_name))==0
 
+    def is_class(self, class_name:str)->bool:
+        """
+        Checks if a class name
+            Parameters:
+                class_name: The name of the class
+        """
+        return class_name in self.classes
 
     def save_png(self,directory:str="./out")->None:
         """

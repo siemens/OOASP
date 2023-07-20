@@ -4,11 +4,22 @@
 
 #program domain(new_object, cls).
 
+% Defined domains
 { ooasp_isa_leaf(LEAFCLASS,new_object):
 		ooasp_leafclass(LEAFCLASS),
-  		ooasp_can_be(C,new_object) } 1:-
+  		ooasp_subclass_ref(LEAFCLASS,C) } 1:-
   	ooasp_domain(C,new_object),
 	guess.
+
+1{ ooasp_isa_leaf(LEAFCLASS,new_object):
+		ooasp_leafclass(LEAFCLASS),
+  		ooasp_subclass_ref(LEAFCLASS,C) } 1:-
+  	ooasp_isa(C,new_object),
+	guess.
+
+% ooasp_cv(not_instance,new_object,"Yes {} {}",(C,LEAFCLASS)):- ooasp_domain(C,new_object), ooasp_subclass_ref(LEAFCLASS,C), ooasp_leafclass(LEAFCLASS).
+% ooasp_cv(not_instance,new_object,"Not an instance",(new_object,)):- ooasp_isa(C,new_object), not ooasp_isa_leaf(_,new_object).
+% :- ooasp_isa(C,new_object), not ooasp_isa_leaf(_,new_object). %Not a good idea
 
 % % Associations from new_object
 { ooasp_associated(ASSOC,new_object,ID2) } :-

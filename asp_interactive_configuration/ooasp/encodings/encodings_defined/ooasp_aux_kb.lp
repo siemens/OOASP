@@ -8,6 +8,10 @@ ooasp_subclass(SUB,SUPER2) :-
     ooasp_subclass(SUB,SUPER1),
     ooasp_subclass(SUPER1,SUPER2).
 
+ooasp_subclass_ref(C1,C2):-ooasp_subclass(C1,C2).
+ooasp_subclass_ref(C,C):-ooasp_class(C).
+
+
 % derive domain for boolean attributes
 ooasp_attr_enum(C,N,"true") :-
     ooasp_attr(C,N,"boolean").

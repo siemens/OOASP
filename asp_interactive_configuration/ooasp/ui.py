@@ -84,7 +84,7 @@ class OOASPUI:
         """
         if change.type != "change" or change.name != "value":
             return
-        self.iconf.new_leaf(change.owner.value)
+        self.iconf.new_object(change.owner.value)
 
     def do_edit(self,change):
         """

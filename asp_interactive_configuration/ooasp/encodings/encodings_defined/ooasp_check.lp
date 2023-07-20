@@ -19,7 +19,6 @@ ooasp_potential_cv(no_value).
 %=======================================
 
 % ------ (USER INPUT) Cant be instance of two different leaf classes
-
 ooasp_cv(notinstanceofsubclass,new_object,"Has two leaf classes {} and {}",(C1,C2)) :-
 	ooasp_isa_leaf(C1,new_object),
 	ooasp_isa_leaf(C2,new_object),

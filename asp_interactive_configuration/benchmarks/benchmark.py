@@ -97,7 +97,7 @@ def extend_solve(ne):
         iconf.extend_domain(ne, "elementA")
     else:
         for i in range(ne):
-            iconf.new_leaf("elementA")
+            iconf.new_object("elementA")
     iconf.extend_domain(ne + 5)
     found = iconf.next_solution()
     return iconf
@@ -108,10 +108,10 @@ def incremental(ne):
     if opt == 'defined':
         for i in range(ne):
             iconf.extend_domain(1, "elementA")
-            iconf.select_leaf_class(i+1, "elementA")
+            iconf.select_object_class(i+1, "elementA")
     else:
         for i in range(ne):
-            iconf.new_leaf("elementA")
+            iconf.new_object("elementA")
     found = iconf.extend_incrementally()
     print(found)
     return iconf
@@ -123,7 +123,7 @@ def options(ne):
         iconf.extend_domain(ne,"elementA")
     else:
         for i in range(ne):
-            iconf.new_leaf("elementA")
+            iconf.new_object("elementA")
     iconf.get_options()
     return iconf
 
