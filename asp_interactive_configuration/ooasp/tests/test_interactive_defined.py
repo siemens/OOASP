@@ -216,7 +216,7 @@ def test_s_options():
     assert "remove_object_class(1)" in opt
     assert "remove_value(1, 'frame_position')" in opt
     assert "select_association('rack_frames', 2, 1)" in opt
-    assert "select_association('ss,1,2', 1, 2)" in opt
+    assert "select_association('frame_modules', 1, 2)" in opt
 
     assert 2 in opts
     assert "select_object_class(2, 'frame')" in opt
@@ -405,10 +405,8 @@ def test_add_remove_assoc():
     iconf.select_association('frame_modules',1,2)
     iconf.check()
     checked_str = iconf.config.fb.asp_str()
-    print(checked_str)
     brave_conf = iconf.get_options()
     brave_str = brave_conf.fb.asp_str()
-    print(brave_str)
     assert "user(ooasp_associated(frame_modules,1,2))." in brave_str
     assert "ooasp_isa(module,2)." in brave_str
     assert "ooasp_isa(frame,2)." not in brave_str

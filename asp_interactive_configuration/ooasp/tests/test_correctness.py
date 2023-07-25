@@ -30,7 +30,6 @@ def test_racks_constraints_module():
     iconf = InteractiveConfigurator(racks_kb,"i1",[settings.racks_example_constraints])
     iconf.new_object("moduleI")
     iconf.check()
-    print(iconf)
     assert len(iconf.config.constraint_violations)==2
     assert "lowerbound" in str(iconf.config.constraint_violations)
     assert "module_requires_element" in str(iconf.config.constraint_violations)
@@ -77,6 +76,9 @@ def test_racks_constraints_associations():
     iconf.new_object("elementA")
     iconf.select_association("element_modules",2,1)
     iconf.check()
+    config_str = iconf.config.fb.asp_str()
+    assert "associated(element_modules,2,1)" in config_str
+
     assert len(iconf.config.constraint_violations)==2
     assert "assoc1_constraint1" in str(iconf.config.constraint_violations)
 

@@ -75,7 +75,7 @@ ooasp_cv(wrongtypeinassoc,ID,"Associated by {} but is not of class {}",(ASSOC,C1
 	ooasp_assoc(ASSOC,C1,C1MIN,C1MAX,C2,C2MIN,C2MAX),
 	not ooasp_isa(C1,ID).
 
-ooasp_cv(wrongtypeinassoc,ID,"Associated by {} but is not of class {}",(ASSOC,C2)) :-
+ooasp_cv(wrongtypeinassoc,ID,"Associated by {} but is not of class {}",(ASSOC,C2,new_object)) :-
 	active(new_object),
 	ooasp_associated(ASSOC,_,ID),
 	ooasp_assoc(ASSOC,C1,C1MIN,C1MAX,C2,C2MIN,C2MAX),

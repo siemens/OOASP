@@ -41,4 +41,3 @@ def test_kb_is_leaf():
 def test_kb_superclasses():
     racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
     super = racks_kb.direct_superclasses('frame')
-    print(super)

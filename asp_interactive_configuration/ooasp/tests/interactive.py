@@ -215,6 +215,4 @@ def test_options():
 def test_json():
 
     racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
-    print(racks_kb)
     iconf = InteractiveConfigurator(racks_kb,"i1",[settings.racks_example_constraints])
-    print(iconf)

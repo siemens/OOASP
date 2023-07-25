@@ -16,7 +16,6 @@ def overwrite_settings():
 def test_kb_create():
     racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
     assert racks_kb.name=="racks_v1"
-    print(racks_kb.fb.asp_str())
     assert "ooasp_assoc(rack_frames,rack,1,1,frame,4,8)." in racks_kb.fb.asp_str()
     assert "ooasp_attr(frame,frame_position,int)." in racks_kb.fb.asp_str()
     assert "ooasp_attr_maxInclusive(frame,frame_position,8)." in racks_kb.fb.asp_str()
