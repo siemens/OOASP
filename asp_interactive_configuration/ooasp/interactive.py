@@ -470,6 +470,7 @@ class InteractiveConfigurator:
                 object_id1: Id of the second object
         """
         fact = self.config.remove_association(assoc_name,object_id1,object_id2)
+        self._falsify_user_externals(fact)
 
     def _remove_value(self,object_id:id,attr_name:str)->None:
         """

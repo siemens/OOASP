@@ -69,15 +69,17 @@ ooasp_cv(no_instance_for_association,new_object,"Associated by {} to {} which is
 
 %--- (USER INPUT) Type of association
 
-ooasp_cv(wrongtypeinassoc,new_object,"Associated by {} but is not of class {}",(ASSOC,C1)) :-
-	ooasp_associated(ASSOC,new_object,_),
+ooasp_cv(wrongtypeinassoc,ID,"Associated by {} but is not of class {}",(ASSOC,C1,new_object)) :-
+	active(new_object),
+	ooasp_associated(ASSOC,ID,_),
 	ooasp_assoc(ASSOC,C1,C1MIN,C1MAX,C2,C2MIN,C2MAX),
-	not ooasp_isa(C1,new_object).
+	not ooasp_isa(C1,ID).
 
-ooasp_cv(wrongtypeinassoc,new_object,"Associated by {} but is not of class {}",(ASSOC,C2)) :-
-	ooasp_associated(ASSOC,_,new_object),
+ooasp_cv(wrongtypeinassoc,ID,"Associated by {} but is not of class {}",(ASSOC,C2)) :-
+	active(new_object),
+	ooasp_associated(ASSOC,_,ID),
 	ooasp_assoc(ASSOC,C1,C1MIN,C1MAX,C2,C2MIN,C2MAX),
-	not ooasp_isa(C2,new_object).
+	not ooasp_isa(C2,ID).
 
 
 %=======================================

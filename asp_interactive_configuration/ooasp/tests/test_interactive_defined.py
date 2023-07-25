@@ -216,7 +216,7 @@ def test_s_options():
     assert "remove_object_class(1)" in opt
     assert "remove_value(1, 'frame_position')" in opt
     assert "select_association('rack_frames', 2, 1)" in opt
-    assert "select_association('frame_modules', 1, 2)" in opt
+    assert "select_association('ss,1,2', 1, 2)" in opt
 
     assert 2 in opts
     assert "select_object_class(2, 'frame')" in opt
@@ -377,3 +377,45 @@ def test_not_a_subclass():
     iconf.select_object_class(1, 'rackDouble')
     ok = iconf.check()
     assert ok # Its ok because the rackDouble is ignored since it no external is grounded for user(ooasp_isa(1,rackDouble))
+
+def test_add_remove_assoc():
+    racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
+    iconf = InteractiveConfigurator(racks_kb,"i1")
+    
+    iconf.extend_domain(1,'object')
+    iconf.extend_domain(1,'object')
+    brave_conf = iconf.get_options()
+    brave_str = brave_conf.fb.asp_str()
+    assert "ooasp_isa(frame,1)." in brave_str
+    assert "ooasp_isa(module,1)." in brave_str
+    assert "ooasp_isa(frame,2)." in brave_str
+    assert "ooasp_isa(module,2)." in brave_str
+    assert "user(" not in brave_str
+
+    iconf.select_association('frame_modules',1,2)
+    iconf.check()
+    checked_str = iconf.config.fb.asp_str()
+    assert "ooasp_associated(frame_modules,1,2)." in checked_str
+
+    iconf.remove_association('frame_modules',1,2)
+    iconf.check()
+    checked_str = iconf.config.fb.asp_str()
+    assert "ooasp_associated(frame_modules,1,2)." not in checked_str
+
+    iconf.select_association('frame_modules',1,2)
+    iconf.check()
+    checked_str = iconf.config.fb.asp_str()
+    print(checked_str)
+    brave_conf = iconf.get_options()
+    brave_str = brave_conf.fb.asp_str()
+    print(brave_str)
+    assert "user(ooasp_associated(frame_modules,1,2))." in brave_str
+    assert "ooasp_isa(module,2)." in brave_str
+    assert "ooasp_isa(frame,2)." not in brave_str
+    assert "ooasp_isa(element,2)." not in brave_str
+
+    assert "ooasp_isa(frame,1)." in brave_str
+    assert "ooasp_isa(module,1)." not in brave_str
+    assert "ooasp_isa(element,1)." not in brave_str
+
+
