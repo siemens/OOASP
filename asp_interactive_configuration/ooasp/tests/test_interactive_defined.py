@@ -72,7 +72,7 @@ def test_s_interactive_add_leaf_extend_browse():
     assert iconf.domain_size == 5
     found = iconf.next_solution()
     assert found
-    assert "ooasp_domain(object,1)." in found.fb.asp_str()
+    assert "ooasp_domain(frame,1)." in found.fb.asp_str()
     assert "ooasp_isa_leaf(frame,1)." in found.fb.asp_str()
     assert "ooasp_domain(object,3)." in found.fb.asp_str()
     assert "ooasp_domain(object,4)." in found.fb.asp_str()
@@ -93,7 +93,7 @@ def test_s_interactive_add_object_extend_browse():
     assert iconf.domain_size == 5
     found = iconf.next_solution()
     assert found
-    assert "ooasp_domain(object,1)." in found.fb.asp_str()
+    assert "ooasp_domain(rack,1)." in found.fb.asp_str()
     assert "ooasp_isa_leaf(rackSingle,1)." in found.fb.asp_str()
     assert "ooasp_domain(object,3)." in found.fb.asp_str()
     assert "ooasp_domain(object,4)." in found.fb.asp_str()
@@ -109,7 +109,7 @@ def test_s_interactive_extend_incrementally():
     found = iconf.extend_incrementally()
     assert found
     assert iconf.domain_size == 5
-    assert "ooasp_domain(object,1)." in found.fb.asp_str()
+    assert "ooasp_domain(frame,1)." in found.fb.asp_str()
     assert "ooasp_isa_leaf(frame,1)." in found.fb.asp_str()
     assert "ooasp_domain(object,3)." in found.fb.asp_str()
     assert "ooasp_domain(object,4)." in found.fb.asp_str()
@@ -267,7 +267,7 @@ def test_normal_extend():
 
     assert found
     assert iconf.domain_size == 5
-    assert "ooasp_domain(object,1)." in found_str
+    assert "ooasp_domain(rackSingle,1)." in found_str
     assert "ooasp_isa_leaf(rackSingle,1)." in found_str
 
 def test_extend_propagate():
@@ -361,7 +361,7 @@ def test_custom_interactive_add_leaf_extend_browse():
     assert iconf.domain_size == 5
     found = iconf.next_solution()
     assert found
-    assert "ooasp_domain(object,1)." in found.fb.asp_str()
+    assert "ooasp_domain(frame,1)." in found.fb.asp_str()
     assert "ooasp_isa_leaf(frame,1)." in found.fb.asp_str()
     assert "ooasp_domain(frame,3)." in found.fb.asp_str()
     assert "ooasp_domain(frame,4)." in found.fb.asp_str()

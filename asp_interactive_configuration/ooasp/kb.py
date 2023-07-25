@@ -147,8 +147,12 @@ class  OOASPKnowledgeBase:
         """
         A list of all classes. Computed via queries to the Factbase
         """
-        q = self.fb.query(self.UNIFIERS.Class).select(self.UNIFIERS.Class.name).all()
-        return set(q)
+        cls = set(self.fb.query(self.UNIFIERS.Class).select(self.UNIFIERS.Class.name).all())
+        cls.remove('object')
+        cls = list(cls)
+        cls.sort()
+        cls=['object'] +cls
+        return cls
 
     @property
     def leafs(self)->List[Predicate]:

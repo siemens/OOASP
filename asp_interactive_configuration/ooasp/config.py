@@ -293,6 +293,7 @@ class  OOASPConfiguration:
             raise RuntimeError(f"{class_name} is not a class")
 
         fact = self.UNIFIERS.Object(class_name=class_name,object_id=object_id)
+        print(fact)
         self.fb.add(fact)
         return fact
 

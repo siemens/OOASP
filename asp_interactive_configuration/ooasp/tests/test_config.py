@@ -37,10 +37,10 @@ def test_config_add_value():
 def test_config_add_leaf():
     racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
     config = OOASPConfiguration("i1",racks_kb)
-    config.add_leaf(1,'frame')
-    fact = "ooasp_isa_leaf(i1,frame,1)"
+    config.add_object(1,'frame')
+    fact = "ooasp_isa(i1,frame,1)"
     assert fact in config.fb.asp_str()
-    removed_l = config.remove_leaf(1)
+    removed_l = config.remove_object(1)
     assert len(removed_l)==1
     removed = removed_l[0]
     assert str(removed) == fact

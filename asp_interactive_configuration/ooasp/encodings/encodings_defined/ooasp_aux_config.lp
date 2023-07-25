@@ -15,6 +15,10 @@ ooasp_isa(SUPER,new_object) :-
     ooasp_isa(SUB,new_object),
     ooasp_subclass(SUB,SUPER).
 
+ooasp_isa_leaf(C,new_object) :-
+    ooasp_isa(C,new_object),
+	ooasp_leafclass(C).
+
 % Auxiliary predicate to avoid duplicated rules
 % ooasp_assoc_gen(ASSOC,POS,ID1,ID2)
 %    Object ID1 apearing in position POS of association ASSOC is associated to object ID2

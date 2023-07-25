@@ -10,7 +10,7 @@ from importlib import reload
 @pytest.fixture(autouse=True)
 def overwrite_settings():
     settings = reload(__import__("ooasp").settings)
-    settings.init('basic')
+    settings.init('defined')
     yield
 
 
@@ -30,6 +30,7 @@ def test_racks_constraints_module():
     iconf = InteractiveConfigurator(racks_kb,"i1",[settings.racks_example_constraints])
     iconf.new_object("moduleI")
     iconf.check()
+    print(iconf)
     assert len(iconf.config.constraint_violations)==2
     assert "lowerbound" in str(iconf.config.constraint_violations)
     assert "module_requires_element" in str(iconf.config.constraint_violations)
@@ -103,6 +104,7 @@ def test_racks_constraints_moduleII_requires_moduleV():
 
     iconf.select_association("frame_modules",1,3)
     iconf.check()
+
     assert len(iconf.config.constraint_violations)==3
     assert "moduleII_requires_moduleV" not in str(iconf.config.constraint_violations)
 
@@ -112,13 +114,15 @@ def test_racks_constraints_moduleII_requires_moduleV():
     iconf.new_object("moduleV")
     iconf.new_object("moduleII")
 
-    iconf.select_association("frame_modules",1,2)
+    iconf.select_association("frame_modules",1,3)
     iconf.check()
+
     assert len(iconf.config.constraint_violations)==5
     assert "moduleII_requires_moduleV" in str(iconf.config.constraint_violations)
 
-    iconf.select_association("frame_modules",1,3)
+    iconf.select_association("frame_modules",1,2)
     iconf.check()
+
     assert len(iconf.config.constraint_violations)==3
     assert "moduleII_requires_moduleV" not in str(iconf.config.constraint_violations)
 

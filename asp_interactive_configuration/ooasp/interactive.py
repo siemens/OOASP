@@ -645,9 +645,9 @@ class InteractiveConfigurator:
                 object_class: The name of the object class
         """
         self._new_state(f"Added object class {object_class}",deep=True)
-        self._extend_domain()
+        new_object = self._extend_domain(cls=object_class)
         try:
-            self.config.add_object(self.state.domain_size,object_class)
+            self.config.add_object(new_object,object_class)
         except Exception as e:
             self.states.pop()
             raise e
