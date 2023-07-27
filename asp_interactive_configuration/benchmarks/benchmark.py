@@ -117,6 +117,7 @@ def incremental(ne):
 def options(ne):
     iconf = new_iconf()
     # current limit
+    iconf.extend_domain(ne-9,"object")
     for i in range(ne):
         iconf.new_object("elementA")
     iconf.get_options()
@@ -147,6 +148,7 @@ def run(n_runs,fun,elements,name = "extend_solve"):
     save_results(results,name)
 
 # run(2,extend_solve,elements=[13,14,15,16,17,18],name=f"{opt}/extend_solve")
-run(2,incremental,elements=[8,9,10],name=f"{opt}-os/incremental")
-# run(2,options,elements=[18,20,22,24],name=f"{opt}/options")
+# run(2,incremental,elements=[8,9,10],name=f"{opt}-os/incremental")
+# run(2,options,elements=[18,20,22,24],name=f"{opt}-os/options")
+run(2,options,elements=[20,22,24,25,26],name=f"{opt}/options")
 # run(2,options_object,elements=[18,20,22,24],name=f"{opt}/options_object")

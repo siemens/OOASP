@@ -24,7 +24,7 @@ grounding_cm = mpl.colormaps['Set2'].resampled(8)
 def plot_gs(bm_names, title):
     plt.clf()
     dfs = {}
-    width = 0.25
+    width = 0.2
     for bm_name in bm_names:
         data_dic = get_results(bm_name)
         df = pd.DataFrame.from_dict(data_dic, orient="index")
@@ -72,10 +72,11 @@ def plot_domain(bm_name, title, name):
 
 # Extend solve
 # plot_gs(["basic/extend_solve","paper/extend_solve","defined/extend_solve"], "Compare Extend Solve")
-plot_gs(["basic/incremental",'paper/incremental','defined/incremental','defined-os/incremental'], "Compare Incremental")
-# plot_gs(["basic/options",'paper/options','defined/options'], "Compare Options")
+# plot_gs(["basic/incremental",'paper/incremental','defined/incremental','defined-os/incremental'], "Compare Incremental")
+plot_gs(['paper/options','defined/options'], "Compare Options")
+# plot_gs(["basic/options",'paper/options','defined/options','defined-os/options'], "Compare Options")
 # plot_gs(["defined/options",'defined/options_object'], "Compare Options to Object")
 
 
-plot_domain("defined-os/incremental", "Extend incrementally (From 9 Elements)","9")
+# plot_domain("defined-os/incremental", "Extend incrementally (From 9 Elements)","9")
 # plot_domain("defined/incremental", "Incremental (Domain 10)","10")
