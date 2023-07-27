@@ -111,12 +111,53 @@ def test_s_interactive_extend_incrementally():
     assert iconf.domain_size == 5
     assert "ooasp_domain(frame,1)." in found.fb.asp_str()
     assert "ooasp_isa_leaf(frame,1)." in found.fb.asp_str()
+    assert "ooasp_domain(object,2)." in found.fb.asp_str()
     assert "ooasp_domain(object,3)." in found.fb.asp_str()
     assert "ooasp_domain(object,4)." in found.fb.asp_str()
     assert "ooasp_domain(object,5)." in found.fb.asp_str()
     found = iconf.next_solution()
     assert found
     assert len(iconf.states)==3
+
+def test_s_interactive_extend_incrementally_overshooting():
+    racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
+    iconf = InteractiveConfigurator(racks_kb,"i1")
+    iconf.new_object('frame')
+    found = iconf.extend_incrementally(overshoot=True)
+    assert found
+    assert iconf.domain_size == 5
+    assert "ooasp_domain(frame,1)." in found.fb.asp_str()
+    assert "ooasp_isa_leaf(frame,1)." in found.fb.asp_str()
+    assert "ooasp_domain(rack,2)." in found.fb.asp_str()
+    assert "ooasp_domain(object,3)." in found.fb.asp_str()
+    assert "ooasp_domain(object,4)." in found.fb.asp_str()
+    assert "ooasp_domain(object,5)." in found.fb.asp_str()
+    print(iconf)
+    found = iconf.next_solution()
+    assert found
+    print(found)
+    assert len(iconf.states)==3
+
+def test_s_interactive_extend_incrementally_overshooting_leaving_object():
+    racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
+    iconf = InteractiveConfigurator(racks_kb,"i1")
+    iconf.new_object('frame')
+    iconf.new_object('frame')
+    found = iconf.extend_incrementally(overshoot=True)
+    assert found
+    assert iconf.domain_size == 6
+    assert "ooasp_domain(frame,1)." in found.fb.asp_str()
+    assert "ooasp_isa_leaf(frame,1)." in found.fb.asp_str()
+    assert "ooasp_domain(frame,2)." in found.fb.asp_str()
+    assert "ooasp_domain(rack,3)." in found.fb.asp_str()
+    assert "ooasp_domain(rack,4)." in found.fb.asp_str()
+    found = iconf.next_solution()
+    print(found)
+    assert found
+    assert not "ooasp_isa_leaf(rack,4)." in found.fb.asp_str() or  not "ooasp_isa_leaf(rack,3)." in found.fb.asp_str()
+    assert found.size == 5
+    assert len(iconf.states)==4
+
 
 def test_s_interactive_select_full():
     racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
@@ -345,6 +386,28 @@ def test_extend_propagate_symmetry():
     assert found
     found = iconf.next_solution()
     assert found
+
+def test_create_required_objects():
+    racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
+    iconf = InteractiveConfigurator(racks_kb,"i1")
+    # iconf.extend_domain(5,cls='object',propagate=True)
+    iconf.extend_domain(1,cls='rackSingle')
+    iconf.extend_domain(3,cls='frame')
+    iconf.select_association('rack_frames',1,2)
+    iconf.select_association('rack_frames',1,3)
+    iconf.select_association('rack_frames',1,4)
+    found = iconf.next_solution()
+    assert not found
+    config_str = iconf.config.fb.asp_str()
+    assert "ooasp_associated(rack_frames,1,2)." in config_str
+    assert "ooasp_associated(rack_frames,1,3)." in config_str
+    assert "ooasp_associated(rack_frames,1,4)." in config_str
+    iconf._create_required_objects('rackSingle',1)
+    config_str = iconf.config.fb.asp_str()
+    assert "ooasp_domain(frame,5)." in config_str
+    found = iconf.next_solution()
+    assert found
+
 
 def test_custom_interactive_add_leaf_extend_browse():
     racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)

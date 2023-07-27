@@ -72,10 +72,10 @@ def plot_domain(bm_name, title, name):
 
 # Extend solve
 # plot_gs(["basic/extend_solve","paper/extend_solve","defined/extend_solve"], "Compare Extend Solve")
-plot_gs(["basic/incremental",'paper/incremental','defined/incremental'], "Compare Incremental")
+plot_gs(["basic/incremental",'paper/incremental','defined/incremental','defined-os/incremental'], "Compare Incremental")
 # plot_gs(["basic/options",'paper/options','defined/options'], "Compare Options")
 # plot_gs(["defined/options",'defined/options_object'], "Compare Options to Object")
 
 
-# plot_domain("defined/incremental", "Extend incrementally (From 9 Elements)","9")
+plot_domain("defined-os/incremental", "Extend incrementally (From 9 Elements)","9")
 # plot_domain("defined/incremental", "Incremental (Domain 10)","10")

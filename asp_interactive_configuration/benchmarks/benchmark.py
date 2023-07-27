@@ -43,8 +43,11 @@ class BM:
         self.set_final_results()
 
     def add_run_results(self, time, iconf):
+        print(iconf)
         result = {
-           "time": time
+           "time": time,
+           "size": iconf.config.size,
+           "domain_size": iconf.config.domain_size,
         }
         result.update(iconf._statistics)
         self.runs[len(self.runs)]=result
@@ -54,9 +57,12 @@ class BM:
         for run in self.runs.values():
             for t in self.final_results.keys():
                 self.final_results[t]+=run[t]
+            self.final_results['size']=run['size']
+            self.final_results['domain_size']=run['domain_size']
 
-        for t in self.final_results.keys():
+        for t in ['time','time-solving','time-grounding']:
             self.final_results[t]=self.final_results[t]/self.n_runs
+
 
         times_per_domain = ["per-domain-grounding","per-domain-solving"]
         for tpd in times_per_domain:
@@ -92,38 +98,27 @@ def new_iconf():
 def extend_solve(ne):
     iconf = new_iconf()
     # current limit
-    if opt == 'defined':
-        # TODO fix
-        iconf.extend_domain(ne, "elementA")
-    else:
-        for i in range(ne):
-            iconf.new_object("elementA")
+    for i in range(ne):
+        iconf.new_object("elementA")
     iconf.extend_domain(ne + 5)
     found = iconf.next_solution()
+    iconf.select_found_configuration()
     return iconf
 
 def incremental(ne):
     iconf = new_iconf()
     # current limit
-    if opt == 'defined':
-        for i in range(ne):
-            iconf.extend_domain(1, "elementA")
-            iconf.select_object_class(i+1, "elementA")
-    else:
-        for i in range(ne):
-            iconf.new_object("elementA")
-    found = iconf.extend_incrementally()
-    print(found)
+    for i in range(ne):
+        iconf.new_object("elementA")
+    found = iconf.extend_incrementally(overshoot=True)
+    iconf.select_found_configuration()
     return iconf
 
 def options(ne):
     iconf = new_iconf()
     # current limit
-    if opt=='defined':
-        iconf.extend_domain(ne,"elementA")
-    else:
-        for i in range(ne):
-            iconf.new_object("elementA")
+    for i in range(ne):
+        iconf.new_object("elementA")
     iconf.get_options()
     return iconf
 
@@ -152,6 +147,6 @@ def run(n_runs,fun,elements,name = "extend_solve"):
     save_results(results,name)
 
 # run(2,extend_solve,elements=[13,14,15,16,17,18],name=f"{opt}/extend_solve")
-run(2,incremental,elements=[8,9,10],name=f"{opt}/incremental")
+run(2,incremental,elements=[8,9,10],name=f"{opt}-os/incremental")
 # run(2,options,elements=[18,20,22,24],name=f"{opt}/options")
 # run(2,options_object,elements=[18,20,22,24],name=f"{opt}/options_object")

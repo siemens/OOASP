@@ -283,23 +283,26 @@ class InteractiveConfigurator:
         """
         self.ctl.add("domain",[str(self.domain_size)],str(fact)+".")
 
-    def _create_associations(self, cls:str, object_id:int, ignore_cls:List=None)->None:
-        if ignore_cls is None:
-            ignore_cls = set()
+    def _create_required_objects(self, cls:str, object_id:int, ignore_assoc:List=None)->None:
+        if ignore_assoc is None:
+            ignore_assoc = set()
         assocs = self.config.kb.associations(cls)
         assocs_added = []
         for name, class2, min, max in assocs:
-            if name in ignore_cls:
+            if name in ignore_assoc:
                 continue
+            curret_assoc = self.config.associated_by(object_id,name)
+            remaining = min - len(curret_assoc) 
+            if remaining<0:
+                raise RuntimeError(f"Object {object_id} associated to more objects via {name}, tha expected")
             assocs_added.append(name)
-            for _ in range(min):
+            for _ in range(remaining):
                 object_id2 = self._extend_domain(class2,True,assocs_added)
-                # self.config.add_association(name,object_id,object_id2)
 
 
 
 
-    def _extend_domain(self, cls='object',propagate=False, ignore_cls:List=None)->int:
+    def _extend_domain(self, cls='object',propagate=False, ignore_assoc:List=None)->int:
         """
         Increases the domain size by one and adds a new domain(object,N) fact to
         the configuration.
@@ -309,7 +312,7 @@ class InteractiveConfigurator:
         new_object = self.state.domain_size
         self.config.add_domain(cls,new_object)
         if propagate:
-            self._create_associations(cls, new_object,ignore_cls)
+            self._create_required_objects(cls, new_object,ignore_assoc)
         return new_object
 
 
@@ -653,7 +656,7 @@ class InteractiveConfigurator:
             self.states.pop()
             raise e
 
-    def extend_incrementally(self, domain_limit:int=100)->OOASPConfiguration:
+    def extend_incrementally(self, domain_limit:int=100, overshoot:bool=False)->OOASPConfiguration:
         """
         Creates a state with a new configuration.
         Trys to find a solution for the current domain size, if a solution is
@@ -667,10 +670,16 @@ class InteractiveConfigurator:
 
             Parameters:
                 domain_limit: The limit size the domain can reach
+                overshoot: If this is passed, then the required elements will be created for each object
             Returns:
                 The found OOASPConfiguration or None if no more solutions are found
         """
-        self._new_state("Extend incrementally",deep=True)
+        name = "Extend incrementally" if not overshoot else "Extend incrementally overshooting"
+        self._new_state(name,deep=True)
+        if overshoot:
+            objs = self.config.objects
+            for o in objs:
+                self._create_required_objects(o.class_name, o.object_id)
         self.found_config = self._next_solution()
 
         while self.found_config == None or self.domain_size>domain_limit:

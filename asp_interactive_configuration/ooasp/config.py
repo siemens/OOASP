@@ -167,6 +167,13 @@ class  OOASPConfiguration:
         The domain size, it is computed by counting the number of objects in the fact base.
         """
         return self.fb.query(self.UNIFIERS.Domain).select(self.UNIFIERS.Domain.object_id).count()
+    
+    @property
+    def size(self)->int:
+        """
+        The number of instantiated objects via isa_leaf
+        """
+        return self.fb.query(self.UNIFIERS.Leaf).select(self.UNIFIERS.Leaf.object_id).count()
 
     @property
     def has_cv(self)->bool:
@@ -240,6 +247,16 @@ class  OOASPConfiguration:
         input_facts = list(self.fb.query(self.UNIFIERS.User).select(self.UNIFIERS.User.predicate).all())
         return [f.symbol for f in input_facts]
 
+    def associated_by(self, obj, assoc_name)->List[Predicate]:
+        """
+        The list of associations from object obj via association assoc_name
+        """
+        Association = self.UNIFIERS.Association
+        q = self.fb.query(Association)
+        q = q.where(((Association.object_id1==obj)&(Association.assoc_name==assoc_name)))
+        q = q.select(Association.object_id2)
+        return list(q.all())
+    
     def domains_from(self, start_domain)->int:
         """
         The domain size, it is computed by counting the number of objects in the fact base.
