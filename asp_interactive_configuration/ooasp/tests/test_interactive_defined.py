@@ -480,3 +480,12 @@ def test_add_remove_assoc():
     assert "ooasp_isa(element,1)." not in brave_str
 
 
+def test_three_racks():
+    racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
+    iconf = InteractiveConfigurator(racks_kb,"i1")
+
+    iconf.new_object('rackSingle')
+    iconf.new_object('rackSingle')
+    iconf.new_object('rackSingle')
+    found = iconf.extend_incrementally()
+    found.save_png(directory="./out/test")

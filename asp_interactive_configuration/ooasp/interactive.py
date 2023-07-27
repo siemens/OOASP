@@ -393,12 +393,18 @@ class InteractiveConfigurator:
         for i in range(1,config.domain_size+1):
             options[i]=[]
 
+        removed_added = set()
         for c in config.editable_unifiers:
             for f in user_fb.query(c).all():
                 if c == config.UNIFIERS.Association:
                         options[f.object_id1].append(utils.editable_fact_as_remove_action(f,self.brave_config.UNIFIERS))
                         options[f.object_id2].append(utils.editable_fact_as_remove_action(f,self.brave_config.UNIFIERS))
                 else:
+                    if c== config.UNIFIERS.Object:
+                        if f.object_id in removed_added:
+                            continue
+                        else:
+                            removed_added.add(f.object_id)
                     options[f.object_id].append(utils.editable_fact_as_remove_action(f,self.brave_config.UNIFIERS))
         for c in config.editable_unifiers:
             for f in config.fb.query(c).all():

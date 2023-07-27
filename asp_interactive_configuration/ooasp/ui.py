@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 import ipywidgets as widgets
-from ipywidgets import Button, VBox, Label, Layout,GridspecLayout, HTML
+from ipywidgets import Button, VBox, HBox, Label, Layout,GridspecLayout, HTML
 from IPython.display import display, Image
 
 def basic_layout():
@@ -11,7 +11,7 @@ def basic_layout():
 def wraped_label(text):
     return HTML(value="<style>p{word-wrap: break-word ;color:red}</style> <p>" + text+"</p>")
 
-
+PSTYLE = "<style>p{word-wrap: break-word; margin-right: 10px;}</style>"
 class OOASPUI:
     """
     UI prototype using pywidgets
@@ -25,9 +25,10 @@ class OOASPUI:
         self.config_image = widgets.Image(format='png')
         self.found_config = widgets.Image(format='png')
 
-        self.history = VBox(layout=Layout(height='300ox', width='auto',overflow_y='auto'))
+        # self.history = VBox(layout=Layout(height='300ox', width='auto',overflow_y='auto'))
         self.extend = basic_layout()
         self.edit = basic_layout()
+        self.edit_object = ''
         self.browse = basic_layout()
         self.check = basic_layout()
         self.opts = None
@@ -40,8 +41,8 @@ class OOASPUI:
         Crates the basic grid structure
         """
         grid = GridspecLayout(3, 6)
-        grid[0, 4:] = self.history
-        grid[0, :4] = self.config_image
+        # grid[0, 4:] = self.history
+        grid[0, :6] = self.config_image
         grid[1, :2] = self.check
         grid[1, 2:4] = self.edit
         grid[1, 4:] = self.extend
@@ -55,7 +56,7 @@ class OOASPUI:
         Updates the UI based on the current interactive state
         """
         self.set_config_image()
-        self.set_history()
+        # self.set_history()
         self.set_edit()
         self.set_extend()
         self.set_browse()
@@ -77,6 +78,11 @@ class OOASPUI:
             f(bt,*args)
             self.update()
         return fun
+
+    def select_edit_object(self, change):
+        if change.type != "change" or change.name != "value":
+            return
+        self.edit_object = change.owner.value
 
     def add_leaf(self,change):
         """
@@ -147,18 +153,38 @@ class OOASPUI:
         """
         Sets the extend domain section
         """
-        extend_domain = Button(description='Add new object',button_style='info')
+        domain_lbl = HTML(value=PSTYLE + "<p> <b>Domain size: "+str(self.iconf.domain_size)+"</b>  </p>") 
+        config_lbl = HTML(value=PSTYLE + "<p> <b>Configuration size: "+str(self.iconf.config.size)+"</b>  </p>") 
+        
+        extend_domain = Button(description='Extend',button_style='info')
         extend_domain.on_click(self.call_and_update(self.button_wrapper('extend_domain')))
-        # dropdown = widgets.Dropdown(
-        #     options=['']+self.iconf.kb.leafs,
-        #     value='',
-        #     description='Add new leaf',
-        #     disabled=False
-        # )
-        # dropdown.observe(self.call_and_update(self.add_leaf))
-        # self.extend.children= tuple([self.title('Extend'), extend_domain,dropdown])
-        self.extend.children= tuple([self.title('Extend'), extend_domain])
+        dropdown = widgets.Dropdown(
+            options=['']+self.iconf.kb.classes,
+            value='',
+            description='Add new object',
+            disabled=False,
+            style={'description_width': '120px'}
+        )
+        dropdown.observe(self.call_and_update(self.add_leaf))
+        self.extend.children= tuple([self.title('Extend'),HBox(children=[domain_lbl,extend_domain]),config_lbl,dropdown])
 
+    def str_opt(self, option):
+        r_or_s, edit_opt = option['fun_name'].split('_',1)
+        if option['fun_name']== 'remove_object_class':
+            s = 'Remove'
+        elif option['fun_name']== 'select_object_class':
+            s = 'Select: ' + option['args'][1]
+        elif option['fun_name']== 'remove_value':
+            s = 'Remove: ' + option['args'][1]
+        elif option['fun_name']== 'select_value':
+            s = 'Select: ' +  option['args'][1] + ' as ' + str(option['args'][2])
+        elif option['fun_name']== 'remove_association':
+            s = f"Remove: {option['args'][0]} from {str(option['args'][1])} to  {str(option['args'][2])}" 
+        elif option['fun_name']== 'select_association':
+            s = f"Select: {option['args'][0]} from {str(option['args'][1])} to  {str(option['args'][2])}" 
+        else:
+            raise RuntimeError("Option format not expected " + str(option))
+        return edit_opt, (s,option['str'])
 
     def set_edit(self):
         """
@@ -172,23 +198,42 @@ class OOASPUI:
         opts = self.iconf._brave_config_as_options()
         if opts is None:
             self.edit.children= tuple([self.title('Edit')] + [Label(value="No options for conflicting configuration")])
-
             return
-        self.opts = {o['str']:o for x in opts.values() for o in x}
-        dropdowns = []
-        for k,v in opts.items():
-            dropdown = widgets.Dropdown(
-                options=['']+[o['str'] for o in v],
-                value='',
-                description=f'Object {k}',
+        dropdown_object = widgets.Dropdown(
+                options=['']+[o for o in opts.keys()],
+                value=self.edit_object,
+                description=f'Object to edit',
                 disabled=False,
-                style={'description_width': '70px','button_color':'red'}
+                style={'description_width': '100px','font_weight':'bold'}
             )
-            dropdown.observe(self.call_and_update(self.do_edit))
-            dropdowns.append(dropdown)
+        dropdown_object.observe(self.call_and_update(self.select_edit_object))
+        o = self.edit_object
+        edit_dropdowns = []
+        names = {'object_class':'Class','value':'Attribuite-Value','association':'Association'}
+        if o!='':
+            obj_opts =  opts[o]
+            self.opts = {o['str']:o for o in obj_opts}
+            edit_options = {'object_class':[],'value':[],'association':[]}
+            for option in obj_opts:
+                edit_opt, entry = self.str_opt(option)
+                edit_options[edit_opt].append(entry)
+
+            for edit, edit_o in edit_options.items():
+                if len(edit_o)==0:
+                    continue
+                d = widgets.Dropdown(
+                    options=[('','')]+edit_o,
+                    value='',
+                    description=names[edit],
+                    disabled=False,
+                    style={'description_width': '200px','font_weight':'bold'}
+                )
+                d.observe(self.call_and_update(self.do_edit))
+
+                edit_dropdowns.append(d)
 
 
-        self.edit.children= tuple([self.title('Edit')] + dropdowns)
+        self.edit.children= tuple([self.title('Edit'),dropdown_object]+edit_dropdowns)
 
 
     def set_browse(self):
