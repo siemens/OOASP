@@ -171,5 +171,6 @@ poetry.toml
 # End of https://www.toptal.com/developers/gitignore/api/python
 
 */out/*
+asp_interactive_configuration/benchmarks/out/*
 
 *.DS_Store
