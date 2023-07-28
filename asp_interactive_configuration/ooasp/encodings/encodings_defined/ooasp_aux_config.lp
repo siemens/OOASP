@@ -7,17 +7,23 @@
 
 ooasp_domain(cls,new_object).
 
-% Transitive closure for the new id
+% Transitive closure when a leaf class is selected via choice
 ooasp_isa(LEAFCLASS,new_object) :-
     ooasp_isa_leaf(LEAFCLASS,new_object).
 
+% Transitive closure
 ooasp_isa(SUPER,new_object) :-
     ooasp_isa(SUB,new_object),
     ooasp_subclass(SUB,SUPER).
 
+% Generation of leafs
 ooasp_isa_leaf(C,new_object) :-
     ooasp_isa(C,new_object),
 	ooasp_leafclass(C).
+
+ooasp_isa_smallest(SUPER,new_object) :-
+    ooasp_isa(SUPER,new_object),
+    not ooasp_isa(SUB,new_object) :ooasp_subclass(SUB,SUPER).
 
 % Auxiliary predicate to avoid duplicated rules
 % ooasp_assoc_gen(ASSOC,POS,ID1,ID2)

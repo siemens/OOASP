@@ -42,7 +42,7 @@ def editable_fact_as_select_action(fact,unifiers):
     Gets the editable fact (Objects, AttrValue and Associations) as
     a select option.
     """
-    if isinstance(fact,unifiers.Object):
+    if isinstance(fact,unifiers.Object) or isinstance(fact,unifiers.Leaf) or isinstance(fact,unifiers.ObjectSmallest):
         return opt('select_object_class',(fact.object_id,fact.class_name))
     elif isinstance(fact,unifiers.AttributeValue):
         return opt('select_value',(fact.object_id,fact.attr_name,fact.attr_value))
@@ -56,7 +56,7 @@ def editable_fact_as_remove_action(fact,unifiers):
     Gets the editable facts (Objects, AttrValue and Associations) as
     a remove option.
     """
-    if isinstance(fact,unifiers.Object):
+    if isinstance(fact,unifiers.Object) or isinstance(fact,unifiers.Leaf) or isinstance(fact,unifiers.ObjectSmallest):
         return opt('remove_object_class',(fact.object_id,))
     elif isinstance(fact,unifiers.AttributeValue):
         return opt('remove_value',(fact.object_id,fact.attr_name))

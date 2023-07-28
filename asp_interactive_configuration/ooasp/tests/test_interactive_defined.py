@@ -138,6 +138,29 @@ def test_s_interactive_extend_incrementally_overshooting():
     print(found)
     assert len(iconf.states)==3
 
+def test_s_interactive_extend_incrementally_overshooting_rack():
+    racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
+    iconf = InteractiveConfigurator(racks_kb,"i1")
+    iconf.new_object('rack')
+    found = iconf.extend_incrementally(overshoot=True)
+    assert found
+    print(found)
+    assert iconf.domain_size == 5
+    assert "ooasp_domain(rack,1)." in found.fb.asp_str()
+    assert "ooasp_isa_leaf(rackSingle,1)." in found.fb.asp_str()
+    assert "ooasp_domain(frame,2)." in found.fb.asp_str()
+    assert "ooasp_domain(frame,3)." in found.fb.asp_str()
+    assert "ooasp_domain(frame,4)." in found.fb.asp_str()
+    assert "ooasp_domain(frame,5)." in found.fb.asp_str()
+    
+    iconf.select_found_configuration()
+    iconf.new_object('rack')
+    found = iconf.extend_incrementally(overshoot=True)
+    assert found
+    print(found)
+    assert iconf.domain_size == 10
+
+
 def test_s_interactive_extend_incrementally_overshooting_leaving_object():
     racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
     iconf = InteractiveConfigurator(racks_kb,"i1")

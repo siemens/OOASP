@@ -71,6 +71,14 @@ class  OOASPConfiguration:
             class_name=ConstantField
             object_id=IntegerField
 
+        class ObjectSmallest(Predicate):
+            class Meta:
+                name = "ooasp_isa_smallest"
+            if settings.include_config:
+                config=NameField(default=self.name)
+            class_name=ConstantField
+            object_id=IntegerField
+
         class Object(Predicate):
             class Meta:
                 name = "ooasp_isa"
@@ -136,6 +144,7 @@ class  OOASPConfiguration:
                 AttributeValue=AttributeValue,
                 Association=Association,
                 Leaf=Leaf,
+                ObjectSmallest=ObjectSmallest,
                 ConfigObject=ConfigObject,
                 Domain=Domain,
                 CV=CV,
@@ -220,12 +229,40 @@ class  OOASPConfiguration:
         return list(self.fb.query(self.UNIFIERS.Leaf).all())
 
     @property
+    def small_objects(self)->List[Predicate]:
+        """
+        Small objects
+        """
+        return list(self.fb.query(self.UNIFIERS.ObjectSmallest).all())
+    
+    @property
+    def smart_objects(self)->List[Predicate]:
+        """
+        Smart objects
+        """
+        small_objects = {o.object_id:o.class_name for o in self.small_objects}
+        objects = [] 
+        for o in self.objects :
+            if o.object_id in small_objects and small_objects[o.object_id]!=o.class_name:
+                continue
+            objects.append(o)
+
+        return objects
+    
+    @property
     def objects(self)->List[Predicate]:
         """
         The list of objects
         """
         return list(self.fb.query(self.UNIFIERS.Object).all())
 
+    @property
+    def unique_objects(self)->List[Predicate]:
+        """
+        The list of objects
+        """
+        return list(self.fb.query(self.UNIFIERS.Object).where(self.UNIFIERS.Object.class_name=='object').all())
+    
     @property
     def constraint_violations(self)->List[Predicate]:
         """
@@ -254,9 +291,11 @@ class  OOASPConfiguration:
         """
         Association = self.UNIFIERS.Association
         q = self.fb.query(Association)
-        q = q.where(((Association.object_id1==obj)&(Association.assoc_name==assoc_name)))
-        q = q.select(Association.object_id2)
-        return list(q.all())
+        q1 = q.where(((Association.object_id1==obj)&(Association.assoc_name==assoc_name)))
+        q1 = q1.select(Association.object_id2)
+        q2 = q.where(((Association.object_id2==obj)&(Association.assoc_name==assoc_name)))
+        q2 = q2.select(Association.object_id1)
+        return list(q1.all()) + list(q2.all())
     
     def domains_from(self, start_domain)->int:
         """
@@ -432,8 +471,8 @@ class  OOASPConfiguration:
         ctl.ground([("base", [])],ClingraphContext())
         ctl.solve(on_model=lambda m: fbs.append(Factbase.from_model(m,default_graph="config")))
         graphs = compute_graphs(fbs[0])
-        g = unflatten(str(graphs['config']),chain=2)
-        graphs['config']=Source(g)
+        # g = unflatten(str(graphs['config']),chain=2)
+        # graphs['config']=Source(g)
         render(graphs,format="png",name_format=self.name,directory=directory)
 
     def view(self):

@@ -293,12 +293,11 @@ class InteractiveConfigurator:
                 continue
             curret_assoc = self.config.associated_by(object_id,name)
             remaining = min - len(curret_assoc) 
-            if remaining<0:
-                raise RuntimeError(f"Object {object_id} associated to more objects via {name}, tha expected")
             assocs_added.append(name)
+            if remaining<0:
+                continue
             for _ in range(remaining):
-                object_id2 = self._extend_domain(class2,True,assocs_added)
-
+                self._extend_domain(class2,True,assocs_added)
 
 
 
@@ -358,7 +357,8 @@ class InteractiveConfigurator:
             end = time.time()
             self._add_solving_time(end -start)
             self.hdn.cancel()
-            return None
+            self.found_config=False
+            return False
 
     def _set_config(self,config:OOASPConfiguration):
         """
@@ -393,27 +393,26 @@ class InteractiveConfigurator:
         for i in range(1,config.domain_size+1):
             options[i]=[]
 
-        removed_added = set()
-        for c in config.editable_unifiers:
-            for f in user_fb.query(c).all():
-                if c == config.UNIFIERS.Association:
-                        options[f.object_id1].append(utils.editable_fact_as_remove_action(f,self.brave_config.UNIFIERS))
-                        options[f.object_id2].append(utils.editable_fact_as_remove_action(f,self.brave_config.UNIFIERS))
-                else:
-                    if c== config.UNIFIERS.Object:
-                        if f.object_id in removed_added:
-                            continue
-                        else:
-                            removed_added.add(f.object_id)
-                    options[f.object_id].append(utils.editable_fact_as_remove_action(f,self.brave_config.UNIFIERS))
-        for c in config.editable_unifiers:
-            for f in config.fb.query(c).all():
-                if str(f) not in user_strs:
-                    if c == config.UNIFIERS.Association:
-                        options[f.object_id1].append(utils.editable_fact_as_select_action(f,self.brave_config.UNIFIERS))
-                        options[f.object_id2].append(utils.editable_fact_as_select_action(f,self.brave_config.UNIFIERS))
-                    else:
-                        options[f.object_id].append(utils.editable_fact_as_select_action(f,self.brave_config.UNIFIERS))
+        # Object
+        for f in config.unique_objects:
+            options[f.object_id].append(utils.editable_fact_as_remove_action(f,self.brave_config.UNIFIERS))
+        for f in config.small_objects:
+            if str(f) not in user_strs:
+                options[f.object_id].append(utils.editable_fact_as_select_action(f,self.brave_config.UNIFIERS))
+        # AttributeValue
+        for f in user_fb.query(config.UNIFIERS.AttributeValue).all():
+            options[f.object_id].append(utils.editable_fact_as_remove_action(f,self.brave_config.UNIFIERS))
+        for f in config.fb.query(config.UNIFIERS.AttributeValue).all():
+            if str(f) not in user_strs:
+                options[f.object_id].append(utils.editable_fact_as_select_action(f,self.brave_config.UNIFIERS))
+        # Association
+        for f in user_fb.query(config.UNIFIERS.Association).all():
+            options[f.object_id1].append(utils.editable_fact_as_remove_action(f,self.brave_config.UNIFIERS))
+            options[f.object_id2].append(utils.editable_fact_as_remove_action(f,self.brave_config.UNIFIERS))      
+        for f in config.fb.query(config.UNIFIERS.Association).all():
+            if str(f) not in user_strs:
+                options[f.object_id1].append(utils.editable_fact_as_select_action(f,self.brave_config.UNIFIERS))
+                options[f.object_id2].append(utils.editable_fact_as_select_action(f,self.brave_config.UNIFIERS))  
 
         return options
 
@@ -541,7 +540,7 @@ class InteractiveConfigurator:
             self._new_state("Browse solutions")
         self.found_config = self._next_solution()
         if not self.found_config:
-            print("No more solutions")
+            return False
         return self.found_config
 
     def end_browsing(self)->None:
@@ -550,6 +549,7 @@ class InteractiveConfigurator:
         any previously computed options in the brave config
         """
         self._outdate_models()
+        return None
 
 
     # Actions changing the configuration
@@ -683,17 +683,17 @@ class InteractiveConfigurator:
         name = "Extend incrementally" if not overshoot else "Extend incrementally overshooting"
         self._new_state(name,deep=True)
         if overshoot:
-            objs = self.config.objects
+            objs = self.config.smart_objects
             for o in objs:
                 self._create_required_objects(o.class_name, o.object_id)
         self.found_config = self._next_solution()
 
-        while self.found_config == None or self.domain_size>domain_limit:
+        while not self.found_config  or self.domain_size>domain_limit:
             self._extend_domain()
             self.found_config = self._next_solution()
 
 
-        if self.found_config == None:
+        if not self.found_config:
             raise RuntimeError(f"No configuration found in the domain limit {domain_limit}")
 
         return self.found_config
@@ -705,9 +705,11 @@ class InteractiveConfigurator:
         """
         current_found_config = self.found_config
         if not current_found_config:
-            raise RuntimeError("No configuration found")
+            print("No configuration found")
+            return
         current_found_config.remove_user()
         self.set_configuration(current_found_config)
+        return None
 
     def set_configuration(self,config:OOASPConfiguration):
         """

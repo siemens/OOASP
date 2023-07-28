@@ -2,10 +2,13 @@
 # SPDX-License-Identifier: MIT
 
 import ipywidgets as widgets
-from ipywidgets import Button, VBox, HBox, Label, Layout,GridspecLayout, HTML
+from ipywidgets import Button, VBox, HBox, Label, Layout,GridspecLayout, HTML, Output
 from IPython.display import display, Image
+from fullscreen import Fullscreen
 
-def basic_layout():
+loader_path = './img/loader.gif'
+
+def basic_vbox():
     return VBox(layout=Layout(height='auto', width='auto'))
 
 def wraped_label(text):
@@ -24,17 +27,19 @@ class OOASPUI:
         self.iconf = iconf
         self.config_image = widgets.Image(format='png')
         self.found_config = widgets.Image(format='png')
-
+        self.config_image.layout.object_fit= 'contain'
+        self.found_config.layout.object_fit= 'contain'
         # self.history = VBox(layout=Layout(height='300ox', width='auto',overflow_y='auto'))
-        self.extend = basic_layout()
-        self.edit = basic_layout()
+        self.extend = basic_vbox()
+        self.edit = basic_vbox()
         self.edit_object = ''
-        self.browse = basic_layout()
-        self.check = basic_layout()
+        self.browse = basic_vbox()
+        self.check = basic_vbox()
         self.opts = None
         self.update()
         self.create_structure()
-        display(HTML("<style>div.output_scroll { height: 44em; }</style>"),self.grid)
+        
+        display(HTML("<style>div.output_scroll { height: 44em; } .container { width:100% !important; }</style>"),self.grid)
 
     def create_structure(self):
         """
@@ -75,8 +80,10 @@ class OOASPUI:
         Calls a function and updates the UI
         """
         def fun(bt):
+            self.found_config.value = Image(loader_path).data
             f(bt,*args)
             self.update()
+            # self.loading.value = Image("out/empty.png").data
         return fun
 
     def select_edit_object(self, change):
@@ -103,13 +110,14 @@ class OOASPUI:
         call = getattr(self.iconf, opt['fun_name'])
         call(*opt['args'])
 
-    def button_wrapper(self, fun_name):
+    
+    def button_wrapper(self, fun_name, **kwargs):
         """
         Used for button callbacks that call the iconf
         """
         def f(bt):
             fun = getattr(self.iconf, fun_name)
-            fun()
+            fun(**kwargs)
         return f
 
     def set_config_image(self):
@@ -125,7 +133,10 @@ class OOASPUI:
         Sets the found configuration image
         """
         if self.iconf.found_config is None:
-            image = Image(f"out/empty.png")
+            image = Image("out/empty.png")
+            self.found_config.value = image.data
+        elif self.iconf.found_config is False:
+            image = Image("out/nosol.png")
             self.found_config.value = image.data
         else:
             self.iconf.found_config.save_png("out/found/")
@@ -240,16 +251,19 @@ class OOASPUI:
         """
         Sets the browse section buttons
         """
-        incremental = Button(description='Find incrementally',button_style='primary')
+        b_layout = Layout(height='auto', width='auto')
+        incremental = Button(description='Find incrementally',button_style='primary',layout=b_layout)
         incremental.on_click(self.call_and_update(self.button_wrapper('extend_incrementally')))
-        select_found = Button(description='Select',button_style='success')
+        incrementalos = Button(description='Find incrementally (overshoot)',button_style='primary',layout=b_layout)
+        incrementalos.on_click(self.call_and_update(self.button_wrapper('extend_incrementally',overshoot=True)))
+        select_found = Button(description='Select',button_style='success',layout=b_layout)
         select_found.on_click(self.call_and_update(self.button_wrapper('select_found_configuration')))
-        next_solution = Button(description='Next solution',button_style='info')
+        next_solution = Button(description='Next solution',button_style='info',layout=b_layout)
         next_solution.on_click(self.call_and_update(self.button_wrapper('next_solution')))
-        end_browsing = Button(description='End browsing',syle='danger')
+        end_browsing = Button(description='End browsing',syle='danger',layout=b_layout)
         end_browsing.on_click(self.call_and_update(self.button_wrapper('end_browsing')))
 
-        self.browse.children= tuple([self.title('Browse'), incremental,next_solution,select_found,end_browsing])
+        self.browse.children= tuple([self.title('Browse'), incremental,incrementalos,next_solution,select_found,end_browsing])
 
 
     def set_check(self):
