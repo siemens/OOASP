@@ -25,27 +25,32 @@ def plot_gs(bm_names, title):
     plt.clf()
     dfs = {}
     width = 0.2
+    fig, ax = plt.subplots()
+
     for bm_name in bm_names:
         data_dic = get_results(bm_name)
         df = pd.DataFrame.from_dict(data_dic, orient="index")
         df['name']=df.index
         df=df.reset_index()
         dfs[bm_name]=df
-    pos = 0
-    for bm_name, df in dfs.items():
-        plt.bar(df.index+(width*pos),df['time'],color=solving_cm(pos),width=width)
-        plt.bar(df.index+(width*pos),df['time-grounding'],color=grounding_cm(pos),width=width)
-        pos+=1
+        print(df)
+    for pos, (bm_name, df) in enumerate(dfs.items()):
+        print(bm_name)
+        ax.bar(df.index+(width*pos),df['time'],color=solving_cm(pos),width=width)
+        ax.bar(df.index+(width*pos),df['time-grounding'],color=grounding_cm(pos),width=width)
+        # if bm_name in ['defined-os/incremental','defined/incremental']:
+        ax.bar_label(ax.containers[pos*2 ],df['size'].astype(str) + "/" + df['domain_size'].astype(str),fontsize=5)
 
-    plt.ylabel('Time (sec)')
-    plt.xlabel('#elements')
-    plt.title(title)
+    ax.set_ylabel('Time (sec)')
+    ax.set_xlabel('#elements')
+    ax.set_title(title)
     legends = []
     for bm_name in dfs.keys():
         legends+=[f'solving {bm_name}', f'grounding {bm_name}']
-    plt.legend(legends)
-    plt.xticks(df.index,df['name'])
-    plt.savefig(f'benchmarks/results/{title}.png')
+    ax.legend(legends)
+    ax.set_xticks(df.index,df['name'])
+    fig.savefig(f'benchmarks/results/{title}.png')
+    print(f"Saved image in benchmarks/results/{title}.png")
     # plt.show()
 
 
@@ -72,8 +77,10 @@ def plot_domain(bm_name, title, name):
 
 # Extend solve
 # plot_gs(["basic/extend_solve","paper/extend_solve","defined/extend_solve"], "Compare Extend Solve")
+# plot_gs(["defined/extend_solve","defined-os/extend_solve"], "Compare Extend Solve")
+plot_gs(['defined/incremental','defined-os/incremental'], "Compare Incremental")
 # plot_gs(["basic/incremental",'paper/incremental','defined/incremental','defined-os/incremental'], "Compare Incremental")
-plot_gs(['paper/options','defined/options'], "Compare Options")
+# plot_gs(['defined/options','defined-os/options'], "Compare Options")
 # plot_gs(["basic/options",'paper/options','defined/options','defined-os/options'], "Compare Options")
 # plot_gs(["defined/options",'defined/options_object'], "Compare Options to Object")
 

@@ -99,7 +99,8 @@ def extend_solve(ne):
     iconf = new_iconf()
     # current limit
     for i in range(ne):
-        iconf.new_object("elementA")
+        e = iconf.new_object("elementA")
+        # iconf._create_required_objects("elementA",e)
     iconf.extend_domain(ne + 5)
     found = iconf.next_solution()
     iconf.select_found_configuration()
@@ -111,6 +112,7 @@ def incremental(ne):
     for i in range(ne):
         iconf.new_object("elementA")
     found = iconf.extend_incrementally(overshoot=True)
+    # found = iconf.extend_incrementally()
     iconf.select_found_configuration()
     return iconf
 
@@ -147,8 +149,9 @@ def run(n_runs,fun,elements,name = "extend_solve"):
 
     save_results(results,name)
 
-# run(2,extend_solve,elements=[13,14,15,16,17,18],name=f"{opt}/extend_solve")
-# run(2,incremental,elements=[8,9,10],name=f"{opt}-os/incremental")
+# run(2,extend_solve,elements=[13,14,15,16,17,18],name=f"{opt}-os/extend_solve")
+# run(2,incremental,elements=[8,9,10,11],name=f"{opt}/incremental-noex")
+run(2,incremental,elements=[8,9,10,11],name=f"{opt}-os/incremental")
 # run(2,options,elements=[18,20,22,24],name=f"{opt}-os/options")
-run(2,options,elements=[20,22,24,25,26],name=f"{opt}/options")
+# run(2,options,elements=[20,22,24,25,26],name=f"{opt}/options")
 # run(2,options_object,elements=[18,20,22,24],name=f"{opt}/options_object")

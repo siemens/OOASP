@@ -24,7 +24,8 @@ counts_as(new_object,C2):-ooasp_subclass_ref(C2,cls).
 	ooasp_assoc(AS,C1,C1MIN,C1MAX,C2,C2MIN,C2MAX).
 
 #external user(ooasp_attr_value(A,new_object,V)):
-	ooasp_attr_enum(_,A,V).
+	ooasp_attr_enum(C,A,V),
+	counts_as(new_object,C).
 
 ooasp_isa(C,new_object) :-
 	user(ooasp_isa(C,new_object)).
