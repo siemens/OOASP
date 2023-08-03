@@ -4,44 +4,40 @@
 
 #program domain(new_object).
 
-{ ooasp_isa_leaf(CONFIG,LEAFCLASS,new_object):
-		ooasp_leafclass(V,LEAFCLASS),
-  		ooasp_subclass(V,LEAFCLASS,C) } 1:-
-  	ooasp_configuration(V,CONFIG),
-  	ooasp_domain(CONFIG,C,new_object),
+{ ooasp_isa_leaf(LEAFCLASS,new_object):
+		ooasp_leafclass(LEAFCLASS),
+  		ooasp_subclass(LEAFCLASS,C) } 1:-
+  	ooasp_domain(C,new_object),
 	guess.
 
 % % Associations from new_object
-{ ooasp_associated(CONFIG,ASSOC,new_object,ID2) } :-
-	ooasp_configuration(V,CONFIG),
-	ooasp_assoc(V,ASSOC,C1,C1MIN,C1MAX,C2,C2MIN,C2MAX),
-	ooasp_isa(CONFIG,C1,new_object),
+{ ooasp_associated(ASSOC,new_object,ID2) } :-
+	ooasp_assoc(ASSOC,C1,C1MIN,C1MAX,C2,C2MIN,C2MAX),
+	ooasp_isa(C1,new_object),
 	ID2<new_object,
-	ooasp_isa(CONFIG,C2,ID2),
+	ooasp_isa(C2,ID2),
 	guess.
 
-{ ooasp_associated(CONFIG,ASSOC,ID1,new_object)} :-
-	ooasp_configuration(V,CONFIG),
-	ooasp_assoc(V,ASSOC,C1,C1MIN,C1MAX,C2,C2MIN,C2MAX),
-	ooasp_isa(CONFIG,C2,new_object),
+{ ooasp_associated(ASSOC,ID1,new_object)} :-
+	ooasp_assoc(ASSOC,C1,C1MIN,C1MAX,C2,C2MIN,C2MAX),
+	ooasp_isa(C2,new_object),
 	ID1<new_object,
-	ooasp_isa(CONFIG,C1,ID1),
+	ooasp_isa(C1,ID1),
 	guess.
 
 % Attributes
-1 { ooasp_attribute_value(CONFIG,N,new_object,VALUE):ooasp_attribute_enum(V,C,N,VALUE) } 1 :-
-	ooasp_isa(CONFIG,C,new_object),
-	ooasp_attribute(V,C,N,T),
-	ooasp_attribute_hasdomain(V,C,N),
-	ooasp_configuration(V,CONFIG),
+1 { ooasp_attr_value(A,new_object,V):
+		ooasp_attr_enum(C,A,V) } 1 :-
+	ooasp_isa(C,new_object),
+	ooasp_attr(C,A,T),
+	ooasp_attr_enum(C,A,_),
 	guess.
 
 % TODO: this rule is only used if MAX-MIN < 30
-1 { ooasp_attribute_value(CONFIG,ATTR,new_object,VALUE):VALUE=MIN..MAX } 1:-
-	ooasp_attribute(V,C,ATTR,T),
-	ooasp_isa(CONFIG,C,new_object),
-	ooasp_attribute_minInclusive(V,C,ATTR,MIN),
-	ooasp_attribute_maxInclusive(V,C,ATTR,MAX),
+1 { ooasp_attr_value(A,new_object,V):V=MIN..MAX } 1:-
+	ooasp_attr(C,A,T),
+	ooasp_isa(C,new_object),
+	ooasp_attr_minInclusive(C,A,MIN),
+	ooasp_attr_maxInclusive(C,A,MAX),
 	%(MAX-MIN)<30,
-	ooasp_configuration(V,CONFIG),
 	guess.

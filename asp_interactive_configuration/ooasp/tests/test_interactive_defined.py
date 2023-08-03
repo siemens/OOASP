@@ -10,11 +10,6 @@ from ooasp import settings
 
 import pytest
 from importlib import reload
-@pytest.fixture(autouse=True)
-def overwrite_settings():
-    settings = reload(__import__("ooasp").settings)
-    settings.init('defined')
-    yield
 
 def test_s_interactive_extend_browse():
     racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)

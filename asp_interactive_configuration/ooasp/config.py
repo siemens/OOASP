@@ -58,46 +58,30 @@ class  OOASPConfiguration:
             class Meta:
                 name = "ooasp_configobject"
 
-            if settings.include_config:
-                config=NameField(default=self.name)
             class_name=ConstantField
             object_id=IntegerField
 
         class Leaf(Predicate):
             class Meta:
                 name = "ooasp_isa_leaf"
-            if settings.include_config:
-                config=NameField(default=self.name)
             class_name=ConstantField
             object_id=IntegerField
 
         class ObjectSmallest(Predicate):
             class Meta:
                 name = "ooasp_isa_smallest"
-            if settings.include_config:
-                config=NameField(default=self.name)
             class_name=ConstantField
             object_id=IntegerField
 
         class Object(Predicate):
             class Meta:
                 name = "ooasp_isa"
-            if settings.include_config:
-                config=NameField(default=self.name)
             class_name=ConstantField
             object_id=IntegerField
 
         class AttributeValue(Predicate):
             class Meta:
-                if settings.include_config:
-                    name = "ooasp_attribute_value"
-                else:
-                    name = "ooasp_attr_value"
-
-
-
-            if settings.include_config:
-                config=NameField(default=self.name)
+                name = "ooasp_attr_value"
             attr_name=ConstantField
             object_id=IntegerField
             attr_value=RawField
@@ -106,8 +90,6 @@ class  OOASPConfiguration:
             class Meta:
                 name = "ooasp_associated"
 
-            if settings.include_config:
-                config=NameField(default=self.name)
             assoc_name=ConstantField
             object_id1=IntegerField
             object_id2=IntegerField
@@ -116,8 +98,6 @@ class  OOASPConfiguration:
             class Meta:
                 name = "ooasp_domain"
 
-            if settings.include_config:
-                config=NameField(default=self.name)
             class_name=ConstantField
             object_id=IntegerField
 
@@ -126,8 +106,6 @@ class  OOASPConfiguration:
             class Meta:
                 name = "ooasp_cv"
 
-            if settings.include_config:
-                config=NameField(default=self.name)
             name=ConstantField
             object_id=IntegerField
             info=StringField

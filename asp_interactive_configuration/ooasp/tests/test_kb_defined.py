@@ -4,14 +4,8 @@
 import pytest
 from ooasp.kb import OOASPKnowledgeBase
 import ooasp.settings as settings
-settings.init('defined')
 import pytest
 from importlib import reload
-@pytest.fixture(autouse=True)
-def overwrite_settings():
-    settings = reload(__import__("ooasp").settings)
-    settings.init('defined')
-    yield
 
 def test_kb_create():
     racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)

@@ -221,10 +221,7 @@ class InteractiveConfigurator:
             log(f"Grounding {cls} {s}")
             if s>1:
                 self.ctl.release_external(Function("active", [Number(s-1)]))
-            if settings.ground_cls:
-                self._ground([("domain",[Number(s),Function(cls, [])])])
-            else:
-                self._ground([("domain",[Number(s)])])
+            self._ground([("domain",[Number(s),Function(cls, [])])])
 
             self.ctl.assign_external(Function("active", [Number(s)]), True)
         self.last_size_grounded=s

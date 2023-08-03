@@ -6,10 +6,6 @@ import numpy as np
 import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from ooasp import settings
-opt = 'defined'
-settings.init(opt)
-
 import functools
 import time
 import ooasp.utils as utils

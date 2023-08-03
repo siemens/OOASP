@@ -7,12 +7,6 @@ from ooasp import settings
 
 import pytest
 from importlib import reload
-@pytest.fixture(autouse=True)
-def overwrite_settings():
-    settings = reload(__import__("ooasp").settings)
-    settings.init('defined')
-    yield
-
 
 def test_racks_constraints_element():
     """ test element constraints """
@@ -49,6 +43,9 @@ def test_racks_constraints_frame():
     iconf = InteractiveConfigurator(racks_kb,"i1",[settings.racks_example_constraints])
     iconf.new_object("frame")
     iconf.check()
+    print(racks_kb)
+    print(iconf)
+    print(iconf.config.constraint_violations)
     assert len(iconf.config.constraint_violations)==2
     assert "no_value" in str(iconf.config.constraint_violations)
     assert "lowerbound" in str(iconf.config.constraint_violations)

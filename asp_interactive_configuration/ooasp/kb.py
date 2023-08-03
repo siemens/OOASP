@@ -42,29 +42,21 @@ class  OOASPKnowledgeBase:
         class KBName(Predicate):
             class Meta:
                 name = "ooasp_kb"
-            if settings.include_kb:
-                kb=NameField
 
         class Class(Predicate):
             class Meta:
                 name = "ooasp_class"
-            if settings.include_kb:
-                kb=NameField
             name=ConstantField
 
         class SubClass(Predicate):
             class Meta:
                 name = "ooasp_subclass"
-            if settings.include_kb:
-                kb=NameField
             sub_class=ConstantField
             super_class=ConstantField
 
         class Assoc(Predicate):
             class Meta:
                 name = "ooasp_assoc"
-            if settings.include_kb:
-                kb=NameField
             name= ConstantField
             class1=ConstantField
             min1=IntegerField
@@ -78,48 +70,28 @@ class  OOASPKnowledgeBase:
 
         class Attr(Predicate):
             class Meta:
-                if settings.include_kb:
-                    name = "ooasp_attribute"
-                else:
-                    name = "ooasp_attr"
-            if settings.include_kb:
-                kb=NameField
+                name = "ooasp_attr"
             class_name=ConstantField
             name=ConstantField
             type=TypeField
 
         class AttrMin(Predicate):
             class Meta:
-                if settings.include_kb:
-                    name = "ooasp_attribute_minInclusive"
-                else:
-                    name = "ooasp_attr_minInclusive"
-            if settings.include_kb:
-                kb=NameField
+                name = "ooasp_attr_minInclusive"
             class_name=ConstantField
             name=ConstantField
             val=IntegerField
 
         class AttrMax(Predicate):
             class Meta:
-                if settings.include_kb:
-                    name = "ooasp_attribute_maxInclusive"
-                else:
-                    name = "ooasp_attr_maxInclusive"
-            if settings.include_kb:
-                kb=NameField
+                name = "ooasp_attr_maxInclusive"
             class_name=ConstantField
             name=ConstantField
             val=IntegerField
 
         class AttrEnum(Predicate):
             class Meta:
-                if settings.include_kb:
-                    name = "ooasp_attribute_enum"
-                else:
-                    name = "ooasp_attr_enum"
-            if settings.include_kb:
-                kb=NameField
+                name = "ooasp_attr_enum"
             class_name=ConstantField
             name=ConstantField
             val=ConstantField

@@ -3,16 +3,14 @@
 
 #program domain(new_object).
 
-:- ooasp_isa_leaf(CONFIG,LEAFCLASS_1,new_object), %Assigned
-   ooasp_isa_leaf(CONFIG,LEAFCLASS_2,ID),
-   ID<new_object, %Different
-   LEAFCLASS_1<LEAFCLASS_2,
-   not user(ooasp_isa_leaf(CONFIG,LEAFCLASS_1,new_object)), %Not selected
-   not user(ooasp_isa_leaf(CONFIG,LEAFCLASS_2,ID)),
-   use_symmetry.
+:- ooasp_isa_leaf(C1,new_object),
+      ooasp_isa_leaf(C2,ID),
+      ID<new_object,
+      C1<C2,
+      not user(ooasp_isa_leaf(C1,new_object)),
+      not user(ooasp_isa_leaf(C2,ID)).
 
-:- ooasp_isa_leaf(CONFIG,_,new_object), %Assigned
-   not ooasp_isa_leaf(CONFIG,_,ID),
-   ooasp_isa(CONFIG,_,ID),
-   ID<new_object,
-   use_symmetry. %Different
+:- ooasp_isa_leaf(_,new_object),
+      not ooasp_isa_leaf(_,ID),
+      ooasp_isa(_,ID),
+      ID<new_object.
