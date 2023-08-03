@@ -537,7 +537,7 @@ class InteractiveConfigurator:
             self._new_state("Browse solutions")
         self.found_config = self._next_solution()
         if not self.found_config:
-            return False
+            return None
         return self.found_config
 
     def end_browsing(self)->None:

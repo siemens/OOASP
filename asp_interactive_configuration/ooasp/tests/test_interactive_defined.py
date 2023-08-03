@@ -6,14 +6,13 @@ from clingo import parse_term
 from ooasp.kb import OOASPKnowledgeBase
 from ooasp.interactive import InteractiveConfigurator
 from ooasp import settings
-
+from ooasp.tests.utils import new_racks_iconf
 
 import pytest
 from importlib import reload
 
 def test_s_interactive_extend_browse():
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
-    iconf = InteractiveConfigurator(racks_kb,"i1")
+    iconf = new_racks_iconf()
     iconf.extend_domain(2,cls='element')
     brave = iconf.get_options()
     conf_str = brave.fb.asp_str()
@@ -27,8 +26,7 @@ def test_s_interactive_extend_browse():
 
 
 def test_s_interactive_extend_browse():
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
-    iconf = InteractiveConfigurator(racks_kb,"i1")
+    iconf = new_racks_iconf()
     iconf.extend_domain(5)
     assert iconf.domain_size == 5
     found = iconf.next_solution()
@@ -46,16 +44,14 @@ def test_s_interactive_extend_browse():
 
 
 def test_s_interactive_add_leaf_non_class():
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
-    iconf = InteractiveConfigurator(racks_kb,"i1")
+    iconf = new_racks_iconf()
 
     with pytest.raises(Exception) as e_info:
         iconf.new_object('other')
     assert iconf.domain_size == 0
 
 def test_s_interactive_add_leaf_extend_browse():
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
-    iconf = InteractiveConfigurator(racks_kb,"i1")
+    iconf = new_racks_iconf()
 
     iconf.new_object('frame')
     found = iconf.next_solution()
@@ -75,8 +71,7 @@ def test_s_interactive_add_leaf_extend_browse():
     found = iconf.next_solution()
 
 def test_s_interactive_add_object_extend_browse():
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
-    iconf = InteractiveConfigurator(racks_kb,"i1")
+    iconf = new_racks_iconf()
 
     iconf.new_object('rack')
     found = iconf.next_solution()
@@ -98,8 +93,7 @@ def test_s_interactive_add_object_extend_browse():
     assert "ooasp_isa_leaf(frame,4)." in found.fb.asp_str()
 
 def test_s_interactive_extend_incrementally():
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
-    iconf = InteractiveConfigurator(racks_kb,"i1")
+    iconf = new_racks_iconf()
     iconf.new_object('frame')
     found = iconf.extend_incrementally()
     assert found
@@ -115,8 +109,7 @@ def test_s_interactive_extend_incrementally():
     assert len(iconf.states)==3
 
 def test_s_interactive_extend_incrementally_overshooting():
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
-    iconf = InteractiveConfigurator(racks_kb,"i1")
+    iconf = new_racks_iconf()
     iconf.new_object('frame')
     found = iconf.extend_incrementally(overshoot=True)
     assert found
@@ -134,8 +127,7 @@ def test_s_interactive_extend_incrementally_overshooting():
     assert len(iconf.states)==3
 
 def test_s_interactive_extend_incrementally_overshooting_rack():
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
-    iconf = InteractiveConfigurator(racks_kb,"i1")
+    iconf = new_racks_iconf()
     iconf.new_object('rack')
     found = iconf.extend_incrementally(overshoot=True)
     assert found
@@ -157,8 +149,7 @@ def test_s_interactive_extend_incrementally_overshooting_rack():
 
 
 def test_s_interactive_extend_incrementally_overshooting_leaving_object():
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
-    iconf = InteractiveConfigurator(racks_kb,"i1")
+    iconf = new_racks_iconf()
     iconf.new_object('frame')
     iconf.new_object('frame')
     found = iconf.extend_incrementally(overshoot=True)
@@ -178,23 +169,21 @@ def test_s_interactive_extend_incrementally_overshooting_leaving_object():
 
 
 def test_s_interactive_select_full():
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
-    iconf = InteractiveConfigurator(racks_kb,"i1")
+    iconf = new_racks_iconf()
     iconf.new_object('frame')
     found = iconf.extend_incrementally()
     assert found
     assert iconf.domain_size == 5
     iconf.select_found_configuration()
-    iconf.new_object('frame')
+    iconf.new_object('module')
     found_new = iconf.next_solution()
     for f in found.fb:
         assert str(f) in found_new.fb.asp_str()
 
-    assert "ooasp_isa_leaf(frame,6)." in found_new.fb.asp_str()
+    assert "ooasp_isa(module,6)." in found_new.fb.asp_str()
 
 def test_s_interactive_ccheck():
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
-    iconf = InteractiveConfigurator(racks_kb,"i1")
+    iconf = new_racks_iconf()
     iconf.check()
     assert len(iconf.config.constraint_violations) == 0
     iconf.new_object('frame')
@@ -211,8 +200,7 @@ def test_s_interactive_ccheck():
 
 
 def test_s_interactive_check_custom_cv():
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
-    iconf = InteractiveConfigurator(racks_kb,"i1",[settings.racks_example_constraints])
+    iconf = new_racks_iconf()
     iconf.check()
     assert len(iconf.config.constraint_violations) == 0
     iconf.new_object('frame')
@@ -227,8 +215,7 @@ def test_s_interactive_check_custom_cv():
 
 
 def test_s_interactive_select():
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
-    iconf = InteractiveConfigurator(racks_kb,"i1",[settings.racks_example_constraints])
+    iconf = new_racks_iconf()
     iconf.extend_domain(1)
     iconf.select_object_class(1,'frame')
     objects = iconf.config.objects
@@ -256,8 +243,7 @@ def test_s_interactive_select():
 
 
 def test_s_options():
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
-    iconf = InteractiveConfigurator(racks_kb,"i1",[settings.racks_example_constraints])
+    iconf = new_racks_iconf()
     iconf.extend_domain(1)
 
     brave_conf = iconf.get_options()
@@ -311,15 +297,13 @@ def test_s_options():
 
 def test_s_json():
 
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
-    iconf = InteractiveConfigurator(racks_kb,"i1",[settings.racks_example_constraints])
+    iconf = new_racks_iconf()
 
 
 
 
 def test_normal_extend():
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
-    iconf = InteractiveConfigurator(racks_kb,"i1")
+    iconf = new_racks_iconf()
     iconf.new_object('rackSingle')
     found = iconf.extend_incrementally()
     found_str = found.fb.asp_str()
@@ -330,8 +314,7 @@ def test_normal_extend():
     assert "ooasp_isa_leaf(rackSingle,1)." in found_str
 
 def test_extend_propagate():
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
-    iconf = InteractiveConfigurator(racks_kb,"i1")
+    iconf = new_racks_iconf()
     iconf.extend_domain(1,cls='rackSingle',propagate=True)
     iconf.select_object_class(1, 'rackSingle')
     iconf.select_object_class(2, 'frame')
@@ -357,7 +340,7 @@ def test_extend_propagate():
     assert 'ooasp_associated(rack_frames,1,4).'  in conf_str
     assert 'ooasp_associated(rack_frames,1,5)'  in conf_str
 
-    # iconf = InteractiveConfigurator(racks_kb,"i1")
+    # iconf = new_racks_iconf()
     # iconf.extend_domain(1,cls='element',propagate=True)
     # iconf.select_object_class(1, 'element')
     # conf_str = iconf.config.fb.asp_str()
@@ -370,8 +353,7 @@ def test_extend_propagate():
     # assert 'ooasp_associated(element_modules,1,2)' in conf_str
 
 def test_extend_propagate_empty():
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
-    iconf = InteractiveConfigurator(racks_kb,"i1")
+    iconf = new_racks_iconf()
     iconf.extend_domain(1,cls='rackSingle',propagate=True)
     conf_str = iconf.config.fb.asp_str()
     assert 'ooasp_domain(rackSingle,1).' in conf_str
@@ -386,8 +368,7 @@ def test_extend_propagate_empty():
     assert found
 
 def test_extend_propagate_symmetry():
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
-    iconf = InteractiveConfigurator(racks_kb,"i1")
+    iconf = new_racks_iconf()
     # iconf.extend_domain(5,cls='object',propagate=True)
     iconf.extend_domain(1,cls='rackSingle')
     iconf.extend_domain(4,cls='frame')
@@ -397,7 +378,7 @@ def test_extend_propagate_symmetry():
     assert found
 
 
-    iconf = InteractiveConfigurator(racks_kb,"i1")
+    iconf = new_racks_iconf()
     iconf.extend_domain(4,cls='frame')
     iconf.extend_domain(1,cls='rackSingle')
     found = iconf.next_solution()
@@ -406,8 +387,7 @@ def test_extend_propagate_symmetry():
     assert found
 
 def test_create_required_objects():
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
-    iconf = InteractiveConfigurator(racks_kb,"i1")
+    iconf = new_racks_iconf()
     # iconf.extend_domain(5,cls='object',propagate=True)
     iconf.extend_domain(1,cls='rackSingle')
     iconf.extend_domain(3,cls='frame')
@@ -428,8 +408,7 @@ def test_create_required_objects():
 
 
 def test_custom_interactive_add_leaf_extend_browse():
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
-    iconf = InteractiveConfigurator(racks_kb,"i1")
+    iconf = new_racks_iconf()
 
     iconf.new_object('frame')
     found = iconf.next_solution()
@@ -451,8 +430,7 @@ def test_custom_interactive_add_leaf_extend_browse():
     assert found
 
 def test_not_a_subclass():
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
-    iconf = InteractiveConfigurator(racks_kb,"i1")
+    iconf = new_racks_iconf()
 
     iconf.extend_domain(1,'rackSingle')
     iconf.select_object_class(1, 'rackDouble')
@@ -460,8 +438,7 @@ def test_not_a_subclass():
     assert ok # Its ok because the rackDouble is ignored since it no external is grounded for user(ooasp_isa(1,rackDouble))
 
 def test_add_remove_assoc():
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
-    iconf = InteractiveConfigurator(racks_kb,"i1")
+    iconf = new_racks_iconf()
     
     iconf.extend_domain(1,'object')
     iconf.extend_domain(1,'object')
@@ -499,8 +476,7 @@ def test_add_remove_assoc():
 
 
 def test_three_racks():
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
-    iconf = InteractiveConfigurator(racks_kb,"i1")
+    iconf = new_racks_iconf()
 
     iconf.new_object('rackSingle')
     iconf.new_object('rackSingle')
