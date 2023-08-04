@@ -1,9 +1,11 @@
 # Copyright (c) 2022 Siemens AG Oesterreich
 # SPDX-License-Identifier: MIT
 
+from importlib import resources
 import ipywidgets as widgets
 from ipywidgets import Button, VBox, Label, Layout,GridspecLayout, HTML
 from IPython.display import display, Image
+import ooasp.resources
 
 def basic_layout():
     return VBox(layout=Layout(height='auto', width='auto'))
@@ -119,7 +121,8 @@ class OOASPUI:
         Sets the found configuration image
         """
         if self.iconf.found_config is None:
-            image = Image(f"out/empty.png")
+            path = resources.files(ooasp.resources).joinpath("empty.png")
+            image = Image(str(path))
             self.found_config.value = image.data
         else:
             self.iconf.found_config.save_png("out/found/")
