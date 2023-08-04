@@ -4,22 +4,24 @@
 
 #program domain(new_object, cls).
 
-% Defined domains
+% If an object has a domain, then it could be instanciated
 { ooasp_isa_leaf(LEAFCLASS,new_object):
 		ooasp_leafclass(LEAFCLASS),
   		ooasp_subclass_ref(LEAFCLASS,C) } 1:-
   	ooasp_domain(C,new_object),
 	guess.
 
+% If is_a appears then it has to be instanciated as leaf
 1{ ooasp_isa_leaf(LEAFCLASS,new_object):
 		ooasp_leafclass(LEAFCLASS),
   		ooasp_subclass_ref(LEAFCLASS,C) } 1:-
   	ooasp_isa(C,new_object),
 	guess.
 
-% ooasp_cv(not_instance,new_object,"Yes {} {}",(C,LEAFCLASS)):- ooasp_domain(C,new_object), ooasp_subclass_ref(LEAFCLASS,C), ooasp_leafclass(LEAFCLASS).
-% ooasp_cv(not_instance,new_object,"Not an instance",(new_object,)):- ooasp_isa(C,new_object), not ooasp_isa_leaf(_,new_object).
-% :- ooasp_isa(C,new_object), not ooasp_isa_leaf(_,new_object). %Not a good idea
+% #heuristic ooasp_isa_leaf(LEAFCLASS, new_object): 
+% 	ooasp_domain(C,new_object),
+% 	ooasp_leafclass(LEAFCLASS),
+%   	ooasp_subclass_ref(LEAFCLASS,C). [-1,sign]
 
 % % Associations from new_object
 { ooasp_associated(ASSOC,new_object,ID2) } :-

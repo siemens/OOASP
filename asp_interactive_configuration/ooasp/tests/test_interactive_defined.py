@@ -11,7 +11,7 @@ from ooasp.tests.utils import new_racks_iconf
 import pytest
 from importlib import reload
 
-def test_s_interactive_extend_browse():
+def test_s_interactive_extend_browse_basic():
     iconf = new_racks_iconf()
     iconf.extend_domain(2,cls='element')
     brave = iconf.get_options()
@@ -35,7 +35,13 @@ def test_s_interactive_extend_browse():
     assert "ooasp_domain(object,3)." in iconf.config.fb.asp_str()
     assert "ooasp_domain(object,4)." in iconf.config.fb.asp_str()
     assert "ooasp_domain(object,5)." in iconf.config.fb.asp_str()
+    print(found)
     found = iconf.next_solution()
+    print(found)
+    found = iconf.next_solution()
+    print(found)
+    found = iconf.next_solution()
+    print(found)
     assert found
     q = found.associations
     assert len(q)==4
@@ -153,6 +159,9 @@ def test_s_interactive_extend_incrementally_overshooting_leaving_object():
     iconf.new_object('frame')
     iconf.new_object('frame')
     found = iconf.extend_incrementally(overshoot=True)
+    print(found)
+    found = iconf.next_solution()
+    print(found)
     assert found
     assert iconf.domain_size == 6
     assert "ooasp_domain(frame,1)." in found.fb.asp_str()

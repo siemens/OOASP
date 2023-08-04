@@ -41,5 +41,3 @@ ooasp_assoc_gen(ASSOC,2,new_object,ID1) :-
 
 ooasp_assoc_gen(ASSOC,2,ID2,new_object) :-
 	ooasp_associated(ASSOC,new_object,ID2).
-
-

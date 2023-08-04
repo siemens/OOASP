@@ -129,6 +129,7 @@ class InteractiveConfigurator:
         """
         self.ctl = Control(["0",
                 "--warn=none",
+                # "--heuristic=Domain",
                 f"-c config_name={self.config_name}",
                 f"-c kb_name={self.kb.name}"])
         self.ctl.add("base",[],self.kb.fb.asp_str())
