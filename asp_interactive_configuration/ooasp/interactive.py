@@ -383,7 +383,7 @@ class InteractiveConfigurator:
         self.state.config=config
 
 
-    def _add_objects_to_dic(self, config: OOASPConfiguration, options: dict) -> dict:
+    def _add_objects_to_dict(self, config: OOASPConfiguration, options: dict) -> dict:
         """
         Adds the objects from the brave configuration to the provided dictionary
 
@@ -403,7 +403,7 @@ class InteractiveConfigurator:
         return options
     
 
-    def _add_attributes_to_dic(self, config: OOASPConfiguration, options: dict) -> dict:
+    def _add_attributes_to_dict(self, config: OOASPConfiguration, options: dict) -> dict:
         """
         Adds the attributes from the brave configuration to the provided dictionary
 
@@ -424,7 +424,7 @@ class InteractiveConfigurator:
         return options
     
 
-    def _add_associations_to_dic(self, config: OOASPConfiguration, options: dict) -> dict:
+    def _add_associations_to_dict(self, config: OOASPConfiguration, options: dict) -> dict:
         """
         Adds the associations from the brave configuration to the provided dictionary
 
