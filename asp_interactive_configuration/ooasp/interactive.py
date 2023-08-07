@@ -462,9 +462,9 @@ class InteractiveConfigurator:
         for i in range(1,config.domain_size+1):
             options[i]=[]
 
-        options = self._add_objects_to_dic(config, options)
-        options = self._add_attributes_to_dic(config, options)
-        options = self._add_associations_to_dic(config, options)
+        options = self._add_objects_to_dict(config, options)
+        options = self._add_attributes_to_dict(config, options)
+        options = self._add_associations_to_dict(config, options)
 
         return options
 
