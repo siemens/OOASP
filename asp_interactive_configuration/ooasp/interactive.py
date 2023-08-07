@@ -281,6 +281,16 @@ class InteractiveConfigurator:
         self.ctl.add("domain",[str(self.domain_size)],str(fact)+".")
 
     def _create_required_objects(self, cls:str, object_id:int, ignore_assoc:List=None)->None:
+        """
+        Creates required objects for a given object based on associations in the knowledge base configuration.
+        It ensures that the minimum required number of associated objects is met for each association.
+        
+            Parameters:
+                cls (str): The class (object type) for which required objects are being created.
+                object_id (int): The ID of the object for which required objects are being created.
+                ignore_assoc (List, optional): A list of association names to be ignored during object creation.
+                    Defaults to None.
+        """
         if ignore_assoc is None:
             ignore_assoc = set()
         assocs = self.config.kb.associations(cls)
@@ -372,6 +382,71 @@ class InteractiveConfigurator:
         self.state.domain_size = new_size
         self.state.config=config
 
+
+    def _add_objects_to_dict(self, config: OOASPConfiguration, options: dict) -> dict:
+        """
+        Adds the objects from the brave configuration to the provided dictionary
+
+            Parameters:
+                config: The current brave configuration
+                options:The dictionary to be updated with the objects from the config
+            Returns:
+                The updated dictionary, now containing the objects from the configuration
+        """
+        user_strs = [str(s) for s in config.user_input]
+
+        for f in config.unique_objects:
+            options[f.object_id].append(utils.editable_fact_as_remove_action(f,config.UNIFIERS))
+        for f in config.small_objects:
+            if str(f) not in user_strs:
+                options[f.object_id].append(utils.editable_fact_as_select_action(f,config.UNIFIERS))
+        return options
+    
+
+    def _add_attributes_to_dict(self, config: OOASPConfiguration, options: dict) -> dict:
+        """
+        Adds the attributes from the brave configuration to the provided dictionary
+
+            Parameters:
+                config: The current brave configuration
+                options:The dictionary to be updated with the attributes from the config
+            Returns:
+                The updated dictionary, now containing the attributes from the configuration
+        """
+        user_strs = [str(s) for s in config.user_input]
+        user_fb = unify(config.editable_unifiers, config.user_input)
+
+        for f in user_fb.query(config.UNIFIERS.AttributeValue).all():
+            options[f.object_id].append(utils.editable_fact_as_remove_action(f,config.UNIFIERS))
+        for f in config.fb.query(config.UNIFIERS.AttributeValue).all():
+            if str(f) not in user_strs:
+                options[f.object_id].append(utils.editable_fact_as_select_action(f,config.UNIFIERS))
+        return options
+    
+
+    def _add_associations_to_dict(self, config: OOASPConfiguration, options: dict) -> dict:
+        """
+        Adds the associations from the brave configuration to the provided dictionary
+
+            Parameters:
+                config: The current brave configuration
+                options:The dictionary to be updated with the associations from the config
+            Returns:
+                The updated dictionary, now containing the associations from the configuration
+        """
+        user_strs = [str(s) for s in config.user_input]
+        user_fb = unify(config.editable_unifiers, config.user_input)
+
+        for f in user_fb.query(config.UNIFIERS.Association).all():
+            options[f.object_id1].append(utils.editable_fact_as_remove_action(f,self.brave_config.UNIFIERS))
+            options[f.object_id2].append(utils.editable_fact_as_remove_action(f,self.brave_config.UNIFIERS))      
+        for f in config.fb.query(config.UNIFIERS.Association).all():
+            if str(f) not in user_strs:
+                options[f.object_id1].append(utils.editable_fact_as_select_action(f,self.brave_config.UNIFIERS))
+                options[f.object_id2].append(utils.editable_fact_as_select_action(f,self.brave_config.UNIFIERS))
+        return options
+
+
     def _brave_config_as_options(self) -> dict:
         """
         Returns the brave configuration computed as a dictionary with
@@ -383,33 +458,13 @@ class InteractiveConfigurator:
         if self.brave_config is None:
             raise RuntimeError("A brave configuration must be computed to get it as options")
         config = self.brave_config
-        user_symbols = config.user_input
-        user_strs = [str(s) for s in user_symbols]
-        user_fb = unify(config.editable_unifiers, user_symbols)
         options = {}
         for i in range(1,config.domain_size+1):
             options[i]=[]
 
-        # Object
-        for f in config.unique_objects:
-            options[f.object_id].append(utils.editable_fact_as_remove_action(f,self.brave_config.UNIFIERS))
-        for f in config.small_objects:
-            if str(f) not in user_strs:
-                options[f.object_id].append(utils.editable_fact_as_select_action(f,self.brave_config.UNIFIERS))
-        # AttributeValue
-        for f in user_fb.query(config.UNIFIERS.AttributeValue).all():
-            options[f.object_id].append(utils.editable_fact_as_remove_action(f,self.brave_config.UNIFIERS))
-        for f in config.fb.query(config.UNIFIERS.AttributeValue).all():
-            if str(f) not in user_strs:
-                options[f.object_id].append(utils.editable_fact_as_select_action(f,self.brave_config.UNIFIERS))
-        # Association
-        for f in user_fb.query(config.UNIFIERS.Association).all():
-            options[f.object_id1].append(utils.editable_fact_as_remove_action(f,self.brave_config.UNIFIERS))
-            options[f.object_id2].append(utils.editable_fact_as_remove_action(f,self.brave_config.UNIFIERS))      
-        for f in config.fb.query(config.UNIFIERS.Association).all():
-            if str(f) not in user_strs:
-                options[f.object_id1].append(utils.editable_fact_as_select_action(f,self.brave_config.UNIFIERS))
-                options[f.object_id2].append(utils.editable_fact_as_select_action(f,self.brave_config.UNIFIERS))  
+        options = self._add_objects_to_dict(config, options)
+        options = self._add_attributes_to_dict(config, options)
+        options = self._add_associations_to_dict(config, options)
 
         return options
 
