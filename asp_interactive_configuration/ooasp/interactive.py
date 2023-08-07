@@ -281,6 +281,16 @@ class InteractiveConfigurator:
         self.ctl.add("domain",[str(self.domain_size)],str(fact)+".")
 
     def _create_required_objects(self, cls:str, object_id:int, ignore_assoc:List=None)->None:
+        """
+        Creates required objects for a given object based on associations in the knowledge base configuration.
+        It ensures that the minimum required number of associated objects is met for each association.
+        
+            Parameters:
+                cls (str): The class (object type) for which required objects are being created.
+                object_id (int): The ID of the object for which required objects are being created.
+                ignore_assoc (List, optional): A list of association names to be ignored during object creation.
+                    Defaults to None.
+        """
         if ignore_assoc is None:
             ignore_assoc = set()
         assocs = self.config.kb.associations(cls)
@@ -373,7 +383,16 @@ class InteractiveConfigurator:
         self.state.config=config
 
 
-    def _object_options(self, config: OOASPConfiguration, options: dict) -> dict:
+    def _add_objects_to_dic(self, config: OOASPConfiguration, options: dict) -> dict:
+        """
+        Adds the objects from the brave configuration to the provided dictionary
+
+            Parameters:
+                config: The current brave configuration
+                options:The dictionary to be updated with the objects from the config
+            Returns:
+                The updated dictionary, now containing the objects from the configuration
+        """
         user_strs = [str(s) for s in config.user_input]
 
         for f in config.unique_objects:
@@ -384,7 +403,16 @@ class InteractiveConfigurator:
         return options
     
 
-    def _attribute_options(self, config: OOASPConfiguration, options: dict) -> dict:
+    def _add_attributes_to_dic(self, config: OOASPConfiguration, options: dict) -> dict:
+        """
+        Adds the attributes from the brave configuration to the provided dictionary
+
+            Parameters:
+                config: The current brave configuration
+                options:The dictionary to be updated with the attributes from the config
+            Returns:
+                The updated dictionary, now containing the attributes from the configuration
+        """
         user_strs = [str(s) for s in config.user_input]
         user_fb = unify(config.editable_unifiers, config.user_input)
 
@@ -396,8 +424,16 @@ class InteractiveConfigurator:
         return options
     
 
-    def _association_options(self, config: OOASPConfiguration, options: dict) -> dict:
+    def _add_associations_to_dic(self, config: OOASPConfiguration, options: dict) -> dict:
+        """
+        Adds the associations from the brave configuration to the provided dictionary
 
+            Parameters:
+                config: The current brave configuration
+                options:The dictionary to be updated with the associations from the config
+            Returns:
+                The updated dictionary, now containing the associations from the configuration
+        """
         user_strs = [str(s) for s in config.user_input]
         user_fb = unify(config.editable_unifiers, config.user_input)
 
@@ -426,9 +462,9 @@ class InteractiveConfigurator:
         for i in range(1,config.domain_size+1):
             options[i]=[]
 
-        options = self._object_options(config, options)
-        options = self._attribute_options(config, options)
-        options = self._association_options(config, options)
+        options = self._add_objects_to_dic(config, options)
+        options = self._add_attributes_to_dic(config, options)
+        options = self._add_associations_to_dic(config, options)
 
         return options
 

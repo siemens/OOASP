@@ -4,7 +4,6 @@
 import ipywidgets as widgets
 from ipywidgets import Button, VBox, HBox, Label, Layout,GridspecLayout, HTML, Output
 from IPython.display import display, Image
-from fullscreen import Fullscreen
 
 loader_path = './img/loader.gif'
 
@@ -180,6 +179,9 @@ class OOASPUI:
         self.extend.children= tuple([self.title('Extend'),HBox(children=[domain_lbl,extend_domain]),config_lbl,dropdown])
 
     def str_opt(self, option):
+        """
+        Takes an option and formats it into a human-readable string representation.
+        """
         r_or_s, edit_opt = option['fun_name'].split('_',1)
         if option['fun_name']== 'remove_object_class':
             s = 'Remove'
