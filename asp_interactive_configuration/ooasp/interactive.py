@@ -126,7 +126,6 @@ class InteractiveConfigurator:
         """
         self.ctl = Control(["0",
                 "--warn=none",
-                # "--heuristic=Domain",
                 f"-c config_name={self.config_name}",
                 f"-c kb_name={self.kb.name}"])
         self.ctl.add("base",[],self.kb.fb.asp_str())
@@ -275,6 +274,7 @@ class InteractiveConfigurator:
         self.ctl.add("domain",[str(self.domain_size)],str(fact)+".")
 
     def _create_required_objects(self, cls:str, object_id:int, ignore_assoc:List=None)->None:
+<<<<<<< HEAD
         """
         Creates required objects for a given object based on associations in the knowledge base configuration.
         It ensures that the minimum required number of associated objects is met for each association.
@@ -285,11 +285,17 @@ class InteractiveConfigurator:
                 ignore_assoc (List, optional): A list of association names to be ignored during object creation.
                     Defaults to None.
         """
+=======
+        print("Creating required")
+        print(cls)
+        print(ignore_assoc)
+>>>>>>> 0a3631d (Fixing overshoot)
         if ignore_assoc is None:
             ignore_assoc = set()
         assocs = self.config.kb.associations(cls)
         assocs_added = []
         for name, class2, min, max in assocs:
+            print(f"ASS: {name}")
             if name in ignore_assoc:
                 continue
             curret_assoc = self.config.associated_by(object_id,name)

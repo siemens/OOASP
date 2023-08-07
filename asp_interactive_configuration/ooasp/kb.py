@@ -9,6 +9,7 @@ from clorm import Predicate, ConstantField, IntegerField, FactBase, refine_field
 from clingraph.orm import Factbase
 from clingraph.graphviz import compute_graphs, render
 from clingraph.clingo_utils import ClingraphContext
+from functools import cache
 import ooasp.settings as settings
 # pylint: disable=missing-class-docstring
 # pylint: disable=too-few-public-methods
@@ -122,6 +123,7 @@ class  OOASPKnowledgeBase:
 
 
     @property
+    # @cache
     def classes(self)->List[Predicate]:
         """
         A list of all classes. Computed via queries to the Factbase

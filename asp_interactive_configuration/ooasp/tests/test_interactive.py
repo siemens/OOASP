@@ -152,6 +152,27 @@ def test_s_interactive_extend_incrementally_overshooting_rack():
     print(found)
     assert iconf.domain_size == 10
 
+def test_s_interactive_extend_incrementally_overshooting_rack_specialization():
+    iconf = new_racks_iconf()
+    iconf.new_object('rackSingle')
+    found = iconf.extend_incrementally(overshoot=True)
+    assert found
+    print(found)
+    assert iconf.domain_size == 5
+    assert "ooasp_domain(rack,1)." in found.fb.asp_str()
+    assert "ooasp_isa_leaf(rackSingle,1)." in found.fb.asp_str()
+    assert "ooasp_domain(frame,2)." in found.fb.asp_str()
+    assert "ooasp_domain(frame,3)." in found.fb.asp_str()
+    assert "ooasp_domain(frame,4)." in found.fb.asp_str()
+    assert "ooasp_domain(frame,5)." in found.fb.asp_str()
+    
+    iconf.select_found_configuration()
+    iconf.new_object('rack')
+    found = iconf.extend_incrementally(overshoot=True)
+    assert found
+    print(found)
+    assert iconf.domain_size == 10
+
 
 def test_s_interactive_extend_incrementally_overshooting_leaving_object():
     iconf = new_racks_iconf()

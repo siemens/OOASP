@@ -18,11 +18,6 @@
   	ooasp_isa(C,new_object),
 	guess.
 
-% #heuristic ooasp_isa_leaf(LEAFCLASS, new_object): 
-% 	ooasp_domain(C,new_object),
-% 	ooasp_leafclass(LEAFCLASS),
-%   	ooasp_subclass_ref(LEAFCLASS,C). [-1,sign]
-
 % % Associations from new_object
 { ooasp_associated(ASSOC,new_object,ID2) } :-
 	ooasp_assoc(ASSOC,C1,C1MIN,C1MAX,C2,C2MIN,C2MAX),
