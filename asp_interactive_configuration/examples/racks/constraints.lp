@@ -161,12 +161,12 @@ ooasp_cv(frame_must_be_within_range, F, "Frame position is outside of range {} "
 
 % moduleII requires moduleV
 % TODO: Is using active(new_object) enough?
-% ooasp_cv(moduleII_requires_moduleV,F,"ModuleII requires moduleV in frame {}",(F,new_object)):-
-% 	active(new_object),
-%     ooasp_isa(frame,F),
-%     ooasp_isa(moduleII,M),
-%     ooasp_associated(frame_modules,F,M),
-%     not ooasp_isa(moduleV,M5): ooasp_associated(frame_modules,F,M5).
+ooasp_cv(moduleII_requires_moduleV,F,"ModuleII requires moduleV in frame {}",(F,new_object)):-
+	active(new_object),
+    ooasp_isa(frame,F),
+    ooasp_isa(moduleII,M),
+    ooasp_associated(frame_modules,F,M),
+    not ooasp_isa(moduleV,M5): ooasp_associated(frame_modules,F,M5).
 
 % ooasp_cv(moduleII_requires_moduleV,F,"ModuleII requires moduleV in frame {}",(F,new_object)):-
 % 	active(new_object),

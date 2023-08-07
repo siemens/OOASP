@@ -700,6 +700,7 @@ class InteractiveConfigurator:
         new_object = self._extend_domain(cls=object_class)
         try:
             self.config.add_object(new_object,object_class)
+            return new_object
         except Exception as e:
             self.states.pop()
             raise e

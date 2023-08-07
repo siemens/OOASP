@@ -49,35 +49,20 @@ ooasp_assoc(frame_modules,frame,1,1,module,0,5).
 ooasp_assoc(element_modules,element,0,1,module,1,4).
 
 
-ooasp_assoc(rack_framesS,rackSingle,1,1,frame,4,4).
-ooasp_assoc(rack_framesD,rackDouble,1,1,frame,8,8).
+ooasp_assoc(rack_framesS,rackSingle,0,1,frame,4,4).
+ooasp_assoc(rack_framesD,rackDouble,0,1,frame,8,8).
 
 ooasp_assoc(element_modules1,elementA,1,1,moduleI,1,1).
-% ooasp_assoc(element_modules,elementA,0,0,moduleII,0,0).
-% ooasp_assoc(element_modules,elementA,0,0,moduleIII,0,0).
-% ooasp_assoc(element_modules,elementA,0,0,moduleIV,0,0).
-
-% ooasp_assoc(element_modules,elementB,0,0,moduleI,0,0).
 ooasp_assoc(element_modules2,elementB,1,1,moduleII,2,2).
-% ooasp_assoc(element_modules,elementB,0,0,moduleIII,0,0).
-% ooasp_assoc(element_modules,elementB,0,0,moduleIV,0,0).
-
-% ooasp_assoc(element_modules,elementC,0,0,moduleI,0,0).
-% ooasp_assoc(element_modules,elementC,0,0,moduleII,0,0).
 ooasp_assoc(element_modules3,elementC,1,1,moduleIII,3,3).
-% ooasp_assoc(element_modules,elementC,0,0,moduleIV,0,0).
-
-% ooasp_assoc(element_modules,elementD,0,0,moduleI,0,0).
-% ooasp_assoc(element_modules,elementD,0,0,moduleII,0,0).
-% ooasp_assoc(element_modules,elementD,0,0,moduleIII,0,0).
 ooasp_assoc(element_modules4,elementD,1,1,moduleIV,4,4).
 
-% ooasp_assoc_specialization(rack_framesS,rack_frames).
-% ooasp_assoc_specialization(rack_framesD,rack_frames).
-% ooasp_assoc_specialization(element_modules1,element_modules).
-% ooasp_assoc_specialization(element_modules2,element_modules).
-% ooasp_assoc_specialization(element_modules3,element_modules).
-% ooasp_assoc_specialization(element_modules4,element_modules).
+ooasp_assoc_specialization(rack_framesS,rack_frames).
+ooasp_assoc_specialization(rack_framesD,rack_frames).
+ooasp_assoc_specialization(element_modules1,element_modules).
+ooasp_assoc_specialization(element_modules2,element_modules).
+ooasp_assoc_specialization(element_modules3,element_modules).
+ooasp_assoc_specialization(element_modules4,element_modules).
 
 
 ooasp_attr(frame,frame_position,int).

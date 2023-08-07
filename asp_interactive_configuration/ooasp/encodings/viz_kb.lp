@@ -38,7 +38,7 @@ attr(edge,(Class1,Class2), fontcolor, lightblue):-ooasp_assoc(Name,Class1,Min1,M
 attr(edge,(Class1,Class2), dir, black):-ooasp_assoc(Name,Class1,Min1,Max1,Class2,Min2,Max2).
 attr(edge,(Class1,Class2), arrowtail, odiamond):-ooasp_assoc(Name,Class1,Min1,Max1,Class2,Min2,Max2).
 attr(edge,(Class1,Class2), arrowhead, odiamond):-ooasp_assoc(Name,Class1,Min1,Max1,Class2,Min2,Max2).
-attr(edge,(Class1,Class2), xlabel, "<<b>{{name}}</b> <br/><sub> {{super}}</sub>>"):-ooasp_assoc(Name,Class1,Min1,Max1,Class2,Min2,Max2).
+attr(edge,(Class1,Class2), xlabel, "<{{super}} <br/><FONT POINT-SIZE='10'> {{name}}</FONT>>"):-ooasp_assoc(Name,Class1,Min1,Max1,Class2,Min2,Max2).
 attr(edge,(Class1,Class2), (xlabel,name), Name):-ooasp_assoc(Name,Class1,Min1,Max1,Class2,Min2,Max2).
 attr(edge,(Class1,Class2), (xlabel,super), Super):-ooasp_assoc(Name,Class1,Min1,Max1,Class2,Min2,Max2),ooasp_assoc_specialization(Name,Super).
 

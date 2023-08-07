@@ -35,18 +35,17 @@ def test_s_interactive_extend_browse():
     assert "ooasp_domain(object,3)." in iconf.config.fb.asp_str()
     assert "ooasp_domain(object,4)." in iconf.config.fb.asp_str()
     assert "ooasp_domain(object,5)." in iconf.config.fb.asp_str()
-    print(found)
     found = iconf.next_solution()
-    print(found)
-    found = iconf.next_solution()
-    print(found)
-    found = iconf.next_solution()
-    print(found)
     assert found
-    q = found.associations
-    assert len(q)==4
+    assert len(found.associations)==8 # 4*2
+    found = iconf.next_solution()
+    assert found
+    assert len(found.associations)==8 # 4*2
+    found = iconf.next_solution()
+    assert found
+    assert len(found.associations)==8 # 4*2
     q = iconf.found_config.associations
-    assert len(q)==4
+    assert len(q)==8
 
 
 def test_s_interactive_add_leaf_non_class():
@@ -188,6 +187,7 @@ def test_s_interactive_select_full():
 
     assert "ooasp_isa(module,6)." in found_new.fb.asp_str()
 
+
 def test_s_interactive_ccheck():
     iconf = new_racks_iconf()
     iconf.check()
@@ -216,7 +216,10 @@ def test_s_interactive_check_custom_cv():
     iconf.new_object('frame')
     iconf.select_association('rack_frames',5,6)
     iconf.check()
-    assert 'ooasp_cv(racksingleupperbound,5,"Rack singles should be associated to 4 frames ",(6,)).' in iconf.state.config.fb.asp_str()
+    print(iconf.state.config.fb.asp_str())
+    assert '(upperbound' in iconf.state.config.fb.asp_str()
+    assert '(rack_framesS,4' in iconf.state.config.fb.asp_str()
+    
 
 
 
@@ -489,3 +492,33 @@ def test_three_racks():
     iconf.new_object('rackSingle')
     found = iconf.extend_incrementally()
     found.save_png(directory="./out/test")
+
+def test_specialization():
+    iconf = new_racks_iconf()
+
+    iconf.extend_domain(5)
+    iconf.select_object_class(1, 'rackSingle')
+    iconf.select_object_class(2, 'frame')
+    iconf.select_object_class(3, 'frame')
+    iconf.select_object_class(4, 'frame')
+    iconf.select_object_class(5, 'frame')
+    iconf.select_association('rack_frames',1,2)
+    iconf.select_association('rack_frames',1,3)
+    iconf.select_association('rack_frames',1,4)
+    iconf.select_association('rack_frames',1,5)
+    iconf.check()
+    # Only the missing values
+    assert len(iconf.config.constraint_violations) == 4
+
+def test_specialization_extend():
+    iconf = new_racks_iconf()
+    iconf.new_object('rackSingle')
+    found = iconf.extend_incrementally()    
+    assert found
+    assert found.size == 5
+
+    iconf = new_racks_iconf()
+    iconf.new_object('rackDouble')
+    found = iconf.extend_incrementally()    
+    assert found
+    assert found.size == 9

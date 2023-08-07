@@ -73,7 +73,11 @@ attr(node, Object_id, (label,attr,Attr_name), @argument_str(Attr_name,Value,"#0D
 % Associations
 edge((Object_id1,Object_id2)) :-ooasp_associated(Name,Object_id1,Object_id2).
 
-attr(edge, (Object_id1,Object_id2), xlabel, Name) :- ooasp_associated(Name,Object_id1,Object_id2).
+% attr(edge, (Object_id1,Object_id2), xlabel, Name) :- ooasp_associated(Name,Object_id1,Object_id2).
+attr(edge,(Object_id1,Object_id2), xlabel, "<{{name}} <br/><FONT POINT-SIZE='10'> {{super}}</FONT>>"):-ooasp_associated(Name,Object_id1,Object_id2).
+attr(edge,(Object_id1,Object_id2), (xlabel,name), Name):-ooasp_associated(Name,Object_id1,Object_id2), not ooasp_assoc_specialization(_,Name).
+attr(edge,(Object_id1,Object_id2), (xlabel,super), Super):-ooasp_associated(Name,Object_id1,Object_id2),ooasp_assoc_specialization(Name,Super).
+
 attr(edge, (Object_id1,Object_id2), color, "#0DB144") :- user(ooasp_associated(Name,Object_id1,Object_id2)).
 attr(edge, (Object_id1,Object_id2), fontcolor, "#0DB144") :- user(ooasp_associated(Name,Object_id1,Object_id2)).
 
