@@ -159,9 +159,6 @@ def test_s_interactive_extend_incrementally_overshooting_leaving_object():
     iconf.new_object('frame')
     iconf.new_object('frame')
     found = iconf.extend_incrementally(overshoot=True)
-    print(found)
-    found = iconf.next_solution()
-    print(found)
     assert found
     assert iconf.domain_size == 6
     assert "ooasp_domain(frame,1)." in found.fb.asp_str()

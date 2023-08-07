@@ -54,6 +54,12 @@ class  OOASPKnowledgeBase:
             sub_class=ConstantField
             super_class=ConstantField
 
+        class AssocSpecialization(Predicate):
+            class Meta:
+                name = "ooasp_assoc_specialization"
+            sub_class=ConstantField
+            super_class=ConstantField
+
         class Assoc(Predicate):
             class Meta:
                 name = "ooasp_assoc"
@@ -100,6 +106,7 @@ class  OOASPKnowledgeBase:
                 Class=Class,
                 SubClass=SubClass,
                 Assoc=Assoc,
+                AssocSpecialization=AssocSpecialization,
                 Attr=Attr,
                 AttrMin=AttrMin,
                 AttrMax=AttrMax,

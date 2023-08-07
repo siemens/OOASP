@@ -5,7 +5,7 @@ graph(kb).
 
 attr(graph_nodes, kb, shape, rectangle).
 attr(graph, kb, splines, ortho).
-attr(graph, kb, nodesep, "1").
+attr(graph, kb, nodesep, "2").
 attr(graph, kb, rankdir, "TB").
 attr(graph, kb, fontsize, 20).
 attr(graph, kb, (label,0), "Knowledge Base "):-ooasp_class(object).
@@ -31,10 +31,16 @@ attr(node, T, hight, 0):- node(T).
 % Associations
 edge((Class1,Class2)):-ooasp_assoc(Name,Class1,Min1,Max1,Class2,Min2,Max2).
 
-attr(edge,(Class1,Class2), dir, back):-ooasp_assoc(Name,Class1,Min1,Max1,Class2,Min2,Max2).
+attr(edge,(Class1,Class2), color, black):-ooasp_assoc(Name,Class1,Min1,Max1,Class2,Min2,Max2), not ooasp_assoc_specialization(Name,_).
+attr(edge,(Class1,Class2), color, lightblue):-ooasp_assoc(Name,Class1,Min1,Max1,Class2,Min2,Max2), ooasp_assoc_specialization(Name,_).
+attr(edge,(Class1,Class2), fontcolor, lightblue):-ooasp_assoc(Name,Class1,Min1,Max1,Class2,Min2,Max2), ooasp_assoc_specialization(Name,_).
+
+attr(edge,(Class1,Class2), dir, black):-ooasp_assoc(Name,Class1,Min1,Max1,Class2,Min2,Max2).
 attr(edge,(Class1,Class2), arrowtail, odiamond):-ooasp_assoc(Name,Class1,Min1,Max1,Class2,Min2,Max2).
 attr(edge,(Class1,Class2), arrowhead, odiamond):-ooasp_assoc(Name,Class1,Min1,Max1,Class2,Min2,Max2).
-attr(edge,(Class1,Class2), xlabel, Name):-ooasp_assoc(Name,Class1,Min1,Max1,Class2,Min2,Max2).
+attr(edge,(Class1,Class2), xlabel, "<<b>{{name}}</b> <br/><sub> {{super}}</sub>>"):-ooasp_assoc(Name,Class1,Min1,Max1,Class2,Min2,Max2).
+attr(edge,(Class1,Class2), (xlabel,name), Name):-ooasp_assoc(Name,Class1,Min1,Max1,Class2,Min2,Max2).
+attr(edge,(Class1,Class2), (xlabel,super), Super):-ooasp_assoc(Name,Class1,Min1,Max1,Class2,Min2,Max2),ooasp_assoc_specialization(Name,Super).
 
 cardinality((Class1,Class2),taillabel,Min1,Max1):-ooasp_assoc(Name,Class1,Min1,Max1,Class2,Min2,Max2).
 cardinality((Class1,Class2),headlabel,Min2,Max2):-ooasp_assoc(Name,Class1,Min1,Max1,Class2,Min2,Max2).
@@ -51,7 +57,7 @@ attr(edge,ID, (Propery,3), Max):- cardinality(ID,Propery,Min,Max).
 edge((Sup,Sub)):-ooasp_subclass(Sub,Sup).
 
 attr(edge,(Sup,Sub),color,"#888889"):-ooasp_subclass(Sub,Sup).
-attr(edge,(Sup,Sub),dir,back):-ooasp_subclass(Sub,Sup).
+attr(edge,(Sup,Sub),dir,black):-ooasp_subclass(Sub,Sup).
 attr(edge,(Sup,Sub),arrowtail,open):-ooasp_subclass(Sub,Sup).
 attr(edge,(Sup,Sub),arrowsize,"0.5"):-ooasp_subclass(Sub,Sup).
 

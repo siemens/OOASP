@@ -41,3 +41,18 @@ ooasp_assoc_gen(ASSOC,2,new_object,ID1) :-
 
 ooasp_assoc_gen(ASSOC,2,ID2,new_object) :-
 	ooasp_associated(ASSOC,new_object,ID2).
+
+% Association specialization
+ooasp_associated(ASSOC,ID1,ID2) :-
+    ooasp_associated(ASSOC_S,ID1,ID2),
+    ooasp_assoc_specialization(ASSOC_S,ASSOC),
+    ooasp_assoc(ASSOC,C1,_,_,C2,_,_),
+    ooasp_isa(C1,ID1),
+    ooasp_isa(C2,ID2).
+
+ooasp_associated(ASSOC_S,ID1,ID2) :-
+    ooasp_associated(ASSOC,ID1,ID2),
+    ooasp_assoc_specialization(ASSOC_S,ASSOC),
+    ooasp_assoc(ASSOC_S,C1,_,_,C2,_,_),
+    ooasp_isa(C1,ID1),
+    ooasp_isa(C2,ID2).
