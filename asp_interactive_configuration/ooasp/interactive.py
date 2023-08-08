@@ -14,9 +14,6 @@ import ooasp.utils as utils
 from typing import List
 import ooasp.settings as settings
 
-def log(x):
-    # print(x)
-    return
 
 class State:
     """
@@ -219,7 +216,6 @@ class InteractiveConfigurator:
             return
         domains = self.config.domains_from(self.last_size_grounded)
         for cls, s in domains:
-            log(f"Grounding {cls} {s}")
             if s>1:
                 self.ctl.release_external(Function("active", [Number(s-1)]))
             self._ground([("domain",[Number(s),Function(cls, [])])])
@@ -255,10 +251,7 @@ class InteractiveConfigurator:
         Sets all partial configuration as user externals to True.
         This uses special predicate `user/1`
         """
-        log(self.config.editable_facts)
         for f in self.config.editable_facts:
-            log("Assigning")
-            log(Function("user",[f.symbol]))
             # self.ctl.assign_external(Function("random",[]), True)
             self.ctl.assign_external(Function("user",[f.symbol]), True)
 
@@ -353,15 +346,12 @@ class InteractiveConfigurator:
         start = time.time()
         try:
             model = next(self.solution_iterator)
-            log("found model")
-            log(model)
             end = time.time()
             self._add_solving_time(end -start)
             found_config = OOASPConfiguration.from_model(self.state.config.name,
                     self.kb, model)
             return found_config
         except StopIteration:
-            log("No model")
             end = time.time()
             self._add_solving_time(end -start)
             self.hdn.cancel()
@@ -513,7 +503,6 @@ class InteractiveConfigurator:
             sat = False
             for model in hdn:
                 sat = True
-                log(model)
                 self.state.config = OOASPConfiguration.from_model(self.state.config.name,
                     self.kb, model)
                 self.config.remove_user()

@@ -2,8 +2,6 @@
 % SPDX-License-Identifier: MIT
 
 % EXAMPLE racks
-ooasp_kb().
-
 % classes
 ooasp_class(object).
 

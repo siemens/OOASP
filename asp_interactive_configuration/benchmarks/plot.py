@@ -13,6 +13,14 @@ solving_cm = mpl.colormaps['Pastel2'].resampled(8)
 grounding_cm = mpl.colormaps['Set2'].resampled(8)
 
 def get_results(name="bm"):
+    """Gets the results for a given benchamrk name
+
+    Args:
+        name (str, optional): The name/path of the benchmark. Defaults to "bm".
+
+    Returns:
+        json: Json with the benchmarks info
+    """
     with open(f'benchmarks/results/{name}.json') as outfile:
         return json.load(outfile)
 
@@ -22,6 +30,13 @@ solving_cm = mpl.colormaps['Pastel2'].resampled(8)
 grounding_cm = mpl.colormaps['Set2'].resampled(8)
 
 def plot_gs(bm_names, title):
+    """Compare different benchmarks outputs
+
+    Args:
+        bm_names : The name of the benchmark files to compare
+        title : The title of the plot and output file
+    """
+        
     plt.clf()
     dfs = {}
     width = 0.2
@@ -38,7 +53,6 @@ def plot_gs(bm_names, title):
         print(bm_name)
         ax.bar(df.index+(width*pos),df['time'],color=solving_cm(pos),width=width)
         ax.bar(df.index+(width*pos),df['time-grounding'],color=grounding_cm(pos),width=width)
-        # if bm_name in ['defined-os/incremental','defined/incremental']:
         ax.bar_label(ax.containers[pos*2 ],df['size'].astype(str) + "/" + df['domain_size'].astype(str),fontsize=5)
 
     ax.set_ylabel('Time (sec)')
@@ -55,6 +69,13 @@ def plot_gs(bm_names, title):
 
 
 def plot_domain(bm_name, title, name):
+    """Plotting the times for a single call devided per domain
+
+    Args:
+        bm_name : The name of the benchmark file saved
+        title : The title of the plot and output file
+        name : The domain name (Number)
+    """
     plt.clf()
     data_dic = get_results(bm_name)[name]
     d = {
@@ -73,17 +94,3 @@ def plot_domain(bm_name, title, name):
     plt.legend(['solving','grounding'])
     plt.savefig(f'benchmarks/results/{title}.png')
     # plt.show()
-
-
-# Extend solve
-# plot_gs(["basic/extend_solve","paper/extend_solve","defined/extend_solve"], "Compare Extend Solve")
-# plot_gs(["defined/extend_solve","defined-os/extend_solve"], "Compare Extend Solve")
-plot_gs(['defined/incremental','defined-os/incremental'], "Compare Incremental")
-# plot_gs(["basic/incremental",'paper/incremental','defined/incremental','defined-os/incremental'], "Compare Incremental")
-# plot_gs(['defined/options','defined-os/options'], "Compare Options")
-# plot_gs(["basic/options",'paper/options','defined/options','defined-os/options'], "Compare Options")
-# plot_gs(["defined/options",'defined/options_object'], "Compare Options to Object")
-
-
-# plot_domain("defined-os/incremental", "Extend incrementally (From 9 Elements)","9")
-# plot_domain("defined/incremental", "Incremental (Domain 10)","10")

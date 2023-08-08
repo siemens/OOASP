@@ -14,7 +14,6 @@ from .kb import OOASPKnowledgeBase
 from copy import deepcopy
 import ooasp.utils as utils
 import ooasp.settings as settings
-from graphviz import unflatten, Source
 
 
 class  OOASPConfiguration:
@@ -449,8 +448,6 @@ class  OOASPConfiguration:
         ctl.ground([("base", [])],ClingraphContext())
         ctl.solve(on_model=lambda m: fbs.append(Factbase.from_model(m,default_graph="config")))
         graphs = compute_graphs(fbs[0])
-        # g = unflatten(str(graphs['config']),chain=2)
-        # graphs['config']=Source(g)
         render(graphs,format="png",name_format=self.name,directory=directory)
 
     def view(self):

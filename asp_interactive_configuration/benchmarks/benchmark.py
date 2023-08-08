@@ -6,13 +6,14 @@ import numpy as np
 import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-import functools
 import time
 import ooasp.utils as utils
-
+from ooasp import settings
 
 class BM:
-
+    """
+    Benchmark container
+    """
     def __init__(self, n_runs, name, fn, **kwargs):
         self.n_runs=n_runs
         self.name=name
@@ -81,22 +82,30 @@ class BM:
 
 # --------- Utils
 def save_results(bms, name="bm"):
+    """Saves the results as a json file
+
+    Args:
+        bms: Benchmarks
+        name (str, optional): Name. Defaults to "bm".
+    """
     data = {bm.name:bm.final_results for bm in bms}
     with open(f'benchmarks/results/{name}.json', 'w') as outfile:
         json.dump(data, outfile,indent=4)
 
 def new_iconf():
+    """Creates a new interactive configurator for the racks example
+
+    Returns:
+        InteractiveConfigurator
+    """
     racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
     return InteractiveConfigurator(racks_kb,"i1",[settings.racks_example_constraints])
 
 # --------- Functions to benchmark
-
 def extend_solve(ne):
     iconf = new_iconf()
-    # current limit
     for i in range(ne):
         e = iconf.new_object("elementA")
-        # iconf._create_required_objects("elementA",e)
     iconf.extend_domain(ne + 5)
     found = iconf.next_solution()
     iconf.select_found_configuration()
@@ -104,17 +113,14 @@ def extend_solve(ne):
 
 def incremental(ne):
     iconf = new_iconf()
-    # current limit
     for i in range(ne):
         iconf.new_object("elementA")
     found = iconf.extend_incrementally(overshoot=True)
-    # found = iconf.extend_incrementally()
     iconf.select_found_configuration()
     return iconf
 
 def options(ne):
     iconf = new_iconf()
-    # current limit
     iconf.extend_domain(ne-9,"object")
     for i in range(ne):
         iconf.new_object("elementA")
@@ -127,17 +133,17 @@ def options_object(ne):
     iconf.get_options()
     return iconf
 
-# def options_object(ne):
-#     iconf = new_iconf()
-#     # current limit
-#     iconf.extend_domain(ne)
-#     iconf.get_options()
-#     iconf.show_options()
-#     return iconf
-
 # --------- Running benchmarks
 
 def run(n_runs,fun,elements,name = "extend_solve"):
+    """Main function called to run a benchmark
+
+    Args:
+        n_runs: Number of types to run the function
+        fun: function to benchmark
+        elements: the elements used for each run
+        name (str, optional): The benchmark name used for saving
+    """
     n_runs = 3
     results = []
     for e in elements:
@@ -145,9 +151,3 @@ def run(n_runs,fun,elements,name = "extend_solve"):
 
     save_results(results,name)
 
-# run(2,extend_solve,elements=[13,14,15,16,17,18],name=f"{opt}-os/extend_solve")
-# run(2,incremental,elements=[8,9,10,11],name=f"{opt}/incremental-noex")
-run(2,incremental,elements=[8,9,10,11],name=f"{opt}-os/incremental")
-# run(2,options,elements=[18,20,22,24],name=f"{opt}-os/options")
-# run(2,options,elements=[20,22,24,25,26],name=f"{opt}/options")
-# run(2,options_object,elements=[18,20,22,24],name=f"{opt}/options_object")
