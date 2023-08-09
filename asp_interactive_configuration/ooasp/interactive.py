@@ -240,6 +240,7 @@ class InteractiveConfigurator:
         any previously computed options in the brave config
         """
         self.brave_config=None
+        self.cautious_config=None
         self.found_config=None
         if self.solution_iterator:
             self.hdn.cancel()
@@ -274,7 +275,6 @@ class InteractiveConfigurator:
         self.ctl.add("domain",[str(self.domain_size)],str(fact)+".")
 
     def _create_required_objects(self, cls:str, object_id:int, ignore_assoc:List=None)->None:
-<<<<<<< HEAD
         """
         Creates required objects for a given object based on associations in the knowledge base configuration.
         It ensures that the minimum required number of associated objects is met for each association.
@@ -285,17 +285,12 @@ class InteractiveConfigurator:
                 ignore_assoc (List, optional): A list of association names to be ignored during object creation.
                     Defaults to None.
         """
-=======
-        print("Creating required")
-        print(cls)
-        print(ignore_assoc)
->>>>>>> 0a3631d (Fixing overshoot)
         if ignore_assoc is None:
             ignore_assoc = set()
         assocs = self.config.kb.associations(cls)
         assocs_added = []
         for name, class2, min, max in assocs:
-            print(f"ASS: {name}")
+            # print(f"ASS: {name}")
             if name in ignore_assoc:
                 continue
             curret_assoc = self.config.associated_by(object_id,name)
@@ -516,6 +511,28 @@ class InteractiveConfigurator:
                 raise RuntimeError("Got UNSAT while checking for cvs")
 
         return not self.config.has_cv
+
+    def _get_cautious(self)->OOASPConfiguration:
+        if self.browsing:
+            raise RuntimeError("Cant get cautious while browsing")
+        self._ground_missing()
+        self.ctl.assign_external(Function("guess"), True)
+        self.ctl.assign_external(Function("check_permanent_cv"), True)
+        self.ctl.assign_external(Function("check_potential_cv"), False)
+        self._set_user_externals()
+        self.ctl.configuration.solve.enum_mode = 'cautious'
+        self.ctl.configuration.solve.opt_mode = 'optN'
+        with  self.ctl.solve(yield_=True) as hdn:
+            cautious_model = None
+            for model in hdn:
+                cautious_model = model
+            if cautious_model is None:
+                self.cautious_config = None
+                raise RuntimeError("No available options for conflicting configuration")
+            self.cautious_config = OOASPConfiguration.from_model(self.state.config.name,
+                    self.kb, cautious_model)
+        return self.cautious_config
+    
 
     def _remove_association(self,assoc_name:str,object_id1:int,object_id2:int)->None:
         """
