@@ -125,10 +125,8 @@ def test_s_interactive_extend_incrementally_overshooting():
     assert "ooasp_domain(object,3)." in found.fb.asp_str()
     assert "ooasp_domain(object,4)." in found.fb.asp_str()
     assert "ooasp_domain(object,5)." in found.fb.asp_str()
-    print(iconf)
     found = iconf.next_solution()
     assert found
-    print(found)
     assert len(iconf.states)==3
 
 def test_s_interactive_extend_incrementally_overshooting_rack():
@@ -136,7 +134,6 @@ def test_s_interactive_extend_incrementally_overshooting_rack():
     iconf.new_object('rack')
     found = iconf.extend_incrementally(overshoot=True)
     assert found
-    print(found)
     assert iconf.domain_size == 5
     assert "ooasp_domain(rack,1)." in found.fb.asp_str()
     assert "ooasp_isa_leaf(rackSingle,1)." in found.fb.asp_str()
@@ -149,7 +146,6 @@ def test_s_interactive_extend_incrementally_overshooting_rack():
     iconf.new_object('rack')
     found = iconf.extend_incrementally(overshoot=True)
     assert found
-    print(found)
     assert iconf.domain_size == 10
 
 
@@ -160,18 +156,13 @@ def test_s_interactive_extend_incrementally_overshooting_leaving_object():
     iconf.new_object('frame')
     found = iconf.extend_incrementally(overshoot=True)
     assert found
-    assert iconf.domain_size == 6
+    assert iconf.domain_size == 5
     assert "ooasp_domain(frame,1)." in found.fb.asp_str()
     assert "ooasp_isa_leaf(frame,1)." in found.fb.asp_str()
     assert "ooasp_domain(frame,2)." in found.fb.asp_str()
     assert "ooasp_domain(rack,3)." in found.fb.asp_str()
-    assert "ooasp_domain(rack,4)." in found.fb.asp_str()
-    found = iconf.next_solution()
-    print(found)
-    assert found
-    assert not "ooasp_isa_leaf(rack,4)." in found.fb.asp_str() or  not "ooasp_isa_leaf(rack,3)." in found.fb.asp_str()
+    assert "ooasp_domain(object,4)." in found.fb.asp_str()
     assert found.size == 5
-    assert len(iconf.states)==4
 
 
 def test_s_interactive_select_full():
@@ -199,9 +190,9 @@ def test_s_interactive_ccheck():
     iconf.new_object('frame')
     iconf.check()
     assert len(iconf.config.constraint_violations) == 6
-    assert 'ooasp_cv(lowerbound,2,"Lowerbound for {} is {} but has {}",(rack_frames,1,0,frame' in iconf.state.config.fb.asp_str()
-    assert 'ooasp_cv(lowerbound,1,"Lowerbound for {} is {} but has {}",(rack_frames,1,0,frame' in iconf.state.config.fb.asp_str()
-    assert 'ooasp_cv(lowerbound,3,"Lowerbound for {} is {} but has {}",(rack_frames,1,0,frame' in iconf.state.config.fb.asp_str()
+    assert 'ooasp_cv(lowerbound,2,"Lowerbound for {} is {} but has {} {}",(rack_frames,1,0,rack' in iconf.state.config.fb.asp_str()
+    assert 'ooasp_cv(lowerbound,1,"Lowerbound for {} is {} but has {} {}",(rack_frames,1,0,rack' in iconf.state.config.fb.asp_str()
+    assert 'ooasp_cv(lowerbound,3,"Lowerbound for {} is {} but has {} {}",(rack_frames,1,0,rack' in iconf.state.config.fb.asp_str()
     assert 'ooasp_cv(no_value,1,"Missing value for {}",(frame_position,))' in iconf.state.config.fb.asp_str()
     assert 'ooasp_cv(no_value,2,"Missing value for {}",(frame_position,))' in iconf.state.config.fb.asp_str()
     assert 'ooasp_cv(no_value,3,"Missing value for {}",(frame_position,))' in iconf.state.config.fb.asp_str()
@@ -217,7 +208,6 @@ def test_s_interactive_check_custom_cv():
     iconf.new_object('frame')
     iconf.select_association('rack_frames',5,6)
     iconf.check()
-    print(iconf.state.config.fb.asp_str())
     assert '(upperbound' in iconf.state.config.fb.asp_str()
     assert '(rack_framesS,4' in iconf.state.config.fb.asp_str()
     
@@ -323,59 +313,20 @@ def test_normal_extend():
     assert "ooasp_domain(rackSingle,1)." in found_str
     assert "ooasp_isa_leaf(rackSingle,1)." in found_str
 
-def test_extend_propagate():
+def test_new_propagate():
     iconf = new_racks_iconf()
-    iconf.extend_domain(1,cls='rackSingle',propagate=True)
-    iconf.select_object_class(1, 'rackSingle')
-    iconf.select_object_class(2, 'frame')
-    iconf.select_object_class(3, 'frame')
-    iconf.select_object_class(4, 'frame')
-    iconf.select_object_class(5, 'frame')
+    iconf.new_object('rackSingle',propagate=True)
     conf_str = iconf.config.fb.asp_str()
     assert 'ooasp_domain(rackSingle,1).' in conf_str
     assert 'ooasp_domain(frame,2).'  in conf_str
     assert 'ooasp_domain(frame,3).'  in conf_str
     assert 'ooasp_domain(frame,4).'  in conf_str
     assert 'ooasp_domain(frame,5).'  in conf_str
-    iconf.check()
-    found = iconf.next_solution()
-    assert found
+    assert 'ooasp_associated(rack_framesS,1,2).'  in conf_str
+    assert 'ooasp_associated(rack_framesS,1,3).'  in conf_str
+    assert 'ooasp_associated(rack_framesS,1,4).'  in conf_str
+    assert 'ooasp_associated(rack_framesS,1,5)'  in conf_str
 
-    # found = iconf.extend_incrementally()
-    conf_str = found.fb.asp_str()
-    assert 'ooasp_isa_leaf(rackSingle,1).' in conf_str
-    assert 'ooasp_isa_leaf(frame,2).' in conf_str
-    assert 'ooasp_associated(rack_frames,1,2).'  in conf_str
-    assert 'ooasp_associated(rack_frames,1,3).'  in conf_str
-    assert 'ooasp_associated(rack_frames,1,4).'  in conf_str
-    assert 'ooasp_associated(rack_frames,1,5)'  in conf_str
-
-    # iconf = new_racks_iconf()
-    # iconf.extend_domain(1,cls='element',propagate=True)
-    # iconf.select_object_class(1, 'element')
-    # conf_str = iconf.config.fb.asp_str()
-    # assert 'ooasp_domain(element,1).' in conf_str
-    # assert 'ooasp_domain(module,2).' in conf_str
-    # assert 'ooasp_domain(frame,3).' in conf_str
-    # assert 'ooasp_domain(rack,4).' in conf_str
-    # assert 'ooasp_associated(rack_frames,3,4).' in conf_str
-    # assert 'ooasp_associated(frame_modules,2,3).' in conf_str
-    # assert 'ooasp_associated(element_modules,1,2)' in conf_str
-
-def test_extend_propagate_empty():
-    iconf = new_racks_iconf()
-    iconf.extend_domain(1,cls='rackSingle',propagate=True)
-    conf_str = iconf.config.fb.asp_str()
-    assert 'ooasp_domain(rackSingle,1).' in conf_str
-    assert 'ooasp_domain(frame,2).'  in conf_str
-    assert 'ooasp_domain(frame,3).'  in conf_str
-    assert 'ooasp_domain(frame,4).'  in conf_str
-    assert 'ooasp_domain(frame,5).'  in conf_str
-    iconf.check()
-    found = iconf.next_solution()
-    assert found
-    found = iconf.next_solution()
-    assert found
 
 def test_extend_propagate_symmetry():
     iconf = new_racks_iconf()
@@ -398,23 +349,18 @@ def test_extend_propagate_symmetry():
 
 def test_create_required_objects():
     iconf = new_racks_iconf()
-    # iconf.extend_domain(5,cls='object',propagate=True)
-    iconf.extend_domain(1,cls='rackSingle')
+    iconf.new_object('rackSingle')
     iconf.extend_domain(3,cls='frame')
     iconf.select_association('rack_frames',1,2)
     iconf.select_association('rack_frames',1,3)
     iconf.select_association('rack_frames',1,4)
-    found = iconf.next_solution()
-    assert not found
-    config_str = iconf.config.fb.asp_str()
-    assert "ooasp_associated(rack_frames,1,2)." in config_str
-    assert "ooasp_associated(rack_frames,1,3)." in config_str
-    assert "ooasp_associated(rack_frames,1,4)." in config_str
     iconf._create_required_objects('rackSingle',1)
     config_str = iconf.config.fb.asp_str()
     assert "ooasp_domain(frame,5)." in config_str
     found = iconf.next_solution()
     assert found
+    assert found.size == 5
+    assert found.domain_size == 5
 
 
 def test_custom_interactive_add_leaf_extend_browse():

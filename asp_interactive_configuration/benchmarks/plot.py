@@ -48,9 +48,7 @@ def plot_gs(bm_names, title):
         df['name']=df.index
         df=df.reset_index()
         dfs[bm_name]=df
-        print(df)
     for pos, (bm_name, df) in enumerate(dfs.items()):
-        print(bm_name)
         ax.bar(df.index+(width*pos),df['time'],color=solving_cm(pos),width=width)
         ax.bar(df.index+(width*pos),df['time-grounding'],color=grounding_cm(pos),width=width)
         ax.bar_label(ax.containers[pos*2 ],df['size'].astype(str) + "/" + df['domain_size'].astype(str),fontsize=5)

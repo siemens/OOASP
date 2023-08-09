@@ -19,7 +19,6 @@ def test_heuristic():
     # Then the combinations of all frame positions
     for i in range(0,24):
         found = iconf.next_solution()
-        print(found)
         assert found
         assert found.size == 5
         assert "ooasp_isa_leaf(rackSingle,5)." in found.fb.asp_str()

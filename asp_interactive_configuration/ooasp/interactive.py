@@ -272,7 +272,7 @@ class InteractiveConfigurator:
         """
         self.ctl.add("domain",[str(self.domain_size)],str(fact)+".")
 
-    def _create_required_objects(self, cls:str, object_id:int, ignore_assoc:List=None)->None:
+    def _create_required_objects(self, cls:str, object_id:int)->None:
         """
         Creates required objects for a given object based on associations in the knowledge base configuration.
         It ensures that the minimum required number of associated objects is met for each association.
@@ -283,25 +283,24 @@ class InteractiveConfigurator:
                 ignore_assoc (List, optional): A list of association names to be ignored during object creation.
                     Defaults to None.
         """
-        if ignore_assoc is None:
-            ignore_assoc = set()
-        assocs = self.config.kb.associations(cls)
-        assocs_added = []
-        for name, class2, min, max in assocs:
-            # print(f"ASS: {name}")
-            if name in ignore_assoc:
+        cautious =  self._get_cautious()
+        common_violations = cautious.constraint_violations
+        for cv in common_violations:
+            # TODO maybe improove performance using query
+            if cv.name != 'lowerbound' or cv.object_id != object_id:
                 continue
-            curret_assoc = self.config.associated_by(object_id,name)
-            remaining = min - len(curret_assoc) 
-            assocs_added.append(name)
-            if remaining<0:
-                continue
-            for _ in range(remaining):
-                self._extend_domain(class2,True,assocs_added)
+            assoc, cmin, n, c, opt, _ = cv.args.symbol.arguments
+            for _ in range(n.number,cmin.number):
+                object2 = self._new_object(c.name)
+                if str(opt) == '1':
+                    self.config.add_association(assoc.name,object_id,object2)
+                else:
+                    self.config.add_association(assoc.name,object2,object_id)
 
 
 
-    def _extend_domain(self, cls='object',propagate=False, ignore_assoc:List=None)->int:
+
+    def _extend_domain(self, cls='object')->int:
         """
         Increases the domain size by one and adds a new domain(object,N) fact to
         the configuration.
@@ -310,11 +309,24 @@ class InteractiveConfigurator:
         self._outdate_models()
         new_object = self.state.domain_size
         self.config.add_domain(cls,new_object)
-        if propagate:
-            self._create_required_objects(cls, new_object,ignore_assoc)
         return new_object
 
+    def _new_object(self, object_class, propagate=False)->int:
+        """
+        Increses the domain size by one and adds an object of the given class
 
+        Args:
+            object_class (_type_): Class of the object
+            propagate (bool, optional): If it should propagate creation. Defaults to False.
+
+        Returns:
+            int: Identifier of the new object
+        """
+        new_object = self._extend_domain(cls=object_class)
+        self.config.add_object(new_object,object_class)
+        if propagate:
+            self._create_required_objects(object_class, new_object)
+        return new_object
 
     # --------- Browsing
 
@@ -735,7 +747,7 @@ class InteractiveConfigurator:
             raise e
 
 
-    def extend_domain(self,num:int=1,cls='object',propagate=False)->None:
+    def extend_domain(self,num:int=1,cls='object')->None:
         """
         Creates a state with a new configuration.
         Increases the domain size and adds a new domain(object,N) fact to
@@ -746,9 +758,9 @@ class InteractiveConfigurator:
         self._new_state(f"Extended domain by {num} ",deep=True)
         next_num_objects = self.state.domain_size + num
         for i in range(self.state.domain_size+1,next_num_objects+1):
-            self._extend_domain(cls=cls,propagate=propagate)
+            self._extend_domain(cls=cls)
 
-    def new_object(self,object_class:str)->None:
+    def new_object(self,object_class:str, propagate=False)->None:
         """
         Creates a state with a new configuration.
         Increases the domain size by one and adds a new domain(object,N) fact to
@@ -758,10 +770,8 @@ class InteractiveConfigurator:
                 object_class: The name of the object class
         """
         self._new_state(f"Added object class {object_class}",deep=True)
-        new_object = self._extend_domain(cls=object_class)
         try:
-            self.config.add_object(new_object,object_class)
-            return new_object
+            return self._new_object(object_class, propagate)
         except Exception as e:
             self.states.pop()
             raise e

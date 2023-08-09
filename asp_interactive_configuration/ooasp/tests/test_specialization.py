@@ -43,10 +43,9 @@ def test_specialization_extend():
 
 def test_s_interactive_extend_incrementally_overshooting_rack_specialization():
     iconf = new_racks_iconf()
-    iconf.new_object('rackSingle')
+    iconf.new_object('rack')
     found = iconf.extend_incrementally(overshoot=True)
     assert found
-    print(found)
     assert iconf.domain_size == 5
     assert "ooasp_domain(rack,1)." in found.fb.asp_str()
     assert "ooasp_isa_leaf(rackSingle,1)." in found.fb.asp_str()
@@ -59,7 +58,6 @@ def test_s_interactive_extend_incrementally_overshooting_rack_specialization():
     iconf.new_object('rack')
     found = iconf.extend_incrementally(overshoot=True)
     assert found
-    print(found)
     assert iconf.domain_size == 10
 
 
@@ -69,11 +67,11 @@ def test_specialization_cautious_double():
     iconf.new_object('frame')
     cautious = iconf._get_cautious()
     assert len(cautious.constraint_violations) == 1
-    assert('ooasp_cv(lowerbound,1,"Lowerbound for {} is {} but has {}",(rack_framesD,8,1,rackDouble,2))') in cautious.fb.asp_str()
+    assert('ooasp_cv(lowerbound,1,"Lowerbound for {} is {} but has {} {}",(rack_framesD,8,1,frame') in cautious.fb.asp_str()
     iconf.extend_domain(3)
     cautious = iconf._get_cautious()
     assert len(cautious.constraint_violations) == 1
-    assert('ooasp_cv(lowerbound,1,"Lowerbound for {} is {} but has {}",(rack_framesD,8,4,rackDouble,5))') in cautious.fb.asp_str()
+    assert('ooasp_cv(lowerbound,1,"Lowerbound for {} is {} but has {} {}",(rack_framesD,8,4,frame') in cautious.fb.asp_str()
 
 def test_specialization_cautious_rack():
     iconf = new_racks_iconf()
@@ -81,7 +79,7 @@ def test_specialization_cautious_rack():
     iconf.new_object('frame')
     cautious = iconf._get_cautious()
     assert len(cautious.constraint_violations) == 1
-    assert('ooasp_cv(lowerbound,1,"Lowerbound for {} is {} but has {}",(rack_framesS,4,1,rackSingle,2))') in cautious.fb.asp_str()
+    assert('ooasp_cv(lowerbound,1,"Lowerbound for {} is {} but has {} {}",(rack_framesS,4,1,frame') in cautious.fb.asp_str()
     iconf.extend_domain(3)
     cautious = iconf._get_cautious()
     assert len(cautious.constraint_violations) == 0

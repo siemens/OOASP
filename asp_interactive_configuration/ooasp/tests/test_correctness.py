@@ -16,17 +16,18 @@ def test_racks_constraints_element():
     iconf.check()
     assert len(iconf.config.constraint_violations)==1
     assert "lowerbound" in str(iconf.config.constraint_violations)
-    assert '(element_modules1,1,0,elementA,1)' in str(iconf.config.constraint_violations)
+    assert '(element_modules1,1,0,module' in str(iconf.config.constraint_violations)
 
-def test_racks_constraints_module():
+def test_racks_constraints_moduleI():
     """ test module constraints """
     iconf = new_racks_iconf()
     iconf.new_object("moduleI")
+    iconf.check()
     assert len(iconf.config.constraint_violations)==2
     assert "lowerbound" in str(iconf.config.constraint_violations)
-    assert "(element_modules1,1,1)" in str(iconf.config.constraint_violations)
+    assert "(element_modules1,1,0,elementA" in str(iconf.config.constraint_violations)
 
-def test_racks_constraints_module():
+def test_racks_constraints_moduleV():
     """ the moduleV constraints """
     iconf = new_racks_iconf()
     iconf.new_object("moduleV")
@@ -50,7 +51,7 @@ def test_racks_constraints_rack():
     iconf.check()
     assert len(iconf.config.constraint_violations)==1
     assert "lowerbound" in str(iconf.config.constraint_violations)
-    assert "rack_framesD,8,0,rackDouble" in str(iconf.config.constraint_violations)
+    assert "rack_framesD,8,0,frame" in str(iconf.config.constraint_violations)
     for i in range(7):
         f_id = iconf.new_object("frame")
         iconf.select_value(f_id,'frame_position',f_id-1)
@@ -60,7 +61,7 @@ def test_racks_constraints_rack():
     iconf.check()
     assert len(iconf.config.constraint_violations)==1
     assert "lowerbound" in str(iconf.config.constraint_violations)
-    assert "rack_framesD,8,7,rackDouble" in str(iconf.config.constraint_violations)
+    assert "rack_framesD,8,7,frame" in str(iconf.config.constraint_violations)
 
 
 
@@ -76,7 +77,7 @@ def test_racks_constraints_associations():
     assert "associated(element_modules,2,1)" in config_str
 
     assert len(iconf.config.constraint_violations)==2
-    assert "element_modules1,1,0,elementA" in str(iconf.config.constraint_violations)
+    assert "element_modules1,1,0,moduleI" in str(iconf.config.constraint_violations)
 
     iconf = new_racks_iconf()
     iconf.new_object("elementA")
@@ -84,7 +85,7 @@ def test_racks_constraints_associations():
     iconf.select_association("element_modules",1,2)
     iconf.check()
     assert len(iconf.config.constraint_violations)==2
-    assert "element_modules1,1,0,elementA" in str(iconf.config.constraint_violations)
+    assert "element_modules1,1,0,moduleI" in str(iconf.config.constraint_violations)
 
 def test_racks_constraints_moduleII_requires_moduleV():
     """ test moduleII requires moduleV constraint """

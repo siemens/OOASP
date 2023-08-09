@@ -61,16 +61,16 @@ ooasp_leafclass(C) :-
 % ooasp_assoc_limit(ASSOC,min,1,C1,C2MIN)
 % The association ASSOC must be from a C1 object to at least C2MIN objects
 
-ooasp_assoc_limit(ASSOC,min,1,C1,C2MIN):-
+ooasp_assoc_limit(ASSOC,min,1,C1,C2MIN,C2):-
 	ooasp_assoc(ASSOC,C1,C1MIN,C1MAX,C2,C2MIN,C2MAX).
 
-ooasp_assoc_limit(ASSOC,max,1,C1,C2MAX):-
+ooasp_assoc_limit(ASSOC,max,1,C1,C2MAX,C2):-
 	ooasp_assoc(ASSOC,C1,C1MIN,C1MAX,C2,C2MIN,C2MAX).
 
-ooasp_assoc_limit(ASSOC,min,2,C2,C1MIN):-
+ooasp_assoc_limit(ASSOC,min,2,C2,C1MIN,C1):-
 	ooasp_assoc(ASSOC,C1,C1MIN,C1MAX,C2,C2MIN,C2MAX).
 
-ooasp_assoc_limit(ASSOC,max,2,C2,C1MAX):-
+ooasp_assoc_limit(ASSOC,max,2,C2,C1MAX,C1):-
 	ooasp_assoc(ASSOC,C1,C1MIN,C1MAX,C2,C2MIN,C2MAX).
 
 
