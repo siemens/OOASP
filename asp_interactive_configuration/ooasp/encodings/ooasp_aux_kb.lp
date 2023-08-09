@@ -72,3 +72,8 @@ ooasp_assoc_limit(ASSOC,min,2,C2,C1MIN):-
 
 ooasp_assoc_limit(ASSOC,max,2,C2,C1MAX):-
 	ooasp_assoc(ASSOC,C1,C1MIN,C1MAX,C2,C2MIN,C2MAX).
+
+
+is_an_assoc_specialization(ASSOC_S):- ooasp_assoc_specialization(ASSOC_S,ASSOC).
+specialization_priority(ASSOC,1):-is_an_assoc_specialization(ASSOC).
+specialization_priority(ASSOC,20):-not is_an_assoc_specialization(ASSOC), ooasp_assoc(ASSOC,_,_,_,_,_,_).

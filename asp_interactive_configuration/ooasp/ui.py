@@ -11,7 +11,7 @@ def basic_vbox():
     return VBox(layout=Layout(height='auto', width='auto'))
 
 def wraped_label(text):
-    return HTML(value="<style>p{word-wrap: break-word ;color:red}</style> <p>" + text+"</p>")
+    return HTML(value="<style>cv{word-wrap: break-word ;color:red}</style> <p class='cv'>" + text+"</p>")
 
 PSTYLE = "<style>p{word-wrap: break-word; margin-right: 10px;}</style>"
 class OOASPUI:
@@ -274,12 +274,10 @@ class OOASPUI:
         """
         check = Button(description='Check',button_style='success')
         check.on_click(self.call_and_update(self.button_wrapper('check')))
-        cvs = self.iconf.config.constraint_violations
-        cvs_labels =[]
-        for c in cvs:
-            cvs_labels.append(wraped_label(self.iconf.config.format_cv(c)))
-        if len(cvs) == 0:
-            cvs_labels.append(Label(value="All checks passed!"))
-        self.check.children= tuple([self.title('Check'), check] + cvs_labels)
+        clear = Button(description='Clear checks',button_style='warning')
+        clear.on_click(self.call_and_update(self.button_wrapper('remove_cvs')))
+        get_inferences = Button(description='Add inferences',button_style='info')
+        get_inferences.on_click(self.call_and_update(self.button_wrapper('add_inferences')))
+        self.check.children= tuple([self.title('Check'), check, clear, get_inferences])
 
 

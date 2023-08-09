@@ -3,7 +3,9 @@
 
 #program domain(new_object, cls).
 
-:~ ooasp_cv(lowerbound,_,_,(ASSOC,CMIN,N,new_object)). [CMIN-N]
+% Used to know the missing objects
+:~ ooasp_cv(lowerbound,_,_,(ASSOC,CMIN,N,C,new_object)). [CMIN-N,ASSOC]
+
 :- ooasp_cv(CV,_,_,_),
 	not ooasp_potential_cv(CV),
 	check_permanent_cv.
@@ -33,7 +35,7 @@ ooasp_cv(notinstanceofsubclass,new_object,"Has two leaf classes {} and {}",(C1,C
 %--- Association bounds
 
 ooasp_cv(upperbound,ID1,
-  "Upperbound for association {} exceeded: {}",
+  "Upperbound for {} exceeded: {}",
   (A,CMAX,new_object)):-
 	ooasp_assoc_limit(A,max,OPT,C,CMAX),
 	ooasp_isa(C,ID1),
@@ -42,13 +44,16 @@ ooasp_cv(upperbound,ID1,
 	active(new_object).
 
 
-ooasp_cv(lowerbound,ID1,"Lowerbound for association {} not reached: {}",(ASSOC,CMIN,N,new_object)):-
+lb_violation(lowerbound,ID1,"Lowerbound for {} is {} but has {}",(ASSOC,CMIN,N,C,new_object)):-
 	ooasp_assoc_limit(ASSOC,min,OPT,C,CMIN),
 	ooasp_isa(C,ID1),
 	#count { ID2:ooasp_assoc_gen(ASSOC,OPT,ID1,ID2) } = N,
 	N < CMIN,
-	% #count { ID2:ooasp_assoc_gen(ASSOC,OPT,ID1,ID2) } < CMIN,
 	active(new_object).
+
+ooasp_cv(lowerbound,ID1,M,(ASSOC,CMIN,N,C,new_object)):-
+	lb_violation(lowerbound,ID1,M,(ASSOC,CMIN,N,C,new_object)),
+	not lb_violation(lowerbound,ID1,_,(SUBASSOC,_,_,_,new_object)):ooasp_assoc_specialization(SUBASSOC,ASSOC).
 
 
 %--- Associations are only allowed to something instantiated

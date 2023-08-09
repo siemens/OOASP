@@ -44,7 +44,7 @@ def test_kb_superclasses():
 
 def test_kb_assoc():
     racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
-    racks_kb.save_png()
+    racks_kb.save_png("out/try")
     assoc =  racks_kb.associations('module')
     assoc1 =  racks_kb.associations('moduleI')
     assert ('frame_modules', 'frame', 1, 1) in assoc

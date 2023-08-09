@@ -240,7 +240,6 @@ class InteractiveConfigurator:
         any previously computed options in the brave config
         """
         self.brave_config=None
-        self.cautious_config=None
         self.found_config=None
         if self.solution_iterator:
             self.hdn.cancel()
@@ -251,9 +250,8 @@ class InteractiveConfigurator:
         Sets all partial configuration as user externals to True.
         This uses special predicate `user/1`
         """
-        for f in self.config.editable_facts:
-            # self.ctl.assign_external(Function("random",[]), True)
-            self.ctl.assign_external(Function("user",[f.symbol]), True)
+        for f in self.config.all_as_user():
+            self.ctl.assign_external(f, True)
 
     def _falsify_user_externals(self,facts:List)->None:
         """
@@ -337,6 +335,7 @@ class InteractiveConfigurator:
             self.ctl.assign_external(Function("check_potential_cv"), True)
             self._set_user_externals()
             self.ctl.configuration.solve.enum_mode = 'auto'
+            self.ctl.configuration.solve.opt_mode = 'ignore'
             start = time.time()
             self.hdn = self.ctl.solve(yield_=True)
             end = time.time()
@@ -359,7 +358,7 @@ class InteractiveConfigurator:
             self.found_config=False
             return False
 
-    def _set_config(self,config:OOASPConfiguration):
+    def _set_config(self,config:OOASPConfiguration, set_user_facts = True):
         """
         Sets the current configuration to the given one
             Parameters:
@@ -373,6 +372,9 @@ class InteractiveConfigurator:
             raise RuntimeError("Can't set a configuration with smaller domain size")
         self.state.domain_size = new_size
         self.state.config=config
+        if set_user_facts:
+            config.consider_as_user(config.editable_facts)
+
 
 
     def _add_objects_to_dict(self, config: OOASPConfiguration, options: dict) -> dict:
@@ -476,6 +478,7 @@ class InteractiveConfigurator:
         self.ctl.assign_external(Function("check_potential_cv"), False)
         self._set_user_externals()
         self.ctl.configuration.solve.enum_mode = 'brave'
+        self.ctl.configuration.solve.opt_mode = 'ignore'
         with  self.ctl.solve(yield_=True) as hdn:
             brave_model = None
             for model in hdn:
@@ -500,13 +503,14 @@ class InteractiveConfigurator:
         self.ctl.assign_external(Function("check_potential_cv"), False)
         self._set_user_externals()
         self.ctl.configuration.solve.enum_mode = 'auto'
+        self.ctl.configuration.solve.opt_mode = 'ignore'
         with  self.ctl.solve(yield_=True) as hdn:
             sat = False
             for model in hdn:
                 sat = True
-                self.state.config = OOASPConfiguration.from_model(self.state.config.name,
+                checked_config = OOASPConfiguration.from_model(self.state.config.name,
                     self.kb, model)
-                self.config.remove_user()
+                self._set_config(checked_config)
             if not sat:
                 raise RuntimeError("Got UNSAT while checking for cvs")
 
@@ -526,12 +530,14 @@ class InteractiveConfigurator:
             cautious_model = None
             for model in hdn:
                 cautious_model = model
-            if cautious_model is None:
-                self.cautious_config = None
-                raise RuntimeError("No available options for conflicting configuration")
-            self.cautious_config = OOASPConfiguration.from_model(self.state.config.name,
+                cfg = OOASPConfiguration.from_model(self.state.config.name,
                     self.kb, cautious_model)
-        return self.cautious_config
+            if cautious_model is None:
+                self.found_config = None
+                raise RuntimeError("No available options for conflicting configuration")
+            self.found_config = OOASPConfiguration.from_model(self.state.config.name,
+                    self.kb, cautious_model)
+        return self.found_config
     
 
     def _remove_association(self,assoc_name:str,object_id1:int,object_id2:int)->None:
@@ -590,6 +596,30 @@ class InteractiveConfigurator:
         self.found_config=found_config
         return self._get_options()
 
+    def add_inferences(self)->None:
+        """
+        Creates a new state.
+        Gets a Configuration where the facts are the intersection of all stable models optimized to minimize errors.
+        Sets this configuration as the current one
+            Returns:
+                An OOASPConfiguration object with all the forced decisions
+        """
+        self._new_state("Add inferences")
+        cautious = self._get_cautious()
+        if cautious:
+            self.set_configuration(cautious,set_user_facts=False)
+        return 
+    
+    def get_inferences(self)->None:
+        """
+        Creates a new state.
+        Gets a Configuration where the facts are the intersection of all stable models optimized to minimize errors.
+            Returns:
+                An OOASPConfiguration object with all the forced decisions
+        """
+        self._new_state("Obtaining inferences")
+        return self._get_cautious()
+    
     def next_solution(self)->OOASPConfiguration:
         """
         Creates a new state.
@@ -651,6 +681,14 @@ class InteractiveConfigurator:
         """
         self._new_state(f"Removed object class for {object_id}",deep=True)
         self._remove_object(object_id)
+
+    def remove_cvs(self)->None:
+        """
+        Creates a state with a new configuration.
+        Removes all the constraint violations
+        """
+        self._new_state(f"Removed constraint violations",deep=True)
+        self.config.remove_cvs()
 
     def select_association(self,assoc_name:str,object_id1:int,object_id2:int)->None:
         """
@@ -777,7 +815,7 @@ class InteractiveConfigurator:
         self.set_configuration(current_found_config)
         return None
 
-    def set_configuration(self,config:OOASPConfiguration):
+    def set_configuration(self,config:OOASPConfiguration, set_user_facts=True):
         """
         Sets the current configuration to a new one
             Parameters:
@@ -787,7 +825,7 @@ class InteractiveConfigurator:
                 is smaller.
         """
         self._new_state("Set partial configuration")
-        self._set_config(config)
+        self._set_config(config, set_user_facts=set_user_facts)
 
     #------------- Visualize
 

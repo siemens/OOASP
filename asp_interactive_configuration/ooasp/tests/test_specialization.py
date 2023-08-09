@@ -63,12 +63,27 @@ def test_s_interactive_extend_incrementally_overshooting_rack_specialization():
     assert iconf.domain_size == 10
 
 
-def test_specialization_cautious():
+def test_specialization_cautious_double():
     iconf = new_racks_iconf()
     iconf.new_object('rackDouble')
     iconf.new_object('frame')
     cautious = iconf._get_cautious()
-    print(cautious)
+    assert len(cautious.constraint_violations) == 1
+    assert('ooasp_cv(lowerbound,1,"Lowerbound for {} is {} but has {}",(rack_framesD,8,1,rackDouble,2))') in cautious.fb.asp_str()
     iconf.extend_domain(3)
     cautious = iconf._get_cautious()
-    print(cautious)
+    assert len(cautious.constraint_violations) == 1
+    assert('ooasp_cv(lowerbound,1,"Lowerbound for {} is {} but has {}",(rack_framesD,8,4,rackDouble,5))') in cautious.fb.asp_str()
+
+def test_specialization_cautious_rack():
+    iconf = new_racks_iconf()
+    iconf.new_object('rack')
+    iconf.new_object('frame')
+    cautious = iconf._get_cautious()
+    assert len(cautious.constraint_violations) == 1
+    assert('ooasp_cv(lowerbound,1,"Lowerbound for {} is {} but has {}",(rack_framesS,4,1,rackSingle,2))') in cautious.fb.asp_str()
+    iconf.extend_domain(3)
+    cautious = iconf._get_cautious()
+    assert len(cautious.constraint_violations) == 0
+    assert('ooasp_isa(rackSingle,1).') in cautious.fb.asp_str()
+    assert('ooasp_associated(rack_framesS,1,2)') in cautious.fb.asp_str()

@@ -184,7 +184,8 @@ def test_s_interactive_select_full():
     iconf.new_object('module')
     found_new = iconf.next_solution()
     for f in found.fb:
-        assert str(f) in found_new.fb.asp_str()
+        if not 'user' in str(f):
+            assert str(f) in found_new.fb.asp_str()
 
     assert "ooasp_isa(module,6)." in found_new.fb.asp_str()
 
@@ -198,13 +199,12 @@ def test_s_interactive_ccheck():
     iconf.new_object('frame')
     iconf.check()
     assert len(iconf.config.constraint_violations) == 6
-    assert 'ooasp_cv(lowerbound,1,"Lowerbound for association {} not reached: {}",(rack_frames,1,3)).' in iconf.state.config.fb.asp_str()
-    assert 'ooasp_cv(lowerbound,2,"Lowerbound for association {} not reached: {}",(rack_frames,1,3)).' in iconf.state.config.fb.asp_str()
-    assert 'ooasp_cv(lowerbound,3,"Lowerbound for association {} not reached: {}",(rack_frames,1,3)).' in iconf.state.config.fb.asp_str()
+    assert 'ooasp_cv(lowerbound,2,"Lowerbound for {} is {} but has {}",(rack_frames,1,0,frame' in iconf.state.config.fb.asp_str()
+    assert 'ooasp_cv(lowerbound,1,"Lowerbound for {} is {} but has {}",(rack_frames,1,0,frame' in iconf.state.config.fb.asp_str()
+    assert 'ooasp_cv(lowerbound,3,"Lowerbound for {} is {} but has {}",(rack_frames,1,0,frame' in iconf.state.config.fb.asp_str()
     assert 'ooasp_cv(no_value,1,"Missing value for {}",(frame_position,))' in iconf.state.config.fb.asp_str()
     assert 'ooasp_cv(no_value,2,"Missing value for {}",(frame_position,))' in iconf.state.config.fb.asp_str()
     assert 'ooasp_cv(no_value,3,"Missing value for {}",(frame_position,))' in iconf.state.config.fb.asp_str()
-
 
 def test_s_interactive_check_custom_cv():
     iconf = new_racks_iconf()

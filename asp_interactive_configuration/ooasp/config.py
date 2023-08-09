@@ -4,7 +4,7 @@
 from importlib import resources
 from typing import List
 from types import SimpleNamespace
-from clingo import Model, parse_term
+from clingo import Model, parse_term, Function
 from clorm.clingo import Control
 from clorm import Symbol, Predicate, ConstantField, IntegerField, FactBase, RawField, refine_field, Raw, StringField
 from clingraph.orm import Factbase
@@ -292,12 +292,14 @@ class  OOASPConfiguration:
         for u in users:
             self.fb.remove(u)
 
-    def _remove_facts(self,facts:List[Predicate])->None:
+    def _remove_facts(self,facts:List[Predicate], remove_user=True)->None:
         """
         Removes the given facts from the configuration factbase
         """
         for f in facts:
             self.fb.remove(f)
+            if remove_user:
+                self.fb.remove(self.UNIFIERS.User(f.symbol))
 
     def add_domain(self, class_name:str, object_id:int)->Predicate:
         """
@@ -328,6 +330,7 @@ class  OOASPConfiguration:
 
         fact = self.UNIFIERS.Object(class_name=class_name,object_id=object_id)
         self.fb.add(fact)
+        self.consider_as_user([fact])
         return fact
 
     def add_value(self, object_id:int, attr_name:str, attr_value)->Predicate:
@@ -344,6 +347,7 @@ class  OOASPConfiguration:
             object_id=object_id,
             attr_value=Raw(parse_term(str(attr_value))))
         self.fb.add(fact)
+        self.consider_as_user([fact])
         return fact
 
     def add_association(self, assoc_name:str,object_id1:int,object_id2:int)->Predicate:
@@ -360,6 +364,7 @@ class  OOASPConfiguration:
             object_id1=object_id1,
             object_id2=object_id2)
         self.fb.add(fact)
+        self.consider_as_user([fact])
         return fact
 
     def remove_object(self, object_id)->List[Predicate]:
@@ -412,6 +417,15 @@ class  OOASPConfiguration:
         return associations
 
 
+    def remove_cvs(self)->None:
+        """
+        Removes all the constraint violations
+        """
+        CV = self.UNIFIERS.CV
+        q = self.fb.query(CV)
+        cvs = list(q.all())
+        self._remove_facts(cvs, remove_user=False)
+    
     def show_cv(self)->None:
         """
         Prints all the constraint violations on the configuration formated
@@ -431,7 +445,24 @@ class  OOASPConfiguration:
         """
         args = [str(a) for a in cv.args.symbol.arguments]
         return f"Object {cv.object_id}: {cv.info.format(*args)}"
+    
+    def all_as_user(self):
+        """
+        All configuration editable facts as user symbols
 
+        Returns:
+            list[Symbol]: User symbols
+        """
+        return [Function("user",[f.symbol]) for f in  self.editable_facts]
+    
+    def consider_as_user(self, facts):
+        """
+        All configuration editable facts are added as user symbols
+        """
+        for f in  facts:
+            self.fb.add(self.UNIFIERS.User(f.symbol))
+    
+    
     def save_png(self,directory:str="./out"):
         """
         Saves the configuration as a png using clingraph

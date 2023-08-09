@@ -4,6 +4,7 @@
 #defined ooasp_isa/3.
 
 graph(config).
+#const color_green = "#0DB144".
 
 attr(graph_nodes, config, shape, rectangle).
 attr(graph, config, splines, ortho).
@@ -33,11 +34,14 @@ node(Object_id) :- any_node(Object_id).
 attr(node, Object_id, label, @concat("<<TABLE BORDER='0' CELLBORDER='1' CELLSPACING='0' CELLPADDING='1'>",
                                         "<TR><TD><FONT COLOR='{{color}}'><B>{{isa}} ({{id}})</B><BR/>{{class}}</FONT></TD></TR><TR><TD ALIGN='right'> ",
                                         "{% set attr = attr|default({}) %}{% for k, v in attr.items() %}{{v}} {% endfor %}",
+                                        "{% set cv = cv|default({}) %}{% for k, v in cv.items() %}{{v}} {% endfor %}",
                                         "</TD></TR></TABLE>>")):- any_node(Object_id).
 attr(node, Object_id,  (label,class), @stringify(Class,true)):- any_node(Object_id),ooasp_domain(Class,Object_id).
 attr(node, Object_id,  (label,isa), @stringify(Class,true)):- any_node(Object_id),isa_smallest(Class,Object_id).
-attr(node, Object_id,  (label,color), black):- node(Object_id), not domain_node(_,Object_id).
+attr(node, Object_id,  (label,color), black):- node(Object_id), not domain_node(_,Object_id), user(ooasp_isa(_,Object_id)).
+% Case for objects not isntanciated
 attr(node, Object_id,  (label,color), grey):- node(Object_id), domain_node(_,Object_id).
+attr(node, Object_id,  (label,color), color_green):- node(Object_id), not user(ooasp_isa(_,Object_id)), ooasp_isa(_,Object_id).
 attr(node, Object_id,  (label,id), Object_id):- any_node(Object_id).
 attr(node, Object_id, style, "filled"):- any_node(Object_id).
 
@@ -59,15 +63,19 @@ attr(node, T, width, 0):- node(T).
 attr(node, T, hight, 0):- node(T).
 
 % User selections in green
-attr(node, Object_id, fontcolor, "#0DB144"):- user(ooasp_isa_leaf(Class,Object_id)).
+% attr(node, Object_id, fontcolor, color_green):- ooasp_isa_leaf(Class,Object_id), not user(ooasp_isa(Class,Object_id)).
 
 % Add arguments to nodes
 attr(node, Object_id, (label,attr,Attr_name), @argument_str(Attr_name,Value,"black")):-
     ooasp_attr_value(Attr_name,Object_id,Value),
-    not user(ooasp_attr_value(Attr_name,Object_id,Value)).
-attr(node, Object_id, (label,attr,Attr_name), @argument_str(Attr_name,Value,"#0DB144")):-
-    ooasp_attr_value(Attr_name,Object_id,Value),
     user(ooasp_attr_value(Attr_name,Object_id,Value)).
+attr(node, Object_id, (label,attr,Attr_name), @argument_str(Attr_name,Value,color_green)):-
+    ooasp_attr_value(Attr_name,Object_id,Value),
+    not user(ooasp_attr_value(Attr_name,Object_id,Value)).
+
+% Add cvs to nodes
+attr(node, Object_id, (label,cv,(Name,Object_id)), @cv_str(Name,Mes,Args)):-
+    ooasp_cv(Name,Object_id,Mes,Args).
 
 
 % Associations
@@ -78,16 +86,25 @@ attr(edge,(Object_id1,Object_id2), xlabel, "<{{name}} <br/><FONT POINT-SIZE='10'
 attr(edge,(Object_id1,Object_id2), (xlabel,name), Name):-ooasp_associated(Name,Object_id1,Object_id2), not ooasp_assoc_specialization(_,Name).
 attr(edge,(Object_id1,Object_id2), (xlabel,super), Super):-ooasp_associated(Name,Object_id1,Object_id2),ooasp_assoc_specialization(Name,Super).
 
-attr(edge, (Object_id1,Object_id2), color, "#0DB144") :- user(ooasp_associated(Name,Object_id1,Object_id2)).
-attr(edge, (Object_id1,Object_id2), fontcolor, "#0DB144") :- user(ooasp_associated(Name,Object_id1,Object_id2)).
+attr(edge, (Object_id1,Object_id2), color, color_green) :- ooasp_associated(Name,Object_id1,Object_id2), not user(ooasp_associated(Name,Object_id1,Object_id2)).
+attr(edge, (Object_id1,Object_id2), fontcolor, color_green) :- ooasp_associated(Name,Object_id1,Object_id2), not user(ooasp_associated(Name,Object_id1,Object_id2)).
 
 
 
 #script (python)
 from clingo.symbol import String
+import textwrap
 
 def argument_str(name,type,color):
     s = f"<FONT COLOR='{color.string}'>" + str(name) + " = " + "<I> "+ str(type)  + "</I></FONT><br ALIGN='left'/> "
+    return String(s)
+
+def cv_str(name,message,args):
+    args_symbols = [str(a) for a in args.arguments]
+    formatted_message = f"{message.string.format(*args_symbols)}"
+    s_wrap_list = textwrap.wrap(formatted_message, 40)
+    message_wraped = "<br ALIGN='left'/>   ".join(s_wrap_list)
+    s = f"<FONT COLOR='red'>(" + str(name) + ") " + "<I> "+ message_wraped  + "</I></FONT><br ALIGN='left'/> "
     return String(s)
 
 #end.
