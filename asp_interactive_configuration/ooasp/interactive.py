@@ -12,8 +12,8 @@ from typing import List
 from copy import deepcopy
 import ooasp.utils as utils
 from typing import List
-import ooasp.encodings
-import ooasp.encodings_simple
+import ooasp.settings as settings
+
 
 class State:
     """
@@ -37,14 +37,14 @@ class State:
         self.action = action
 
     @classmethod
-    def initial(cls, kb:OOASPKnowledgeBase, config_name:str, simplified_encodings:bool=False):
+    def initial(cls, kb:OOASPKnowledgeBase, config_name:str):
         """
         Creates the initial state
             Parameters:
                 kb: The Knowledge base
                 config_name: The name of the configuration
         """
-        return cls(OOASPConfiguration(config_name,kb,simplified_encodings),
+        return cls(OOASPConfiguration(config_name,kb),
             action="start",
             domain_size=0)
 
@@ -88,7 +88,7 @@ class InteractiveConfigurator:
             last_size_grounded (int): The last size that was grounded
     """
 
-    def __init__(self, kb:OOASPKnowledgeBase, config_name:str, additional_files:List=None, additional_prg:str="", simplified_encodings=False):
+    def __init__(self, kb:OOASPKnowledgeBase, config_name:str, additional_files:List=None, additional_prg:str=""):
         """
         Creates an interactive configuratior
             Parameters:
@@ -98,14 +98,13 @@ class InteractiveConfigurator:
         """
         self.kb = kb
         self.config_name = config_name
-        self.states = [State.initial(kb,config_name,simplified_encodings=simplified_encodings)]
+        self.states = [State.initial(kb,config_name)]
         self.additional_files = [] if additional_files is None else additional_files
         self.additional_prg = additional_prg
         self._time_grounding = 0
         self._time_solving = 0
         self._individual_ground_times = {}
         self._individual_solve_times = {}
-        self.simplified_encodings = simplified_encodings
         self._init_ctl()
         self.found_config = None
         self.brave_config = None
@@ -127,16 +126,13 @@ class InteractiveConfigurator:
         """
         self.ctl = Control(["0",
                 "--warn=none",
+                # "--heuristic=Domain",
                 f"-c config_name={self.config_name}",
                 f"-c kb_name={self.kb.name}"])
         self.ctl.add("base",[],self.kb.fb.asp_str())
         self.ctl.add("base",[],self.additional_prg)
-        if self.simplified_encodings:
-            path = resources.files(ooasp.encodings_simple).joinpath("ooasp.lp")
-            self.ctl.load(str(path))
-        else:
-            path = resources.files(ooasp.encodings).joinpath("ooasp.lp")
-            self.ctl.load(str(path))
+        file = settings.encodings_path.joinpath("ooasp.lp")
+        self.ctl.load(str(file))
         for f in self.additional_files:
             self.ctl.load(f)
         self._ground([("base",[])])
@@ -197,10 +193,13 @@ class InteractiveConfigurator:
     def _statistics(self):
         self._outdate_models()
         d ={
-            'Time grounding' : self._time_grounding,
-            'Time solving' : self._time_solving}
+            'time-grounding' : self._time_grounding,
+            'time-solving' : self._time_solving,
+            'per-domain-grounding':self._individual_ground_times,
+            'per-domain-solving':self._individual_solve_times
+            }
 
-        return  utils.pretty_dic(d)
+        return d
 
     def _ground(self, args):
         start = time.time()
@@ -215,10 +214,12 @@ class InteractiveConfigurator:
         """
         if self.domain_size == self.last_size_grounded:
             return
-        for s in range(self.last_size_grounded+1,self.domain_size+1):
+        domains = self.config.domains_from(self.last_size_grounded)
+        for cls, s in domains:
             if s>1:
                 self.ctl.release_external(Function("active", [Number(s-1)]))
-            self._ground([("domain",[Number(s)])])
+            self._ground([("domain",[Number(s),Function(cls, [])])])
+
             self.ctl.assign_external(Function("active", [Number(s)]), True)
         self.last_size_grounded=s
 
@@ -251,6 +252,7 @@ class InteractiveConfigurator:
         This uses special predicate `user/1`
         """
         for f in self.config.editable_facts:
+            # self.ctl.assign_external(Function("random",[]), True)
             self.ctl.assign_external(Function("user",[f.symbol]), True)
 
     def _falsify_user_externals(self,facts:List)->None:
@@ -272,14 +274,47 @@ class InteractiveConfigurator:
         """
         self.ctl.add("domain",[str(self.domain_size)],str(fact)+".")
 
-    def _extend_domain(self)->None:
+    def _create_required_objects(self, cls:str, object_id:int, ignore_assoc:List=None)->None:
+        """
+        Creates required objects for a given object based on associations in the knowledge base configuration.
+        It ensures that the minimum required number of associated objects is met for each association.
+        
+            Parameters:
+                cls (str): The class (object type) for which required objects are being created.
+                object_id (int): The ID of the object for which required objects are being created.
+                ignore_assoc (List, optional): A list of association names to be ignored during object creation.
+                    Defaults to None.
+        """
+        if ignore_assoc is None:
+            ignore_assoc = set()
+        assocs = self.config.kb.associations(cls)
+        assocs_added = []
+        for name, class2, min, max in assocs:
+            if name in ignore_assoc:
+                continue
+            curret_assoc = self.config.associated_by(object_id,name)
+            remaining = min - len(curret_assoc) 
+            assocs_added.append(name)
+            if remaining<0:
+                continue
+            for _ in range(remaining):
+                self._extend_domain(class2,True,assocs_added)
+
+
+
+    def _extend_domain(self, cls='object',propagate=False, ignore_assoc:List=None)->int:
         """
         Increases the domain size by one and adds a new domain(object,N) fact to
         the configuration.
         """
         self.state.domain_size+=1
         self._outdate_models()
-        self.config.add_domain('object',self.state.domain_size)
+        new_object = self.state.domain_size
+        self.config.add_domain(cls,new_object)
+        if propagate:
+            self._create_required_objects(cls, new_object,ignore_assoc)
+        return new_object
+
 
 
     # --------- Browsing
@@ -314,13 +349,14 @@ class InteractiveConfigurator:
             end = time.time()
             self._add_solving_time(end -start)
             found_config = OOASPConfiguration.from_model(self.state.config.name,
-                    self.kb, model, self.simplified_encodings)
+                    self.kb, model)
             return found_config
         except StopIteration:
             end = time.time()
             self._add_solving_time(end -start)
             self.hdn.cancel()
-            return None
+            self.found_config=False
+            return False
 
     def _set_config(self,config:OOASPConfiguration):
         """
@@ -337,6 +373,71 @@ class InteractiveConfigurator:
         self.state.domain_size = new_size
         self.state.config=config
 
+
+    def _add_objects_to_dict(self, config: OOASPConfiguration, options: dict) -> dict:
+        """
+        Adds the objects from the brave configuration to the provided dictionary
+
+            Parameters:
+                config: The current brave configuration
+                options:The dictionary to be updated with the objects from the config
+            Returns:
+                The updated dictionary, now containing the objects from the configuration
+        """
+        user_strs = [str(s) for s in config.user_input]
+
+        for f in config.unique_objects:
+            options[f.object_id].append(utils.editable_fact_as_remove_action(f,config.UNIFIERS))
+        for f in config.small_objects:
+            if str(f) not in user_strs:
+                options[f.object_id].append(utils.editable_fact_as_select_action(f,config.UNIFIERS))
+        return options
+    
+
+    def _add_attributes_to_dict(self, config: OOASPConfiguration, options: dict) -> dict:
+        """
+        Adds the attributes from the brave configuration to the provided dictionary
+
+            Parameters:
+                config: The current brave configuration
+                options:The dictionary to be updated with the attributes from the config
+            Returns:
+                The updated dictionary, now containing the attributes from the configuration
+        """
+        user_strs = [str(s) for s in config.user_input]
+        user_fb = unify(config.editable_unifiers, config.user_input)
+
+        for f in user_fb.query(config.UNIFIERS.AttributeValue).all():
+            options[f.object_id].append(utils.editable_fact_as_remove_action(f,config.UNIFIERS))
+        for f in config.fb.query(config.UNIFIERS.AttributeValue).all():
+            if str(f) not in user_strs:
+                options[f.object_id].append(utils.editable_fact_as_select_action(f,config.UNIFIERS))
+        return options
+    
+
+    def _add_associations_to_dict(self, config: OOASPConfiguration, options: dict) -> dict:
+        """
+        Adds the associations from the brave configuration to the provided dictionary
+
+            Parameters:
+                config: The current brave configuration
+                options:The dictionary to be updated with the associations from the config
+            Returns:
+                The updated dictionary, now containing the associations from the configuration
+        """
+        user_strs = [str(s) for s in config.user_input]
+        user_fb = unify(config.editable_unifiers, config.user_input)
+
+        for f in user_fb.query(config.UNIFIERS.Association).all():
+            options[f.object_id1].append(utils.editable_fact_as_remove_action(f,self.brave_config.UNIFIERS))
+            options[f.object_id2].append(utils.editable_fact_as_remove_action(f,self.brave_config.UNIFIERS))      
+        for f in config.fb.query(config.UNIFIERS.Association).all():
+            if str(f) not in user_strs:
+                options[f.object_id1].append(utils.editable_fact_as_select_action(f,self.brave_config.UNIFIERS))
+                options[f.object_id2].append(utils.editable_fact_as_select_action(f,self.brave_config.UNIFIERS))
+        return options
+
+
     def _brave_config_as_options(self) -> dict:
         """
         Returns the brave configuration computed as a dictionary with
@@ -348,28 +449,13 @@ class InteractiveConfigurator:
         if self.brave_config is None:
             raise RuntimeError("A brave configuration must be computed to get it as options")
         config = self.brave_config
-        user_symbols = config.user_input
-        user_strs = [str(s) for s in user_symbols]
-        user_fb = unify(config.editable_unifiers, user_symbols)
         options = {}
         for i in range(1,config.domain_size+1):
             options[i]=[]
 
-        for c in config.editable_unifiers:
-            for f in user_fb.query(c).all():
-                if c == config.UNIFIERS.Association:
-                        options[f.object_id1].append(utils.editable_fact_as_remove_action(f,self.brave_config.UNIFIERS))
-                        options[f.object_id2].append(utils.editable_fact_as_remove_action(f,self.brave_config.UNIFIERS))
-                else:
-                    options[f.object_id].append(utils.editable_fact_as_remove_action(f,self.brave_config.UNIFIERS))
-        for c in config.editable_unifiers:
-            for f in config.fb.query(c).all():
-                if str(f) not in user_strs:
-                    if c == config.UNIFIERS.Association:
-                        options[f.object_id1].append(utils.editable_fact_as_select_action(f,self.brave_config.UNIFIERS))
-                        options[f.object_id2].append(utils.editable_fact_as_select_action(f,self.brave_config.UNIFIERS))
-                    else:
-                        options[f.object_id].append(utils.editable_fact_as_select_action(f,self.brave_config.UNIFIERS))
+        options = self._add_objects_to_dict(config, options)
+        options = self._add_attributes_to_dict(config, options)
+        options = self._add_associations_to_dict(config, options)
 
         return options
 
@@ -397,7 +483,7 @@ class InteractiveConfigurator:
                 self.brave_config = None
                 raise RuntimeError("No available options for conflicting configuration")
             self.brave_config = OOASPConfiguration.from_model(self.state.config.name,
-                    self.kb, brave_model, simplified_encodings=self.simplified_encodings)
+                    self.kb, brave_model)
         return self.brave_config
 
     def _check(self)->bool:
@@ -414,10 +500,14 @@ class InteractiveConfigurator:
         self._set_user_externals()
         self.ctl.configuration.solve.enum_mode = 'auto'
         with  self.ctl.solve(yield_=True) as hdn:
+            sat = False
             for model in hdn:
+                sat = True
                 self.state.config = OOASPConfiguration.from_model(self.state.config.name,
-                    self.kb, model, simplified_encodings=self.simplified_encodings)
+                    self.kb, model)
                 self.config.remove_user()
+            if not sat:
+                raise RuntimeError("Got UNSAT while checking for cvs")
 
         return not self.config.has_cv
 
@@ -430,6 +520,7 @@ class InteractiveConfigurator:
                 object_id1: Id of the second object
         """
         fact = self.config.remove_association(assoc_name,object_id1,object_id2)
+        self._falsify_user_externals(fact)
 
     def _remove_value(self,object_id:id,attr_name:str)->None:
         """
@@ -441,13 +532,13 @@ class InteractiveConfigurator:
         removed_facts = self.config.remove_value(object_id,attr_name)
         self._falsify_user_externals(removed_facts)
 
-    def _remove_leaf(self,object_id:id)->None:
+    def _remove_object(self,object_id:id)->None:
         """
-        Removes the leaf class selection for an object
+        Removes the object class selection for an object
             Parameters:
                 object_id: Id of the object
         """
-        removed_facts = self.config.remove_leaf(object_id)
+        removed_facts = self.config.remove_object(object_id)
         self._falsify_user_externals(removed_facts)
 
 
@@ -491,7 +582,7 @@ class InteractiveConfigurator:
             self._new_state("Browse solutions")
         self.found_config = self._next_solution()
         if not self.found_config:
-            print("No more solutions")
+            return None
         return self.found_config
 
     def end_browsing(self)->None:
@@ -500,6 +591,7 @@ class InteractiveConfigurator:
         any previously computed options in the brave config
         """
         self._outdate_models()
+        return None
 
 
     # Actions changing the configuration
@@ -527,15 +619,15 @@ class InteractiveConfigurator:
         self._new_state(f"Removed value for {object_id}.{attr_name}",deep=True)
         self._remove_value(object_id,attr_name)
 
-    def remove_leaf_class(self,object_id:int)->None:
+    def remove_object_class(self,object_id:int)->None:
         """
         Creates a state with a new configuration.
-        Removes the leaf class selection for an object
+        Removes the object class selection for an object
             Parameters:
                 object_id: Id of the object
         """
-        self._new_state(f"Removed leaf class for {object_id}",deep=True)
-        self._remove_leaf(object_id)
+        self._new_state(f"Removed object class for {object_id}",deep=True)
+        self._remove_object(object_id)
 
     def select_association(self,assoc_name:str,object_id1:int,object_id2:int)->None:
         """
@@ -563,26 +655,26 @@ class InteractiveConfigurator:
         self._remove_value(attr_name,object_id)
         self.config.add_value(object_id,attr_name,attr_value)
 
-    def select_leaf_class(self,object_id:int,leaf_class:str)->None:
+    def select_object_class(self,object_id:int,object_class:str)->None:
         """
         Creates a state with a new configuration.
-        Removes any current leaf selection for the object.
-        Selects the leaf class for the object.
+        Removes any current object selection for the object.
+        Selects the object class for the object.
             Parameters:
                 object_id: Id of the object
             Throws:
-                Error in case the leaf_class is not really a leaf class
+                Error in case the object_class is not really a object class
         """
-        self._new_state(f"Set {object_id} of class {leaf_class}",deep=True)
-        self._remove_leaf(object_id)
+        self._new_state(f"Set {object_id} of class {object_class}",deep=True)
+        self._remove_object(object_id)
         try:
-            self.config.add_leaf(object_id,leaf_class)
+            self.config.add_object(object_id,object_class)
         except Exception as e:
             self.states.pop()
             raise e
 
 
-    def extend_domain(self,num:int=1)->None:
+    def extend_domain(self,num:int=1,cls='object',propagate=False)->None:
         """
         Creates a state with a new configuration.
         Increases the domain size and adds a new domain(object,N) fact to
@@ -593,26 +685,26 @@ class InteractiveConfigurator:
         self._new_state(f"Extended domain by {num} ",deep=True)
         next_num_objects = self.state.domain_size + num
         for i in range(self.state.domain_size+1,next_num_objects+1):
-            self._extend_domain()
+            self._extend_domain(cls=cls,propagate=propagate)
 
-    def new_leaf(self,leaf_class:str)->None:
+    def new_object(self,object_class:str)->None:
         """
         Creates a state with a new configuration.
         Increases the domain size by one and adds a new domain(object,N) fact to
-        Selects the leaf class for the new object
+        Selects the object class for the new object
         the configuration.
             Parameters:
-                leaf_class: The name of the leaf class
+                object_class: The name of the object class
         """
-        self._new_state(f"Added leaf class {leaf_class}",deep=True)
-        self._extend_domain()
+        self._new_state(f"Added object class {object_class}",deep=True)
+        new_object = self._extend_domain(cls=object_class)
         try:
-            self.config.add_leaf(self.state.domain_size,leaf_class)
+            self.config.add_object(new_object,object_class)
         except Exception as e:
             self.states.pop()
             raise e
 
-    def extend_incrementally(self, domain_limit:int=100)->OOASPConfiguration:
+    def extend_incrementally(self, domain_limit:int=100, overshoot:bool=False)->OOASPConfiguration:
         """
         Creates a state with a new configuration.
         Trys to find a solution for the current domain size, if a solution is
@@ -626,18 +718,24 @@ class InteractiveConfigurator:
 
             Parameters:
                 domain_limit: The limit size the domain can reach
+                overshoot: If this is passed, then the required elements will be created for each object
             Returns:
                 The found OOASPConfiguration or None if no more solutions are found
         """
-        self._new_state("Extend incrementally",deep=True)
+        name = "Extend incrementally" if not overshoot else "Extend incrementally overshooting"
+        self._new_state(name,deep=True)
+        if overshoot:
+            objs = self.config.smart_objects
+            for o in objs:
+                self._create_required_objects(o.class_name, o.object_id)
         self.found_config = self._next_solution()
 
-        while self.found_config == None or self.domain_size>domain_limit:
+        while not self.found_config  or self.domain_size>domain_limit:
             self._extend_domain()
             self.found_config = self._next_solution()
 
 
-        if self.found_config == None:
+        if not self.found_config:
             raise RuntimeError(f"No configuration found in the domain limit {domain_limit}")
 
         return self.found_config
@@ -649,9 +747,11 @@ class InteractiveConfigurator:
         """
         current_found_config = self.found_config
         if not current_found_config:
-            raise RuntimeError("No configuration found")
+            print("No configuration found")
+            return
         current_found_config.remove_user()
         self.set_configuration(current_found_config)
+        return None
 
     def set_configuration(self,config:OOASPConfiguration):
         """

@@ -13,8 +13,7 @@ from clingraph.clingo_utils import ClingraphContext
 from .kb import OOASPKnowledgeBase
 from copy import deepcopy
 import ooasp.utils as utils
-import ooasp.encodings
-import ooasp.encodings_simple
+import ooasp.settings as settings
 
 
 class  OOASPConfiguration:
@@ -27,7 +26,7 @@ class  OOASPConfiguration:
             UNIFIERS (Namespace): All clorm unifiers (classes) used to link objects with predicates
     """
 
-    def __init__(self, name:str, kb: OOASPKnowledgeBase, simplified_encodings=False):
+    def __init__(self, name:str, kb: OOASPKnowledgeBase):
         """
         Creates a possibly partial configuration
             Parameters:
@@ -36,7 +35,6 @@ class  OOASPConfiguration:
         """
         self.name:str = name
         self.kb = kb
-        self.simplified_encodings = simplified_encodings
         self.set_unifiers()
         self.fb = FactBase()
 
@@ -59,30 +57,30 @@ class  OOASPConfiguration:
             class Meta:
                 name = "ooasp_configobject"
 
-            if not self.simplified_encodings:
-                config=NameField(default=self.name)
             class_name=ConstantField
             object_id=IntegerField
 
         class Leaf(Predicate):
             class Meta:
                 name = "ooasp_isa_leaf"
-            if not self.simplified_encodings:
-                config=NameField(default=self.name)
+            class_name=ConstantField
+            object_id=IntegerField
+
+        class ObjectSmallest(Predicate):
+            class Meta:
+                name = "ooasp_isa_smallest"
+            class_name=ConstantField
+            object_id=IntegerField
+
+        class Object(Predicate):
+            class Meta:
+                name = "ooasp_isa"
             class_name=ConstantField
             object_id=IntegerField
 
         class AttributeValue(Predicate):
             class Meta:
-                if not self.simplified_encodings:
-                    name = "ooasp_attribute_value"
-                else:
-                    name = "ooasp_attr_value"
-
-
-
-            if not self.simplified_encodings:
-                config=NameField(default=self.name)
+                name = "ooasp_attr_value"
             attr_name=ConstantField
             object_id=IntegerField
             attr_value=RawField
@@ -91,8 +89,6 @@ class  OOASPConfiguration:
             class Meta:
                 name = "ooasp_associated"
 
-            if not self.simplified_encodings:
-                config=NameField(default=self.name)
             assoc_name=ConstantField
             object_id1=IntegerField
             object_id2=IntegerField
@@ -101,8 +97,6 @@ class  OOASPConfiguration:
             class Meta:
                 name = "ooasp_domain"
 
-            if not self.simplified_encodings:
-                config=NameField(default=self.name)
             class_name=ConstantField
             object_id=IntegerField
 
@@ -111,8 +105,6 @@ class  OOASPConfiguration:
             class Meta:
                 name = "ooasp_cv"
 
-            if not self.simplified_encodings:
-                config=NameField(default=self.name)
             name=ConstantField
             object_id=IntegerField
             info=StringField
@@ -129,13 +121,15 @@ class  OOASPConfiguration:
                 AttributeValue=AttributeValue,
                 Association=Association,
                 Leaf=Leaf,
+                ObjectSmallest=ObjectSmallest,
                 ConfigObject=ConfigObject,
                 Domain=Domain,
                 CV=CV,
-                User=User)
+                User=User,
+                Object=Object)
 
     @classmethod
-    def from_model(cls, name:str, kb: OOASPKnowledgeBase, model:Model, simplified_encodings=False):
+    def from_model(cls, name:str, kb: OOASPKnowledgeBase, model:Model):
         """
         Creates a configuration from a clingo model
             Parameters:
@@ -143,7 +137,7 @@ class  OOASPConfiguration:
                 kb: The knowledge base
                 model: The clingo model
         """
-        config= cls(name=name, kb = kb,simplified_encodings=simplified_encodings)
+        config= cls(name=name, kb = kb)
         config.fb = model.facts(unifier=config.unifiers_list,atoms=True,shown=True)
         return config
 
@@ -160,6 +154,13 @@ class  OOASPConfiguration:
         The domain size, it is computed by counting the number of objects in the fact base.
         """
         return self.fb.query(self.UNIFIERS.Domain).select(self.UNIFIERS.Domain.object_id).count()
+    
+    @property
+    def size(self)->int:
+        """
+        The number of instantiated objects via isa_leaf
+        """
+        return self.fb.query(self.UNIFIERS.Leaf).select(self.UNIFIERS.Leaf.object_id).count()
 
     @property
     def has_cv(self)->bool:
@@ -171,17 +172,17 @@ class  OOASPConfiguration:
     @property
     def editable_unifiers(self)->List:
         """
-        List of all unifier classes that are editable: Leaf,AttributeValue,Association
+        List of all unifier classes that are editable: Object,AttributeValue,Association
         """
-        return [self.UNIFIERS.Leaf,self.UNIFIERS.AttributeValue,self.UNIFIERS.Association]
+        return [self.UNIFIERS.Object,self.UNIFIERS.AttributeValue,self.UNIFIERS.Association]
 
     @property
     def editable_facts(self)->List[Predicate]:
         """
         The list of all facts in the fact base that are editable.
-        Editable facts are leaf class, attribute value and associations.
+        Editable facts are object class, attribute value and associations.
         """
-        return self.associations + self.leafs + self.attribute_values
+        return self.associations + self.objects + self.attribute_values
 
     @property
     def assumptions(self)->List[Symbol]:
@@ -205,6 +206,41 @@ class  OOASPConfiguration:
         return list(self.fb.query(self.UNIFIERS.Leaf).all())
 
     @property
+    def small_objects(self)->List[Predicate]:
+        """
+        Small objects
+        """
+        return list(self.fb.query(self.UNIFIERS.ObjectSmallest).all())
+    
+    @property
+    def smart_objects(self)->List[Predicate]:
+        """
+        Smart objects
+        """
+        small_objects = {o.object_id:o.class_name for o in self.small_objects}
+        objects = [] 
+        for o in self.objects :
+            if o.object_id in small_objects and small_objects[o.object_id]!=o.class_name:
+                continue
+            objects.append(o)
+
+        return objects
+    
+    @property
+    def objects(self)->List[Predicate]:
+        """
+        The list of objects
+        """
+        return list(self.fb.query(self.UNIFIERS.Object).all())
+
+    @property
+    def unique_objects(self)->List[Predicate]:
+        """
+        The list of objects
+        """
+        return list(self.fb.query(self.UNIFIERS.Object).where(self.UNIFIERS.Object.class_name=='object').all())
+    
+    @property
     def constraint_violations(self)->List[Predicate]:
         """
         The list of constraint violations
@@ -225,6 +261,28 @@ class  OOASPConfiguration:
         """
         input_facts = list(self.fb.query(self.UNIFIERS.User).select(self.UNIFIERS.User.predicate).all())
         return [f.symbol for f in input_facts]
+
+    def associated_by(self, obj, assoc_name)->List[Predicate]:
+        """
+        The list of associations from object obj via association assoc_name
+        """
+        Association = self.UNIFIERS.Association
+        q = self.fb.query(Association)
+        q1 = q.where(((Association.object_id1==obj)&(Association.assoc_name==assoc_name)))
+        q1 = q1.select(Association.object_id2)
+        q2 = q.where(((Association.object_id2==obj)&(Association.assoc_name==assoc_name)))
+        q2 = q2.select(Association.object_id1)
+        return list(q1.all()) + list(q2.all())
+    
+    def domains_from(self, start_domain)->int:
+        """
+        The domain size, it is computed by counting the number of objects in the fact base.
+        """
+        q = self.fb.query(self.UNIFIERS.Domain)
+        q = q.where(self.UNIFIERS.Domain.object_id>start_domain)
+        q = q.select(self.UNIFIERS.Domain.class_name,self.UNIFIERS.Domain.object_id)
+        return list(q.all())
+
 
     def remove_user(self)->None:
         """
@@ -254,21 +312,21 @@ class  OOASPConfiguration:
         self.fb.add(fact)
         return fact
 
-    def add_leaf(self,object_id:int, class_name:str)->Predicate:
+    def add_object(self,object_id:int, class_name:str)->Predicate:
         """
-        Adds a new leaf predicate to the factbase
+        Adds a new object predicate to the factbase
             Parameters:
                 object_id: The identifier for the object
                 class_name: The class name
             Returns:
                 The added fact
             Throws:
-                Exception if the class of the given name is not a leaf class
+                Exception if the class of the given name is not a object class
         """
-        if not self.kb.is_leaf(class_name):
-            raise RuntimeError(f"{class_name} is not a leaf class")
+        if not self.kb.is_class(class_name):
+            raise RuntimeError(f"{class_name} is not a class")
 
-        fact = self.UNIFIERS.Leaf(class_name=class_name,object_id=object_id)
+        fact = self.UNIFIERS.Object(class_name=class_name,object_id=object_id)
         self.fb.add(fact)
         return fact
 
@@ -304,19 +362,19 @@ class  OOASPConfiguration:
         self.fb.add(fact)
         return fact
 
-    def remove_leaf(self, object_id)->List[Predicate]:
+    def remove_object(self, object_id)->List[Predicate]:
         """
-        Removes any leaf predicates from the factbase associated to the object id
+        Removes any object predicates from the factbase associated to the object id
             Parameters:
                 object_id: The identifier for the object
             Returns:
                 The list of removed facts
         """
-        Leaf = self.UNIFIERS.Leaf
-        q = self.fb.query(Leaf).where(Leaf.object_id == object_id)
-        leafs = list(q.all())
-        self._remove_facts(leafs)
-        return leafs
+        Object = self.UNIFIERS.Object
+        q = self.fb.query(Object).where(Object.object_id == object_id)
+        objects = list(q.all())
+        self._remove_facts(objects)
+        return objects
 
     def remove_value(self, object_id:id, attr_name:str)->List[Predicate]:
         """
@@ -380,16 +438,10 @@ class  OOASPConfiguration:
         """
         ctl = Control(['--warn=none'])
         fbs = []
-        if self.simplified_encodings:
-            path = resources.files(ooasp.encodings_simple).joinpath("viz_config.lp")
-            ctl.load(str(path))
-            path = resources.files(ooasp.encodings_simple).joinpath("ooasp_aux_kb.lp")
-            ctl.load(str(path))
-        else:
-            path = resources.files(ooasp.encodings).joinpath("viz_config.lp")
-            ctl.load(str(path))
-            path = resources.files(ooasp.encodings).joinpath("ooasp_aux_kb.lp")
-            ctl.load(str(path))
+        path = settings.encodings_path.joinpath("viz_config.lp")
+        ctl.load(str(path))
+        path = settings.encodings_path.joinpath("ooasp_aux_kb.lp")
+        ctl.load(str(path))
 
         ctl.add("base",[],self.fb.asp_str())
         ctl.add("base",[],self.kb.fb.asp_str())

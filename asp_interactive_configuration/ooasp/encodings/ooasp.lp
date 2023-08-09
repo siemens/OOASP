@@ -17,5 +17,4 @@ ooasp_configuration(kb_name,config_name).
 #include "ooasp_guess.lp". % Guess section
 #include "ooasp_check.lp". % Check section
 
-use_symmetry.
 #include "ooasp_symmetry.lp". % Symmetry breaking constraints

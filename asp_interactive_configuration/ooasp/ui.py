@@ -2,16 +2,18 @@
 # SPDX-License-Identifier: MIT
 
 import ipywidgets as widgets
-from ipywidgets import Button, VBox, Label, Layout,GridspecLayout, HTML
+from ipywidgets import Button, VBox, HBox, Label, Layout,GridspecLayout, HTML, Output
 from IPython.display import display, Image
 
-def basic_layout():
+loader_path = './img/loader.gif'
+
+def basic_vbox():
     return VBox(layout=Layout(height='auto', width='auto'))
 
 def wraped_label(text):
     return HTML(value="<style>p{word-wrap: break-word ;color:red}</style> <p>" + text+"</p>")
 
-
+PSTYLE = "<style>p{word-wrap: break-word; margin-right: 10px;}</style>"
 class OOASPUI:
     """
     UI prototype using pywidgets
@@ -24,24 +26,27 @@ class OOASPUI:
         self.iconf = iconf
         self.config_image = widgets.Image(format='png')
         self.found_config = widgets.Image(format='png')
-
-        self.history = VBox(layout=Layout(height='300ox', width='auto',overflow_y='auto'))
-        self.extend = basic_layout()
-        self.edit = basic_layout()
-        self.browse = basic_layout()
-        self.check = basic_layout()
+        self.config_image.layout.object_fit= 'contain'
+        self.found_config.layout.object_fit= 'contain'
+        # self.history = VBox(layout=Layout(height='300ox', width='auto',overflow_y='auto'))
+        self.extend = basic_vbox()
+        self.edit = basic_vbox()
+        self.edit_object = ''
+        self.browse = basic_vbox()
+        self.check = basic_vbox()
         self.opts = None
         self.update()
         self.create_structure()
-        display(HTML("<style>div.output_scroll { height: 44em; }</style>"),self.grid)
+        
+        display(HTML("<style>div.output_scroll { height: 44em; } .container { width:100% !important; }</style>"),self.grid)
 
     def create_structure(self):
         """
         Crates the basic grid structure
         """
         grid = GridspecLayout(3, 6)
-        grid[0, 4:] = self.history
-        grid[0, :4] = self.config_image
+        # grid[0, 4:] = self.history
+        grid[0, :6] = self.config_image
         grid[1, :2] = self.check
         grid[1, 2:4] = self.edit
         grid[1, 4:] = self.extend
@@ -55,7 +60,7 @@ class OOASPUI:
         Updates the UI based on the current interactive state
         """
         self.set_config_image()
-        self.set_history()
+        # self.set_history()
         self.set_edit()
         self.set_extend()
         self.set_browse()
@@ -74,9 +79,16 @@ class OOASPUI:
         Calls a function and updates the UI
         """
         def fun(bt):
+            self.found_config.value = Image(loader_path).data
             f(bt,*args)
             self.update()
+            # self.loading.value = Image("out/empty.png").data
         return fun
+
+    def select_edit_object(self, change):
+        if change.type != "change" or change.name != "value":
+            return
+        self.edit_object = change.owner.value
 
     def add_leaf(self,change):
         """
@@ -84,7 +96,7 @@ class OOASPUI:
         """
         if change.type != "change" or change.name != "value":
             return
-        self.iconf.new_leaf(change.owner.value)
+        self.iconf.new_object(change.owner.value)
 
     def do_edit(self,change):
         """
@@ -97,13 +109,14 @@ class OOASPUI:
         call = getattr(self.iconf, opt['fun_name'])
         call(*opt['args'])
 
-    def button_wrapper(self, fun_name):
+    
+    def button_wrapper(self, fun_name, **kwargs):
         """
         Used for button callbacks that call the iconf
         """
         def f(bt):
             fun = getattr(self.iconf, fun_name)
-            fun()
+            fun(**kwargs)
         return f
 
     def set_config_image(self):
@@ -119,7 +132,10 @@ class OOASPUI:
         Sets the found configuration image
         """
         if self.iconf.found_config is None:
-            image = Image(f"out/empty.png")
+            image = Image("out/empty.png")
+            self.found_config.value = image.data
+        elif self.iconf.found_config is False:
+            image = Image("out/nosol.png")
             self.found_config.value = image.data
         else:
             self.iconf.found_config.save_png("out/found/")
@@ -147,18 +163,41 @@ class OOASPUI:
         """
         Sets the extend domain section
         """
-        extend_domain = Button(description='Add new object',button_style='info')
+        domain_lbl = HTML(value=PSTYLE + "<p> <b>Domain size: "+str(self.iconf.domain_size)+"</b>  </p>") 
+        config_lbl = HTML(value=PSTYLE + "<p> <b>Configuration size: "+str(self.iconf.config.size)+"</b>  </p>") 
+        
+        extend_domain = Button(description='Extend',button_style='info')
         extend_domain.on_click(self.call_and_update(self.button_wrapper('extend_domain')))
-        # dropdown = widgets.Dropdown(
-        #     options=['']+self.iconf.kb.leafs,
-        #     value='',
-        #     description='Add new leaf',
-        #     disabled=False
-        # )
-        # dropdown.observe(self.call_and_update(self.add_leaf))
-        # self.extend.children= tuple([self.title('Extend'), extend_domain,dropdown])
-        self.extend.children= tuple([self.title('Extend'), extend_domain])
+        dropdown = widgets.Dropdown(
+            options=['']+self.iconf.kb.classes,
+            value='',
+            description='Add new object',
+            disabled=False,
+            style={'description_width': '120px'}
+        )
+        dropdown.observe(self.call_and_update(self.add_leaf))
+        self.extend.children= tuple([self.title('Extend'),HBox(children=[domain_lbl,extend_domain]),config_lbl,dropdown])
 
+    def str_opt(self, option):
+        """
+        Takes an option and formats it into a human-readable string representation.
+        """
+        r_or_s, edit_opt = option['fun_name'].split('_',1)
+        if option['fun_name']== 'remove_object_class':
+            s = 'Remove'
+        elif option['fun_name']== 'select_object_class':
+            s = 'Select: ' + option['args'][1]
+        elif option['fun_name']== 'remove_value':
+            s = 'Remove: ' + option['args'][1]
+        elif option['fun_name']== 'select_value':
+            s = 'Select: ' +  option['args'][1] + ' as ' + str(option['args'][2])
+        elif option['fun_name']== 'remove_association':
+            s = f"Remove: {option['args'][0]} from {str(option['args'][1])} to  {str(option['args'][2])}" 
+        elif option['fun_name']== 'select_association':
+            s = f"Select: {option['args'][0]} from {str(option['args'][1])} to  {str(option['args'][2])}" 
+        else:
+            raise RuntimeError("Option format not expected " + str(option))
+        return edit_opt, (s,option['str'])
 
     def set_edit(self):
         """
@@ -172,39 +211,61 @@ class OOASPUI:
         opts = self.iconf._brave_config_as_options()
         if opts is None:
             self.edit.children= tuple([self.title('Edit')] + [Label(value="No options for conflicting configuration")])
-
             return
-        self.opts = {o['str']:o for x in opts.values() for o in x}
-        dropdowns = []
-        for k,v in opts.items():
-            dropdown = widgets.Dropdown(
-                options=['']+[o['str'] for o in v],
-                value='',
-                description=f'Object {k}',
+        dropdown_object = widgets.Dropdown(
+                options=['']+[o for o in opts.keys()],
+                value=self.edit_object,
+                description=f'Object to edit',
                 disabled=False,
-                style={'description_width': '70px','button_color':'red'}
+                style={'description_width': '100px','font_weight':'bold'}
             )
-            dropdown.observe(self.call_and_update(self.do_edit))
-            dropdowns.append(dropdown)
+        dropdown_object.observe(self.call_and_update(self.select_edit_object))
+        o = self.edit_object
+        edit_dropdowns = []
+        names = {'object_class':'Class','value':'Attribuite-Value','association':'Association'}
+        if o!='':
+            obj_opts =  opts[o]
+            self.opts = {o['str']:o for o in obj_opts}
+            edit_options = {'object_class':[],'value':[],'association':[]}
+            for option in obj_opts:
+                edit_opt, entry = self.str_opt(option)
+                edit_options[edit_opt].append(entry)
+
+            for edit, edit_o in edit_options.items():
+                if len(edit_o)==0:
+                    continue
+                d = widgets.Dropdown(
+                    options=[('','')]+edit_o,
+                    value='',
+                    description=names[edit],
+                    disabled=False,
+                    style={'description_width': '200px','font_weight':'bold'}
+                )
+                d.observe(self.call_and_update(self.do_edit))
+
+                edit_dropdowns.append(d)
 
 
-        self.edit.children= tuple([self.title('Edit')] + dropdowns)
+        self.edit.children= tuple([self.title('Edit'),dropdown_object]+edit_dropdowns)
 
 
     def set_browse(self):
         """
         Sets the browse section buttons
         """
-        incremental = Button(description='Find incrementally',button_style='primary')
+        b_layout = Layout(height='auto', width='auto')
+        incremental = Button(description='Find incrementally',button_style='primary',layout=b_layout)
         incremental.on_click(self.call_and_update(self.button_wrapper('extend_incrementally')))
-        select_found = Button(description='Select',button_style='success')
+        incrementalos = Button(description='Find incrementally (overshoot)',button_style='primary',layout=b_layout)
+        incrementalos.on_click(self.call_and_update(self.button_wrapper('extend_incrementally',overshoot=True)))
+        select_found = Button(description='Select',button_style='success',layout=b_layout)
         select_found.on_click(self.call_and_update(self.button_wrapper('select_found_configuration')))
-        next_solution = Button(description='Next solution',button_style='info')
+        next_solution = Button(description='Next solution',button_style='info',layout=b_layout)
         next_solution.on_click(self.call_and_update(self.button_wrapper('next_solution')))
-        end_browsing = Button(description='End browsing',syle='danger')
+        end_browsing = Button(description='End browsing',syle='danger',layout=b_layout)
         end_browsing.on_click(self.call_and_update(self.button_wrapper('end_browsing')))
 
-        self.browse.children= tuple([self.title('Browse'), incremental,next_solution,select_found,end_browsing])
+        self.browse.children= tuple([self.title('Browse'), incremental,incrementalos,next_solution,select_found,end_browsing])
 
 
     def set_check(self):
