@@ -64,6 +64,15 @@ def test_racks_constraints_rack():
     assert "rack_framesD,8,7,frame" in str(iconf.config.constraint_violations)
 
 
+def test_racks_constraints_frame_position():
+    """ test assoc constraints """
+    iconf = new_racks_iconf()
+    iconf.new_object("frame")
+    iconf.new_object("rackSingle")
+    iconf.select_association('rack_frames',2,1)
+    iconf.select_value(1,'frame_position',5)
+    iconf.check()
+    assert "frame_must_be_within_range" in str(iconf.config.constraint_violations)
 
 
 def test_racks_constraints_associations():
