@@ -276,7 +276,7 @@ class InteractiveConfigurator:
         """
         self.ctl.add("domain",[str(self.domain_size)],str(fact)+".")
 
-    def _create_required_objects(self, object_id:int=None)->None:
+    def _create_required_objects(self, object_id:int=None)->int:
         """
         Creates required objects for a given object based on associations in the knowledge base configuration.
         It ensures that the minimum required number of associated objects is met for each association.
@@ -287,6 +287,7 @@ class InteractiveConfigurator:
                     Defaults to None.
         """
         cautious =  self._get_cautious()
+        n_objects_added = 0
         common_violations = cautious.constraint_violations
         for cv in common_violations:
             # TODO maybe improove performance using query
@@ -294,20 +295,23 @@ class InteractiveConfigurator:
                 continue
             assoc, cmin, n, c, opt, _ = cv.args.symbol.arguments
             for _ in range(n.number,cmin.number):
+                n_objects_added += 1
                 object2 = self._new_object(c.name)
                 if str(opt) == '1':
                     self.config.add_association(assoc.name,object_id,object2)
                 else:
                     self.config.add_association(assoc.name,object2,object_id)
-
-    def _create_all_required_objects(self)->None:
+        return n_objects_added
+    
+    def _create_all_required_objects(self)->int:
         """
         Creates all the required objects
         """
         objs = self.config.smart_objects
+        n_objects_added=0
         for o in objs:
-            self._create_required_objects(o.object_id)
-
+            n_objects_added += self._create_required_objects(o.object_id)
+        return n_objects_added
 
     def _extend_domain(self, cls='object')->int:
         """
@@ -820,13 +824,13 @@ class InteractiveConfigurator:
             self._create_all_required_objects()
         self.found_config = self._next_solution()
 
-        while not self.found_config  or self.domain_size>domain_limit:
-            # self._check()
-            # self.config.show_cv()
-            # self._outdate_models()
-            # cautious = self._get_cautious()
-            # cautious.show_cv()
-            self._extend_domain()
+        while not self.found_config  and self.domain_size<domain_limit:
+            n_objects_added = 0
+            if overshoot:
+                self._outdate_models()
+                n_objects_added = self._create_all_required_objects()
+            if n_objects_added==0:
+                self._extend_domain()
             self.found_config = self._next_solution()
 
 

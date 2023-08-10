@@ -11,6 +11,11 @@
   	ooasp_domain(C,new_object),
 	guess.
 
+#heuristic ooasp_isa_leaf(LEAFCLASS,new_object): 
+	guess, ooasp_domain(C,new_object),
+	ooasp_subclass_ref(LEAFCLASS,C),
+	ooasp_leafclass(LEAFCLASS). [-1,sign]
+
 % If is_a appears then it has to be instanciated as leaf
 1{ ooasp_isa_leaf(LEAFCLASS,new_object):
 		ooasp_leafclass(LEAFCLASS),

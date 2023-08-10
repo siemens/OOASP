@@ -122,9 +122,9 @@ def test_s_interactive_extend_incrementally_overshooting():
     assert "ooasp_domain(frame,1)." in found.fb.asp_str()
     assert "ooasp_isa_leaf(frame,1)." in found.fb.asp_str()
     assert "ooasp_domain(rack,2)." in found.fb.asp_str()
-    assert "ooasp_domain(object,3)." in found.fb.asp_str()
-    assert "ooasp_domain(object,4)." in found.fb.asp_str()
-    assert "ooasp_domain(object,5)." in found.fb.asp_str()
+    assert "ooasp_domain(frame,3)." in found.fb.asp_str()
+    assert "ooasp_domain(frame,4)." in found.fb.asp_str()
+    assert "ooasp_domain(frame,5)." in found.fb.asp_str()
     found = iconf.next_solution()
     assert found
     assert len(iconf.states)==3
@@ -161,7 +161,7 @@ def test_s_interactive_extend_incrementally_overshooting_leaving_object():
     assert "ooasp_isa_leaf(frame,1)." in found.fb.asp_str()
     assert "ooasp_domain(frame,2)." in found.fb.asp_str()
     assert "ooasp_domain(rack,3)." in found.fb.asp_str()
-    assert "ooasp_domain(object,4)." in found.fb.asp_str()
+    assert "ooasp_domain(frame,4)." in found.fb.asp_str()
     assert found.size == 5
 
 
@@ -365,7 +365,8 @@ def test_create_all_required_objects():
     iconf = new_racks_iconf()
     iconf.new_object('rackSingle')
     iconf.new_object('frame')
-    iconf._create_all_required_objects()
+    objects_added = iconf._create_all_required_objects()
+    assert objects_added == 3
     config_str = iconf.config.fb.asp_str()
     assert "ooasp_domain(frame,5)." in config_str
     found = iconf.next_solution()

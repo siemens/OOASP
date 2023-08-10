@@ -40,7 +40,6 @@ class BM:
         self.set_final_results()
 
     def add_run_results(self, time, iconf):
-        print(iconf)
         result = {
            "time": time,
            "size": iconf.config.size,
