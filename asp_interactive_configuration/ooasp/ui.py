@@ -74,13 +74,13 @@ class OOASPUI:
         return HTML(value=f'<h2>{text}</h2>')
 
 
-    def call_and_update(self, f, *args):
+    def call_and_update(self, f, **kwargs):
         """
         Calls a function and updates the UI
         """
         def fun(bt):
             self.found_config.value = Image(loader_path).data
-            f(bt,*args)
+            f(bt,**kwargs)
             self.update()
             # self.loading.value = Image("out/empty.png").data
         return fun
@@ -90,13 +90,13 @@ class OOASPUI:
             return
         self.edit_object = change.owner.value
 
-    def add_leaf(self,change):
+    def add_new_object(self,change,**kwargs):
         """
         Adds a leaf
         """
         if change.type != "change" or change.name != "value":
             return
-        self.iconf.new_object(change.owner.value)
+        self.iconf.new_object(change.owner.value,**kwargs)
 
     def do_edit(self,change):
         """
@@ -171,12 +171,20 @@ class OOASPUI:
         dropdown = widgets.Dropdown(
             options=['']+self.iconf.kb.classes,
             value='',
-            description='Add new object',
+            description='Add new object        ',
             disabled=False,
-            style={'description_width': '120px'}
+            style={'description_width': '170px'}
         )
-        dropdown.observe(self.call_and_update(self.add_leaf))
-        self.extend.children= tuple([self.title('Extend'),HBox(children=[domain_lbl,extend_domain]),config_lbl,dropdown])
+        dropdown.observe(self.call_and_update(self.add_new_object))
+        dropdown_propagate = widgets.Dropdown(
+            options=['']+self.iconf.kb.classes,
+            value='',
+            description='Add new object (propagate)',
+            disabled=False,
+            style={'description_width': '170px'}
+        )
+        dropdown_propagate.observe(self.call_and_update(self.add_new_object,propagate=True))
+        self.extend.children= tuple([self.title('Extend'),HBox(children=[domain_lbl,extend_domain]),config_lbl,dropdown,dropdown_propagate])
 
     def str_opt(self, option):
         """
@@ -278,6 +286,8 @@ class OOASPUI:
         clear.on_click(self.call_and_update(self.button_wrapper('remove_cvs')))
         get_inferences = Button(description='Add inferences',button_style='info')
         get_inferences.on_click(self.call_and_update(self.button_wrapper('add_inferences')))
-        self.check.children= tuple([self.title('Check'), check, clear, get_inferences])
+        create_required = Button(description='Create required',button_style='info')
+        create_required.on_click(self.call_and_update(self.button_wrapper('create_all_required_objects')))
+        self.check.children= tuple([self.title('Check'), check, clear, get_inferences,create_required])
 
 

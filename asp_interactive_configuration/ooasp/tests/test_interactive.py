@@ -201,15 +201,14 @@ def test_s_interactive_check_custom_cv():
     iconf = new_racks_iconf()
     iconf.check()
     assert len(iconf.config.constraint_violations) == 0
-    iconf.new_object('frame')
+    iconf.new_object('rackSingle')
     iconf.check()
     found = iconf.extend_incrementally()
     iconf.select_found_configuration()
     iconf.new_object('frame')
-    iconf.select_association('rack_frames',5,6)
+    iconf.select_association('rack_frames',1,6)
     iconf.check()
-    assert '(upperbound' in iconf.state.config.fb.asp_str()
-    assert '(rack_framesS,4' in iconf.state.config.fb.asp_str()
+    assert '(upperbound,1,"Upperbound for {} exceeded: {}",(rack_framesS,4,' in iconf.state.config.fb.asp_str()
     
 
 
@@ -354,7 +353,7 @@ def test_create_required_objects():
     iconf.select_association('rack_frames',1,2)
     iconf.select_association('rack_frames',1,3)
     iconf.select_association('rack_frames',1,4)
-    iconf._create_required_objects('rackSingle',1)
+    iconf._create_required_objects(1)
     config_str = iconf.config.fb.asp_str()
     assert "ooasp_domain(frame,5)." in config_str
     found = iconf.next_solution()
@@ -362,6 +361,17 @@ def test_create_required_objects():
     assert found.size == 5
     assert found.domain_size == 5
 
+def test_create_all_required_objects():
+    iconf = new_racks_iconf()
+    iconf.new_object('rackSingle')
+    iconf.new_object('frame')
+    iconf._create_all_required_objects()
+    config_str = iconf.config.fb.asp_str()
+    assert "ooasp_domain(frame,5)." in config_str
+    found = iconf.next_solution()
+    assert found
+    assert found.size == 5
+    assert found.domain_size == 5
 
 def test_custom_interactive_add_leaf_extend_browse():
     iconf = new_racks_iconf()

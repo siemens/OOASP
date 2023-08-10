@@ -3,10 +3,12 @@
 
 import pytest
 from clingo import parse_term
+from clorm.clingo import Control
 from ooasp.kb import OOASPKnowledgeBase
 from ooasp.interactive import InteractiveConfigurator
 from ooasp import settings
 from ooasp.tests.utils import new_racks_iconf
+from ooasp.config import OOASPConfiguration
 
 import pytest
 from importlib import reload
@@ -85,3 +87,25 @@ def test_specialization_cautious_rack():
     assert len(cautious.constraint_violations) == 0
     assert('ooasp_isa(rackSingle,1).') in cautious.fb.asp_str()
     assert('ooasp_associated(rack_framesS,1,2)') in cautious.fb.asp_str()
+
+def test_old_wierd():
+    iconf = new_racks_iconf()
+    iconf.new_object('rackDouble')
+    for i in range(2,10):
+        iconf.new_object('frame')
+        iconf.select_association('rack_frames',1,i)
+    start = 10
+    iconf.new_object('rackSingle')
+    for i in range(start+1,start+5):
+        iconf.new_object('frame')
+        iconf.select_association('rack_frames',start,i)
+    # iconf.new_object('rackDouble')
+    found = iconf.next_solution()
+    assert found
+
+def test_wierd():
+    iconf = new_racks_iconf()
+    iconf.new_object('rackDouble',propagate=True)
+    iconf.new_object('rackSingle',propagate=True)
+    found = iconf.next_solution()
+    assert found

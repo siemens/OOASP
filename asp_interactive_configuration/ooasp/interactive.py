@@ -85,6 +85,7 @@ class InteractiveConfigurator:
             additional_files (List[str]): The list of additional lp files
             found_config (OOASPConfig):  The complete configuration found in the browsing
             brave_config (OOASPConfig):  The brave configuration found with all the options
+            cautious_config (OOASPConfig):  The cautious configuration found with all the inferences
             last_size_grounded (int): The last size that was grounded
     """
 
@@ -108,6 +109,7 @@ class InteractiveConfigurator:
         self._init_ctl()
         self.found_config = None
         self.brave_config = None
+        self.cautious_config = None
         self.solution_iterator = None
         self.hdn = None
 
@@ -214,6 +216,7 @@ class InteractiveConfigurator:
         if self.domain_size == self.last_size_grounded:
             return
         domains = self.config.domains_from(self.last_size_grounded)
+        s = 0
         for cls, s in domains:
             if s>1:
                 self.ctl.release_external(Function("active", [Number(s-1)]))
@@ -241,6 +244,7 @@ class InteractiveConfigurator:
         """
         self.brave_config=None
         self.found_config=None
+        self.cautious_config=None
         if self.solution_iterator:
             self.hdn.cancel()
         self.solution_iterator = None
@@ -272,13 +276,12 @@ class InteractiveConfigurator:
         """
         self.ctl.add("domain",[str(self.domain_size)],str(fact)+".")
 
-    def _create_required_objects(self, cls:str, object_id:int)->None:
+    def _create_required_objects(self, object_id:int=None)->None:
         """
         Creates required objects for a given object based on associations in the knowledge base configuration.
         It ensures that the minimum required number of associated objects is met for each association.
         
             Parameters:
-                cls (str): The class (object type) for which required objects are being created.
                 object_id (int): The ID of the object for which required objects are being created.
                 ignore_assoc (List, optional): A list of association names to be ignored during object creation.
                     Defaults to None.
@@ -297,7 +300,13 @@ class InteractiveConfigurator:
                 else:
                     self.config.add_association(assoc.name,object2,object_id)
 
-
+    def _create_all_required_objects(self)->None:
+        """
+        Creates all the required objects
+        """
+        objs = self.config.smart_objects
+        for o in objs:
+            self._create_required_objects(o.object_id)
 
 
     def _extend_domain(self, cls='object')->int:
@@ -325,7 +334,7 @@ class InteractiveConfigurator:
         new_object = self._extend_domain(cls=object_class)
         self.config.add_object(new_object,object_class)
         if propagate:
-            self._create_required_objects(object_class, new_object)
+            self._create_required_objects(new_object)
         return new_object
 
     # --------- Browsing
@@ -340,7 +349,6 @@ class InteractiveConfigurator:
                 The found OOASPConfiguration or None if no solution is found
         """
         self._ground_missing()
-
         if not self.browsing:
             self.ctl.assign_external(Function("guess") , True)
             self.ctl.assign_external(Function("check_permanent_cv"), True)
@@ -531,6 +539,8 @@ class InteractiveConfigurator:
     def _get_cautious(self)->OOASPConfiguration:
         if self.browsing:
             raise RuntimeError("Cant get cautious while browsing")
+        if self.cautious_config:
+            return self.cautious_config
         self._ground_missing()
         self.ctl.assign_external(Function("guess"), True)
         self.ctl.assign_external(Function("check_permanent_cv"), True)
@@ -545,11 +555,11 @@ class InteractiveConfigurator:
                 cfg = OOASPConfiguration.from_model(self.state.config.name,
                     self.kb, cautious_model)
             if cautious_model is None:
-                self.found_config = None
-                raise RuntimeError("No available options for conflicting configuration")
-            self.found_config = OOASPConfiguration.from_model(self.state.config.name,
+                self.cautious_config = None
+                raise RuntimeError("No available inferences for conflicting configuration")
+            self.cautious_config = OOASPConfiguration.from_model(self.state.config.name,
                     self.kb, cautious_model)
-        return self.found_config
+        return self.cautious_config
     
 
     def _remove_association(self,assoc_name:str,object_id1:int,object_id2:int)->None:
@@ -619,7 +629,9 @@ class InteractiveConfigurator:
         self._new_state("Add inferences")
         cautious = self._get_cautious()
         if cautious:
-            self.set_configuration(cautious,set_user_facts=False)
+            # old_editable = self.config.editable_facts
+            self._set_config(cautious,set_user_facts=True)
+            # self.config.consider_as_user(old_editable)
         return 
     
     def get_inferences(self)->None:
@@ -631,6 +643,14 @@ class InteractiveConfigurator:
         """
         self._new_state("Obtaining inferences")
         return self._get_cautious()
+    
+    def create_all_required_objects(self)->None:
+        """
+        Creates a new state.
+        Adds all required objects to the configuration
+        """
+        self._new_state("Creates all required objects")
+        return self._create_all_required_objects()
     
     def next_solution(self)->OOASPConfiguration:
         """
@@ -797,12 +817,15 @@ class InteractiveConfigurator:
         name = "Extend incrementally" if not overshoot else "Extend incrementally overshooting"
         self._new_state(name,deep=True)
         if overshoot:
-            objs = self.config.smart_objects
-            for o in objs:
-                self._create_required_objects(o.class_name, o.object_id)
+            self._create_all_required_objects()
         self.found_config = self._next_solution()
 
         while not self.found_config  or self.domain_size>domain_limit:
+            # self._check()
+            # self.config.show_cv()
+            # self._outdate_models()
+            # cautious = self._get_cautious()
+            # cautious.show_cv()
             self._extend_domain()
             self.found_config = self._next_solution()
 

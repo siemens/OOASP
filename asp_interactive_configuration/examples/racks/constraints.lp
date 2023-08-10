@@ -22,13 +22,13 @@ ooasp_cv(frame_position_must_be_unique, F1, "Frame position is equal to the one 
 ooasp_cv(frame_must_be_within_range, new_object, "Frame position is outside of range {} ",(new_object,)):-
     ooasp_isa(rackSingle,ID),
     ooasp_associated(rack_frames,ID,new_object),
-    ooasp_attr_value(frame_position,F,P),
+    ooasp_attr_value(frame_position,new_object,P),
     P<1.
 
 ooasp_cv(frame_must_be_within_range, new_object, "Frame position is outside of range {} ",(new_object,)):-
     ooasp_isa(rackSingle,ID),
     ooasp_associated(rack_frames,ID,new_object),
-    ooasp_attr_value(frame_position,F,P),
+    ooasp_attr_value(frame_position,new_object,P),
     P>4.
 
 ooasp_cv(frame_must_be_within_range, F, "Frame position is outside of range {} ",(F,new_object)):-
@@ -47,13 +47,13 @@ ooasp_cv(frame_must_be_within_range, F, "Frame position is outside of range {} "
 ooasp_cv(frame_must_be_within_range, new_object, "Frame position is outside of range {} ",(new_object,)):-
     ooasp_isa(rackDouble,ID),
     ooasp_associated(rack_frames,ID,new_object),
-    ooasp_attr_value(frame_position,F,P),
+    ooasp_attr_value(frame_position,new_object,P),
     P<1.
 
 ooasp_cv(frame_must_be_within_range, new_object, "Frame position is outside of range {} ",(new_object,)):-
     ooasp_isa(rackDouble,ID),
     ooasp_associated(rack_frames,ID,new_object),
-    ooasp_attr_value(frame_position,F,P),
+    ooasp_attr_value(frame_position,new_object,P),
     P>8.
 
 ooasp_cv(frame_must_be_within_range, F, "Frame position is outside of range {} ",(F,new_object)):-
