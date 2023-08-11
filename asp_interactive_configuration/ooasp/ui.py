@@ -4,7 +4,6 @@
 import ipywidgets as widgets
 from ipywidgets import Button, VBox, HBox, Label, Layout,GridspecLayout, HTML, Output
 from IPython.display import display, Image
-from PIL import Image as PILImage
 import cv2 
 
 loader_img = Image('./img/loader.gif')
