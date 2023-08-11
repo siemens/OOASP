@@ -7,6 +7,7 @@ graph(config).
 #const color_green = "#0DB144".
 
 attr(graph_nodes, config, shape, rectangle).
+attr(graph, config, dpi, 300).
 attr(graph, config, splines, ortho).
 attr(graph, config, nodesep, "1").
 attr(graph, config, rankdir, "TB").

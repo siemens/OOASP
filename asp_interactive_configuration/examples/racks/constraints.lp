@@ -3,6 +3,8 @@
 
 #program domain(new_object, cls).
 
+ooasp_potential_cv(moduleII_requires_moduleV).
+
 ooasp_cv(frame_position_must_be_unique, new_object, "Frame position is equal to the one of frame {} ",(F,)):-
     ooasp_associated(rack_frames,R,new_object),
     ooasp_associated(rack_frames,R,F),

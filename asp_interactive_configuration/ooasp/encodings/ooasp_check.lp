@@ -15,7 +15,6 @@
 
 ooasp_potential_cv(lowerbound).
 ooasp_potential_cv(no_value).
-
 % ooasp_cv(NAME,OBEJCT,STR,ARGS)
 %=======================================
 % Instances

@@ -633,9 +633,7 @@ class InteractiveConfigurator:
         self._new_state("Add inferences")
         cautious = self._get_cautious()
         if cautious:
-            # old_editable = self.config.editable_facts
             self._set_config(cautious,set_user_facts=True)
-            # self.config.consider_as_user(old_editable)
         return 
     
     def get_inferences(self)->None:

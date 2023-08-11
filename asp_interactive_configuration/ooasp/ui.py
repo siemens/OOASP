@@ -4,8 +4,12 @@
 import ipywidgets as widgets
 from ipywidgets import Button, VBox, HBox, Label, Layout,GridspecLayout, HTML, Output
 from IPython.display import display, Image
+from PIL import Image as PILImage
+import cv2 
 
-loader_path = './img/loader.gif'
+loader_img = Image('./img/loader.gif')
+empty_img = Image("img/empty.png")
+nosol_img = Image("img/nosol.png")
 
 def basic_vbox():
     return VBox(layout=Layout(height='auto', width='auto'))
@@ -13,6 +17,24 @@ def basic_vbox():
 def wraped_label(text):
     return HTML(value="<style>cv{word-wrap: break-word ;color:red}</style> <p class='cv'>" + text+"</p>")
 
+def resize(baseheight,f_name):
+    baseheight = 300
+    im = cv2.imread(f_name)
+    h, w, _ = im.shape
+    if h>baseheight:
+        hpercent = (baseheight/h)
+        w = int((w*hpercent))
+        resized = cv2.resize(im, (w,baseheight), interpolation = cv2.INTER_AREA)
+        cv2.imwrite(f_name,resized)
+    return w
+
+def config_layout():
+    return Layout(overflow_y='scroll',
+            width='100%',
+            height='300px',
+            flex_flow='row',
+            display='block')
+         
 PSTYLE = "<style>p{word-wrap: break-word; margin-right: 10px;}</style>"
 class OOASPUI:
     """
@@ -24,11 +46,8 @@ class OOASPUI:
         Creates the UI
         """
         self.iconf = iconf
-        self.config_image = widgets.Image(format='png')
-        self.found_config = widgets.Image(format='png')
-        self.config_image.layout.object_fit= 'contain'
-        self.found_config.layout.object_fit= 'contain'
-        # self.history = VBox(layout=Layout(height='300ox', width='auto',overflow_y='auto'))
+        self.config_image = widgets.Image(format='png', width='1000px', layout=Layout(overflow = 'visible',min_width='1000px',height='200px'), unconfined=True)
+        self.found_config = widgets.Image(format='png', width='1000px', layout=Layout(overflow = 'visible',min_width='1000px',height='200px'), unconfined=True)
         self.extend = basic_vbox()
         self.edit = basic_vbox()
         self.edit_object = ''
@@ -45,13 +64,12 @@ class OOASPUI:
         Crates the basic grid structure
         """
         grid = GridspecLayout(3, 6)
-        # grid[0, 4:] = self.history
-        grid[0, :6] = self.config_image
+        grid[0, :6] = HBox(children=[self.config_image], layout=config_layout())
         grid[1, :2] = self.check
         grid[1, 2:4] = self.edit
         grid[1, 4:] = self.extend
         grid[2, 0] = self.browse
-        grid[2, 1:] = self.found_config
+        grid[2, 1:] = HBox(children=[self.found_config], layout=config_layout())
         self.grid = grid
 
 
@@ -79,10 +97,10 @@ class OOASPUI:
         Calls a function and updates the UI
         """
         def fun(bt):
-            self.found_config.value = Image(loader_path).data
+            self.found_config.value = loader_img.data
             f(bt,**kwargs)
+            self.found_config.value = empty_img.data
             self.update()
-            # self.loading.value = Image("out/empty.png").data
         return fun
 
     def select_edit_object(self, change):
@@ -124,7 +142,10 @@ class OOASPUI:
         Sets the configuration image
         """
         self.iconf.config.save_png()
-        image = Image(f"out/{self.iconf.config.name}.png")
+        f_name = f"out/{self.iconf.config.name}.png"
+        w = resize(300,f_name)
+        self.config_image.layout.min_width=str(w/2)+"pt"
+        image = Image(f_name,unconfined=True)
         self.config_image.value = image.data
 
     def set_found_config(self):
@@ -132,14 +153,15 @@ class OOASPUI:
         Sets the found configuration image
         """
         if self.iconf.found_config is None:
-            image = Image("out/empty.png")
-            self.found_config.value = image.data
+            self.found_config.value = empty_img.data
         elif self.iconf.found_config is False:
-            image = Image("out/nosol.png")
-            self.found_config.value = image.data
+            self.found_config.value = nosol_img.data
         else:
             self.iconf.found_config.save_png("out/found/")
-            image = Image(f"out/found/{self.iconf.found_config.name}.png")
+            f_name = f"out/found/{self.iconf.found_config.name}.png"
+            w = resize(300,f_name)
+            self.found_config.layout.min_width=str(w/2)+"pt"
+            image = Image(f_name)
             self.found_config.value = image.data
 
     def set_history(self):

@@ -450,3 +450,11 @@ def test_three_racks():
     iconf.new_object('rackSingle')
     found = iconf.extend_incrementally()
     found.save_png(directory="./out/test")
+
+
+
+def test_moduleII():
+    iconf = new_racks_iconf()
+
+    iconf.new_object('moduleII',propagate=True)
+    iconf.add_inferences()
