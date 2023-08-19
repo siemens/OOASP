@@ -69,3 +69,6 @@ ooasp_attr(frame,frame_position,int).
 ooasp_attr_minInclusive(frame,frame_position,1).
 ooasp_attr_maxInclusive(frame,frame_position,8).
 
+
+ooasp_unique_attr(rack_frames, frame, frame_position).
+

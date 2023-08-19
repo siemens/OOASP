@@ -103,6 +103,13 @@ class  OOASPKnowledgeBase:
             name=ConstantField
             val=ConstantField
 
+        class AttrUnique(Predicate):
+            class Meta:
+                name = "ooasp_unique_attr"
+            assoc_name=ConstantField
+            class_name=ConstantField
+            attr_name=ConstantField
+
         self.UNIFIERS = SimpleNamespace(
                 Class=Class,
                 SubClass=SubClass,
@@ -112,6 +119,7 @@ class  OOASPKnowledgeBase:
                 AttrMin=AttrMin,
                 AttrMax=AttrMax,
                 AttrEnum=AttrEnum,
+                AttrUnique=AttrUnique,
                 KBName=KBName)
 
     @property

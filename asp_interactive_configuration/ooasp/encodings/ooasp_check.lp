@@ -1,6 +1,8 @@
 % Copyright (c) 2022 Siemens AG Oesterreich
 % SPDX-License-Identifier: MIT
 
+% ooasp_cv(NAME,OBEJCT,STR,ARGS)
+
 #program domain(new_object, cls).
 
 % Used to know the missing objects
@@ -15,7 +17,7 @@
 
 ooasp_potential_cv(lowerbound).
 ooasp_potential_cv(no_value).
-% ooasp_cv(NAME,OBEJCT,STR,ARGS)
+
 %=======================================
 % Instances
 %=======================================
@@ -92,6 +94,50 @@ ooasp_cv(wrongtypeinassoc,ID,"Associated by {} but is not of class {}",(ASSOC,C2
 %=======================================
 % Values
 %=======================================
+
+%--- Unique attributes
+
+% The class C of the main object is in position 1 
+
+% The new object is of that class C
+ooasp_cv(unique_attr, (new_object;ID1), "Attribute {} must be unique among all {}s associated by {} to {}",(ATTR,C,ASSOC,ID2,new_object )):-
+	ooasp_unique_attr(ASSOC, C, ATTR),
+	ooasp_assoc(ASSOC,C,_,_,_,_,_),
+	ooasp_associated(ASSOC,new_object,ID2),
+	ooasp_associated(ASSOC,ID1,ID2),
+	new_object>ID1,
+	ooasp_attr_value(ATTR,new_object,V),
+	ooasp_attr_value(ATTR,ID1,V).
+
+% The new object is of the other class
+ooasp_cv(unique_attr, (ID3;ID1), "Attribute {} must be unique among all {}s associated by {} to {}",(ATTR,C,ASSOC,new_object)):-
+	ooasp_unique_attr(ASSOC, C, ATTR),
+	ooasp_assoc(ASSOC,C,_,_,_,_,_),
+	ooasp_associated(ASSOC,ID3,new_object),
+	ooasp_associated(ASSOC,ID1,new_object),
+	ID3>ID1,
+	ooasp_attr_value(ATTR,ID3,V),
+	ooasp_attr_value(ATTR,ID1,V).
+
+% The class C of the main object is in position 2 
+
+ooasp_cv(unique_attr, (new_object;ID1), "Attribute {} must be unique among all {}s associated by {} to {}",(ATTR,C,ASSOC,ID2,new_object )):-
+	ooasp_unique_attr(ASSOC, C, ATTR),
+	ooasp_assoc(ASSOC,_,_,_,C,_,_),
+	ooasp_associated(ASSOC,ID2,new_object),
+	ooasp_associated(ASSOC,ID2,ID1),
+	new_object>ID1,
+	ooasp_attr_value(ATTR,new_object,V),
+	ooasp_attr_value(ATTR,ID1,V).
+
+ooasp_cv(unique_attr, (ID3;ID1), "Attribute {} must be unique among all {}s associated by {} to {}",(ATTR,C,ASSOC,new_object )):-
+	ooasp_unique_attr(ASSOC, C, ATTR),
+	ooasp_assoc(ASSOC,_,_,_,C,_,_),
+	ooasp_associated(ASSOC,new_object,ID3),
+	ooasp_associated(ASSOC,new_object,ID1),
+	ID3>ID1,
+	ooasp_attr_value(ATTR,ID3,V),
+	ooasp_attr_value(ATTR,ID1,V).
 
 %--- (USER INPUT) Attribute value must belong to instance class
 
