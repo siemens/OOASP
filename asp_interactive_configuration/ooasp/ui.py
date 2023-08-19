@@ -45,8 +45,8 @@ class OOASPUI:
         Creates the UI
         """
         self.iconf = iconf
-        self.config_image = widgets.Image(format='png', width='1000px', layout=Layout(overflow = 'visible',min_width='1000px',height='200px'), unconfined=True)
-        self.found_config = widgets.Image(format='png', width='1000px', layout=Layout(overflow = 'visible',min_width='1000px',height='200px'), unconfined=True)
+        self.config_image = widgets.Image(format='png', width='1000px', layout=Layout(overflow = 'visible',min_width='1000px',height='300px'), unconfined=True)
+        self.found_config = widgets.Image(format='png', width='1000px', layout=Layout(overflow = 'visible',min_width='1000px',height='300px'), unconfined=True)
         self.extend = basic_vbox()
         self.edit = basic_vbox()
         self.edit_object = ''
@@ -143,7 +143,8 @@ class OOASPUI:
         self.iconf.config.save_png()
         f_name = f"out/{self.iconf.config.name}.png"
         w = resize(300,f_name)
-        self.config_image.layout.min_width=str(w/2)+"pt"
+        self.config_image.layout.min_width=str(w/1)+"pt"
+        self.config_image.layout.width=str(min([w,1000]))+"pt"
         image = Image(f_name,unconfined=True)
         self.config_image.value = image.data
 
@@ -159,7 +160,8 @@ class OOASPUI:
             self.iconf.found_config.save_png("out/found/")
             f_name = f"out/found/{self.iconf.found_config.name}.png"
             w = resize(300,f_name)
-            self.found_config.layout.min_width=str(w/2)+"pt"
+            self.found_config.layout.min_width=str(w/1)+"pt"
+            self.found_config.layout.width=str(min([w,1000]))+"pt"
             image = Image(f_name)
             self.found_config.value = image.data
 
