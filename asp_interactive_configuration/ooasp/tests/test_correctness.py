@@ -132,13 +132,39 @@ def test_racks_constraints_moduleII_requires_moduleV():
     assert len(iconf.config.constraint_violations)==3
     assert "moduleII_requires_moduleV" not in str(iconf.config.constraint_violations)
 
+def test_racks_unique_constraint():
+    """ test assoc constraints """
+    iconf = new_racks_iconf()
+    iconf.new_object("rack")
+    iconf.new_object("frame")
+    iconf.new_object("frame")
+    iconf.select_association("rack_frames",1,2)
+    iconf.select_association("rack_frames",1,3)
+    iconf.select_value(2,'frame_position',1)
+    iconf.select_value(3,'frame_position',1)
+    iconf.check()
+    assert 'unique_attr,3,"Attribute {} must be unique among all {}s associated by {} to {}",(frame_position,frame,rack_frames,1' in str(iconf.config.constraint_violations)
+    assert 'unique_attr,2,"Attribute {} must be unique among all {}s associated by {} to {}",(frame_position,frame,rack_frames,1' in str(iconf.config.constraint_violations)
+
+    iconf = new_racks_iconf()
+    iconf.new_object("frame")
+    iconf.new_object("frame")
+    iconf.new_object("rack")
+    iconf.select_association("rack_frames",3,1)
+    iconf.select_association("rack_frames",3,2)
+    iconf.select_value(1,'frame_position',1)
+    iconf.select_value(2,'frame_position',1)
+    iconf.check()
+    print(iconf.config.constraint_violations)
+    assert 'ooasp_cv(unique_attr,1,"Attribute {} must be unique among all {}s associated by {} to {}",(frame_position,frame,rack_frames,3' in str(iconf.config.constraint_violations)
+    assert 'ooasp_cv(unique_attr,2,"Attribute {} must be unique among all {}s associated by {} to {}",(frame_position,frame,rack_frames,3' in str(iconf.config.constraint_violations)
+
 
 def test_solve_elements():
     """ solve one instance of each element type"""
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
     element_configuration_size = { "elementA":7, "elementB":9, "elementC":9,"elementD":10}
     for element_type in element_configuration_size.keys():
-        iconf = InteractiveConfigurator(racks_kb,"i1",[settings.racks_example_constraints])
+        iconf = new_racks_iconf()
         iconf.new_object(element_type)
         config = iconf.extend_incrementally()
         assert len(config.constraint_violations)==0
