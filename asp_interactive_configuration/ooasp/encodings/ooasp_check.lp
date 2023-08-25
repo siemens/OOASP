@@ -157,7 +157,8 @@ ooasp_cv(no_value,new_object,"Missing value for {}",(A,)) :-
 	 ooasp_attr(C,A,T),
 	 ooasp_attr_enum(C,A,_),
 	 ooasp_isa(C,new_object),
-	 not ooasp_attr_value(A,new_object,_).
+	 not ooasp_attr_value(A,new_object,_),
+	 numerical == 1.
 
 %--- (USER INPUT) Atribute value not from domain
 ooasp_cv(value_not_domain,new_object,"Value {} for {} not from domain",(V,A)) :-
@@ -165,7 +166,8 @@ ooasp_cv(value_not_domain,new_object,"Value {} for {} not from domain",(V,A)) :-
 	 ooasp_attr_enum(C,A,_),
 	 ooasp_isa(C,new_object),
 	 ooasp_attr_value(A,new_object,V),
-	 not ooasp_attr_enum(C,A,V).
+	 not ooasp_attr_enum(C,A,V),
+	 numerical == 1.
 
 %--- (USER INPUT) Multiple values for a value
 ooasp_cv(conflicting_values,new_object,"Multiple values for {}: {},{}",(A,V1,V2)) :-

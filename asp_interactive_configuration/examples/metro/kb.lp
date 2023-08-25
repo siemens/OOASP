@@ -21,16 +21,16 @@ ooasp_assoc(wagon_handrail,wagon,1,1,handrail,0,1).
 ooasp_assoc(wagon_seats,wagon,1,1,seat,0,80).
 
 ooasp_attr(wagon,nr_passengers,int).
-ooasp_attr_minInclusive(wagon,nr_passengers,50).
-ooasp_attr_maxInclusive(wagon,nr_passengers,200).
+ooasp_attr_minInclusive(wagon,nr_passengers,0).
+ooasp_attr_maxInclusive(wagon,nr_passengers,40).
 
 ooasp_attr(wagon,nr_seats,int).
 ooasp_attr_minInclusive(wagon,nr_seats,0).
-ooasp_attr_maxInclusive(wagon,nr_seats,200).
+ooasp_attr_maxInclusive(wagon,nr_seats,20).
 
 ooasp_attr(wagon,standing_room,int).
 ooasp_attr_minInclusive(wagon,standing_room,0).
-ooasp_attr_maxInclusive(wagon,standing_room,200).
+ooasp_attr_maxInclusive(wagon,standing_room,20).
 
 ooasp_attr(seat,seat_type,str).
 ooasp_attr_enum(seat,seat_type,standard).

@@ -749,7 +749,7 @@ class InteractiveConfigurator:
                 attr_value: Value of the attribute
         """
         self._new_state(f"Set {object_id}.{attr_name}={attr_value}",deep=True)
-        self._remove_value(attr_name,object_id)
+        self._remove_value(object_id,attr_name)
         self.config.add_value(object_id,attr_name,attr_value)
 
     def select_object_class(self,object_id:int,object_class:str)->None:

@@ -301,7 +301,7 @@ class  OOASPConfiguration:
         for f in facts:
             self.fb.remove(f)
             if remove_user:
-                self.fb.remove(self.UNIFIERS.User(f.symbol))
+                self.fb.remove(self.UNIFIERS.User(Raw(f.symbol)))
 
     def add_domain(self, class_name:str, object_id:int)->Predicate:
         """
@@ -396,6 +396,12 @@ class  OOASPConfiguration:
         q = self.fb.query(AttributeValue)
         q = q.where(((AttributeValue.object_id == object_id) & (AttributeValue.attr_name == attr_name)))
         values = list(q.all())
+        
+        # print(f"object_id :{object_id}")
+        # print(f"attr_name :{attr_name}")
+        # print(list(self.fb.query(AttributeValue).where(AttributeValue.object_id == object_id).all()))
+        # print("To remove")
+        # print(values)
         self._remove_facts(values)
         return values
 
@@ -462,8 +468,7 @@ class  OOASPConfiguration:
         All the given facts are added to the current configuration as user input
         """
         for f in  facts:
-            self.fb.add(self.UNIFIERS.User(f.symbol))
-    
+            self.fb.add(self.UNIFIERS.User(Raw(f.symbol)))
     
     def save_png(self,directory:str="./out"):
         """

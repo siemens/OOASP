@@ -8,80 +8,73 @@
 ooasp_potential_cv(nrofseats_eq_attribute_nrseats).
 ooasp_potential_cv(standingroom_iff_handrail).
 
+% Paggensers number is calculated
+ooasp_cv(nrpassengers_neq_nrseats_plus_standingroom,new_object,"Number of passenges calculated",(new_object,)):-
+    ooasp_isa(wagon,new_object),
+    ooasp_attr_value(nr_passengers,new_object,NRP),
+    ooasp_attr_value(nr_seats,new_object,NRS),
+    ooasp_attr_value(standing_room,new_object,S),
+    NRP!=NRS+S.
 
-% deactivated because of performance
-%ooasp_cv_ignore_for_brave(nrpassengers_neq_nrseats_plus_standingroom).
-
-% currently only one wagon allowed
-
+%  Only one wagon allowed
 ooasp_cv(only_one_wagon,new_object,"Only one wagon allowed, found also wagon {}",(W2,)):-
     ooasp_isa(wagon,new_object),
     ooasp_isa(wagon,W2),
     new_object>W2.
 
-% standingroom > 0 -> count(handrail)>0
-ooasp_cv(standingroom_iff_handrail,W,"Standing room > 0 iff there is a handrail v1 {} {} {} {}",(new_object,W,STANDINGROOM,COUNT)):-
+% Handrail required if standing_room>0
+ooasp_cv(standingroom_iff_handrail,W,"Handrail required if stanfing rum is {}",(STANDINGROOM,new_object)):-
     active(new_object),
-    ooasp_arity(wagon_handrail,1,W,COUNT,new_object),
-    ooasp_attribute_value(standing_room,W,STANDINGROOM),
-    COUNT=0,
+    #count{ID2:ooasp_assoc_gen(wagon_handrail,OPT,W,ID2)}=0,
+    ooasp_attr_value(standing_room,W,STANDINGROOM),
     STANDINGROOM>0.
-
-ooasp_cv(standingroom_iff_handrail,W,"Standing room > 0 iff there is a handrail {} {} {} {}",(new_object,W,STANDINGROOM,COUNT)):-
-    active(new_object),
-    ooasp_arity(wagon_handrail,1,W,COUNT,new_object),
-    ooasp_attribute_value(standing_room,W,STANDINGROOM),
-    COUNT>0,
-    STANDINGROOM=0.
 
 
 % the number of associated seats must be equal to the attribute nr_seats
-ooasp_cv(nrofseats_eq_attribute_nrseats,W,"nr of seats = attribute nr_seats {} {} {} {}",(new_object,W,NRSEATS,COUNT)):-
+ooasp_cv(nrofseats_eq_attribute_nrseats,W,"Number of seats should be {} ",(S,new_object)):-
     active(new_object),
-    ooasp_arity(wagon_seats,1,W,COUNT,new_object),
-    ooasp_attribute_value(nr_seats,W,NRSEATS),
-    COUNT!=NRSEATS.
+    #count{ID2:ooasp_assoc_gen(wagon_seats,OPT,W,ID2)}=S,
+    ooasp_attr_value(nr_seats,W,NRSEATS),
+    S!=NRSEATS.
 
 % all equal type except special
-ooasp_cv(type_mustbe_equal_except_special,W,"type_mustbe_equal_except_special {} {} {} {}",(new_object,W,S1,S2)):-
+ooasp_cv(type_equal,W,"All seat types must be equal",(new_object,)):-
     active(new_object),
     ooasp_associated(wagon_seats,W,S1),
     ooasp_associated(wagon_seats,W,S2),
     S1!=S2,
-    ooasp_attribute_value(seat_type,S1,TYPE1),
+    ooasp_attr_value(seat_type,S1,TYPE1),
     TYPE1!=special,
-    ooasp_attribute_value(seat_type,S2,TYPE2),
+    ooasp_attr_value(seat_type,S2,TYPE2),
     TYPE2!=special,
     TYPE1!=TYPE2.
 
-ooasp_cv(type_mustbe_equal_except_special,new_object,"type_mustbe_equal_except_special {} {} {} {}",(new_object,W,S,H)):-
+ooasp_cv(type_equal,new_object,"All seat and handrail types must be equal",(new_object,)):-
     active(new_object),
     ooasp_associated(wagon_seats,W,S),
     ooasp_associated(wagon_handrail,W,H),
     S!=H,
-    ooasp_attribute_value(seat_type,S,TYPE1),
+    ooasp_attr_value(seat_type,S,TYPE1),
     TYPE1!=special,
-    ooasp_attribute_value(handrail_type,H,TYPE2),
+    ooasp_attr_value(handrail_type,H,TYPE2),
     TYPE2!=special,
     TYPE1!=TYPE2.
 
 % all equal color except special
-ooasp_cv(color_mustbe_equal_except_special,W,"color_mustbe_equal_except_special {} {} {} {}",(new_object,W,S1,S2)):-
+ooasp_cv(color_equal,W,"All colors must be equal",(new_object,)):-
     active(new_object),
     ooasp_associated(wagon_seats,W,S1),
     ooasp_associated(wagon_seats,W,S2),
     S1!=S2,
-    ooasp_attribute_value(seat_type,S1,TYPE1),
-    ooasp_attribute_value(seat_color,S1,COLOR1),
+    ooasp_attr_value(seat_type,S1,TYPE1),
+    ooasp_attr_value(seat_color,S1,COLOR1),
     TYPE1!=special,
-    ooasp_attribute_value(seat_type,S2,TYPE2),
-    ooasp_attribute_value(seat_color,S2,COLOR2),
+    ooasp_attr_value(seat_type,S2,TYPE2),
+    ooasp_attr_value(seat_color,S2,COLOR2),
     TYPE2!=special,
     COLOR1!=COLOR2.
 
-ooasp_cv(special_seats_color_mustbe_red,new_object,"special_seats_color_mustbe_red {}",(new_object,S)):-
-    active(new_object),
-    ooasp_attribute_value(seat_type,S,TYPE),
-    TYPE=special,
-    ooasp_attribute_value(seat_color,S,COLOR),
+ooasp_cv(sepecial_red,new_object,"Sepecial seats should be red",(new_object,)):-
+    ooasp_attr_value(seat_type,new_object,special),
+    ooasp_attr_value(seat_color,new_object,COLOR),
     COLOR!=red.
