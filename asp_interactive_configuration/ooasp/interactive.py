@@ -401,7 +401,7 @@ class InteractiveConfigurator:
 
 
 
-    def _add_objects_to_dict(self, config: OOASPConfiguration, options: dict) -> dict:
+    def _add_objects_to_dict(self, config: OOASPConfiguration, options: dict) -> None:
         """
         Adds the objects from the brave configuration to the provided dictionary
 
@@ -412,16 +412,14 @@ class InteractiveConfigurator:
                 The updated dictionary, now containing the objects from the configuration
         """
         user_strs = [str(s) for s in config.user_input]
-
         for f in config.unique_objects:
             options[f.object_id].append(utils.editable_fact_as_remove_action(f,config.UNIFIERS))
         for f in config.small_objects:
             if str(f) not in user_strs:
                 options[f.object_id].append(utils.editable_fact_as_select_action(f,config.UNIFIERS))
-        return options
     
 
-    def _add_attributes_to_dict(self, config: OOASPConfiguration, options: dict) -> dict:
+    def _add_attributes_to_dict(self, config: OOASPConfiguration, options: dict) -> None:
         """
         Adds the attributes from the brave configuration to the provided dictionary
 
@@ -431,18 +429,17 @@ class InteractiveConfigurator:
             Returns:
                 The updated dictionary, now containing the attributes from the configuration
         """
-        user_strs = [str(s) for s in config.user_input]
-        user_fb = unify(config.editable_unifiers, config.user_input)
+        ui = config.user_input
+        user_strs = [str(s) for s in ui]
 
-        for f in user_fb.query(config.UNIFIERS.AttributeValue).all():
+        for f in ui.query(config.UNIFIERS.AttributeValue).all():
             options[f.object_id].append(utils.editable_fact_as_remove_action(f,config.UNIFIERS))
         for f in config.fb.query(config.UNIFIERS.AttributeValue).all():
             if str(f) not in user_strs:
                 options[f.object_id].append(utils.editable_fact_as_select_action(f,config.UNIFIERS))
-        return options
     
 
-    def _add_associations_to_dict(self, config: OOASPConfiguration, options: dict) -> dict:
+    def _add_associations_to_dict(self, config: OOASPConfiguration, options: dict) -> None:
         """
         Adds the associations from the brave configuration to the provided dictionary
 
@@ -452,17 +449,16 @@ class InteractiveConfigurator:
             Returns:
                 The updated dictionary, now containing the associations from the configuration
         """
-        user_strs = [str(s) for s in config.user_input]
-        user_fb = unify(config.editable_unifiers, config.user_input)
+        ui = config.user_input
+        user_strs = [str(s) for s in ui]
 
-        for f in user_fb.query(config.UNIFIERS.Association).all():
+        for f in ui.query(config.UNIFIERS.Association).all():
             options[f.object_id1].append(utils.editable_fact_as_remove_action(f,self.brave_config.UNIFIERS))
             options[f.object_id2].append(utils.editable_fact_as_remove_action(f,self.brave_config.UNIFIERS))      
         for f in config.fb.query(config.UNIFIERS.Association).all():
             if str(f) not in user_strs:
                 options[f.object_id1].append(utils.editable_fact_as_select_action(f,self.brave_config.UNIFIERS))
                 options[f.object_id2].append(utils.editable_fact_as_select_action(f,self.brave_config.UNIFIERS))
-        return options
 
 
     def _brave_config_as_options(self) -> dict:
@@ -473,16 +469,20 @@ class InteractiveConfigurator:
                 The dictionary with ids of objects as keys and list of dicionaries as value
                 representing the possible options
         """
-        if self.brave_config is None:
-            raise RuntimeError("A brave configuration must be computed to get it as options")
-        config = self.brave_config
         options = {}
-        for i in range(1,config.domain_size+1):
+        for i in range(1,self.config.domain_size+1):
             options[i]=[]
 
-        options = self._add_objects_to_dict(config, options)
-        options = self._add_attributes_to_dict(config, options)
-        options = self._add_associations_to_dict(config, options)
+        if self.brave_config is None:
+            # config = self.config
+            for f in self.config.user_input:
+                options[f.object_id].append(utils.editable_fact_as_remove_action(f,self.config.UNIFIERS))
+            return options
+
+
+        self._add_objects_to_dict(self.brave_config, options)
+        self._add_attributes_to_dict(self.brave_config, options)
+        self._add_associations_to_dict(self.brave_config, options)
 
         return options
 
@@ -509,8 +509,9 @@ class InteractiveConfigurator:
                 brave_model = model
             if brave_model is None:
                 self.brave_config = None
-                raise RuntimeError("No available options for conflicting configuration")
-            self.brave_config = OOASPConfiguration.from_model(self.state.config.name,
+                # raise RuntimeError("No available options for conflicting configuration")
+            else:
+                self.brave_config = OOASPConfiguration.from_model(self.state.config.name,
                     self.kb, brave_model)
         return self.brave_config
 
@@ -560,8 +561,9 @@ class InteractiveConfigurator:
                     self.kb, cautious_model)
             if cautious_model is None:
                 self.cautious_config = None
-                raise RuntimeError("No available inferences for conflicting configuration")
-            self.cautious_config = OOASPConfiguration.from_model(self.state.config.name,
+                # raise RuntimeError("No available inferences for conflicting configuration")
+            else: 
+                self.cautious_config = OOASPConfiguration.from_model(self.state.config.name,
                     self.kb, cautious_model)
         return self.cautious_config
     

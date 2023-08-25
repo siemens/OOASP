@@ -3,21 +3,21 @@
 
 % TODO: still missing is the length_mm attribute
 %
-#program domain(new_object).
+#program domain(new_object, cls).
 
-ooasp_cv_ignore_for_brave(nrofseats_eq_attribute_nrseats).
-ooasp_cv_ignore_for_brave(standingroom_iff_handrail).
+ooasp_potential_cv(nrofseats_eq_attribute_nrseats).
+ooasp_potential_cv(standingroom_iff_handrail).
+
 
 % deactivated because of performance
 %ooasp_cv_ignore_for_brave(nrpassengers_neq_nrseats_plus_standingroom).
 
 % currently only one wagon allowed
 
-ooasp_cv(only_one_wagon,W1,"Only one wagon allowed {} {}",(new_object,W2)):-
-    active(new_object),
-    ooasp_isa(wagon,W1),
+ooasp_cv(only_one_wagon,new_object,"Only one wagon allowed, found also wagon {}",(W2,)):-
+    ooasp_isa(wagon,new_object),
     ooasp_isa(wagon,W2),
-    W1!=W2.
+    new_object>W2.
 
 % standingroom > 0 -> count(handrail)>0
 ooasp_cv(standingroom_iff_handrail,W,"Standing room > 0 iff there is a handrail v1 {} {} {} {}",(new_object,W,STANDINGROOM,COUNT)):-
@@ -79,7 +79,7 @@ ooasp_cv(color_mustbe_equal_except_special,W,"color_mustbe_equal_except_special 
     TYPE2!=special,
     COLOR1!=COLOR2.
 
-ooasp_cv(new_object,special_seats_color_mustbe_red,"special_seats_color_mustbe_red {}",(new_object,S)):-
+ooasp_cv(special_seats_color_mustbe_red,new_object,"special_seats_color_mustbe_red {}",(new_object,S)):-
     active(new_object),
     ooasp_attribute_value(seat_type,S,TYPE),
     TYPE=special,

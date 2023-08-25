@@ -155,7 +155,6 @@ def test_racks_unique_constraint():
     iconf.select_value(1,'frame_position',1)
     iconf.select_value(2,'frame_position',1)
     iconf.check()
-    print(iconf.config.constraint_violations)
     assert 'ooasp_cv(unique_attr,1,"Attribute {} must be unique among all {}s associated by {} to {}",(frame_position,frame,rack_frames,3' in str(iconf.config.constraint_violations)
     assert 'ooasp_cv(unique_attr,2,"Attribute {} must be unique among all {}s associated by {} to {}",(frame_position,frame,rack_frames,3' in str(iconf.config.constraint_violations)
 

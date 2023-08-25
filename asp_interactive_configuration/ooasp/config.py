@@ -6,7 +6,7 @@ from typing import List
 from types import SimpleNamespace
 from clingo import Model, parse_term, Function
 from clorm.clingo import Control
-from clorm import Symbol, Predicate, ConstantField, IntegerField, FactBase, RawField, refine_field, Raw, StringField
+from clorm import Symbol, Predicate, ConstantField, IntegerField, FactBase, RawField, refine_field, Raw, StringField, unify
 from clingraph.orm import Factbase
 from clingraph.graphviz import compute_graphs, render
 from clingraph.clingo_utils import ClingraphContext
@@ -260,7 +260,9 @@ class  OOASPConfiguration:
         The of symbols inside a user predicate
         """
         input_facts = list(self.fb.query(self.UNIFIERS.User).select(self.UNIFIERS.User.predicate).all())
-        return [f.symbol for f in input_facts]
+        user_fb  = unify(self.editable_unifiers, [f.symbol if type(f)==Raw else f for f in input_facts])
+        
+        return user_fb
 
     def associated_by(self, obj, assoc_name)->List[Predicate]:
         """
