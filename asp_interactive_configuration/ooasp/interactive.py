@@ -5,6 +5,7 @@ import time
 from importlib import resources
 from clorm.clingo import Control
 from clingo import Number, Function
+from clingo.ast import ProgramBuilder, parse_files
 from clorm import Predicate, unify
 from ooasp.config import OOASPConfiguration
 from ooasp.kb import OOASPKnowledgeBase
@@ -13,6 +14,11 @@ from copy import deepcopy
 import ooasp.utils as utils
 from typing import List
 import ooasp.settings as settings
+from clingcon import ClingconTheory
+from fclingo import THEORY, Translator
+from fclingo.__main__ import CSP
+from fclingo.parsing import HeadBodyTransformer
+
 
 
 class State:
@@ -73,6 +79,11 @@ class State:
         }
         return utils.pretty_dic(info)
 
+class Config:
+    def __init__(self, max_int, min_int, print_trans) -> None:
+        self.max_int = max_int
+        self.min_int = min_int
+        self.print_trans = print_trans
 
 class InteractiveConfigurator:
 
@@ -106,6 +117,7 @@ class InteractiveConfigurator:
         self._time_solving = 0
         self._individual_ground_times = {}
         self._individual_solve_times = {}
+        self.theory = ClingconTheory()
         self._init_ctl()
         self.found_config = None
         self.brave_config = None
@@ -130,12 +142,18 @@ class InteractiveConfigurator:
                 "--warn=none",
                 f"-c config_name={self.config_name}",
                 f"-c kb_name={self.kb.name}"])
+        self.theory.register(self.ctl)
+        self.ftranslator = Translator(self.ctl, Config(0, 1000, False))
+        self.ctl.add("base", [], THEORY)
         self.ctl.add("base",[],self.kb.fb.asp_str())
         self.ctl.add("base",[],self.additional_prg)
-        file = settings.encodings_path.joinpath("ooasp.lp")
-        self.ctl.load(str(file))
-        for f in self.additional_files:
-            self.ctl.load(f)
+        files = [str(settings.encodings_path.joinpath("ooasp.lp"))] + self.additional_files
+        with ProgramBuilder(self.ctl) as pb:
+            hbt = HeadBodyTransformer()
+            parse_files(
+                files,
+                lambda ast: self.theory.rewrite_ast(ast, lambda stm: pb.add(hbt.visit(stm))),
+            )
         self._ground([("base",[])])
         self.last_size_grounded = 0
 
@@ -153,6 +171,16 @@ class InteractiveConfigurator:
         s+= str(self.state)
 
         return s
+
+    def theory_on_model(self, model):
+        model = model.model_
+        # self.theory.on_model(model)
+        defined =  [s.arguments[0] for s in model.symbols(shown=True) if str(s).startswith("__def")]
+        for key, val in self.theory.assignment(model.thread_id):
+            if key in defined:
+                print(f"assigned {key}={val}")
+                f = Function("ooasp_attr_value", key.arguments+[Number(int(str(val)))])
+                model.extend([f])
 
     @property
     def state(self):
@@ -205,6 +233,7 @@ class InteractiveConfigurator:
     def _ground(self, args):
         start = time.time()
         self.ctl.ground(args)
+        self.ftranslator.translate()
         end = time.time()
         self._add_grounding_time(end -start)
 
@@ -370,6 +399,7 @@ class InteractiveConfigurator:
         start = time.time()
         try:
             model = next(self.solution_iterator)
+            self.theory_on_model(model)
             end = time.time()
             self._add_solving_time(end -start)
             found_config = OOASPConfiguration.from_model(self.state.config.name,
@@ -532,6 +562,7 @@ class InteractiveConfigurator:
         with  self.ctl.solve(yield_=True) as hdn:
             sat = False
             for model in hdn:
+                self.theory_on_model(model)
                 sat = True
                 checked_config = OOASPConfiguration.from_model(self.state.config.name,
                     self.kb, model)

@@ -73,7 +73,7 @@ class  OOASPKnowledgeBase:
             max2=IntegerField
 
         TypeField = refine_field(ConstantField,
-        ["int","str","bool"])
+        ["int","str","bool","enumint"])
 
         class Attr(Predicate):
             class Meta:

@@ -12,4 +12,4 @@ racks_example_constraints = "./examples/racks/constraints.lp"
 global metro_example_kb
 metro_example_kb = "./examples/metro/kb.lp"
 global metro_example_constraints
-metro_example_constraints = "./examples/metro/constraints.lp"
+metro_example_constraints = "./examples/metro/fconstraints.lp"

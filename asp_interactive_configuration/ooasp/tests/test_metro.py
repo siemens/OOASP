@@ -9,15 +9,32 @@ from ooasp.tests.utils import new_metro_iconf
 import pytest
 from importlib import reload
 
-def test_metro_cv_wagon_constraints():
+def test_metro_next():
     """ test element constraints """
     iconf = new_metro_iconf()
     iconf.new_object("wagon")
+    found = iconf.next_solution()
+    assert found
+    assert "ooasp_attr_value(nr_seats,1,0)." in str(found)
+    assert "ooasp_attr_value(standing_room,1,0)." in str(found)
+    assert "ooasp_attr_value(nr_passengers,1,0)." in str(found)
+    found = iconf.next_solution()
+    assert not found
+
+
+def test_metro_cv_wagon_constraints():
+    """ test element constraints """
+    iconf = new_metro_iconf()
+    print("Created")
+    iconf.new_object("wagon")
+    print("New object")
     iconf.check()
+    print("Checked")
     assert len(iconf.config.constraint_violations) ==3
     iconf.select_value(1,"nr_passengers",10)
     iconf.select_value(1,"nr_seats",10)
     iconf.select_value(1,"standing_room",0)
+    print(iconf.config)
     iconf.check()
     iconf.config.show_cv()
     assert len(iconf.config.constraint_violations) ==1
@@ -43,6 +60,7 @@ def test_metro_cv_handrail_required():
     iconf = new_metro_iconf()
     iconf.new_object("wagon")
     iconf.select_value(1,"standing_room",10)
+    print(iconf.config)
     iconf.check()
     iconf.config.show_cv()
     assert len(iconf.config.constraint_violations) ==3
@@ -50,6 +68,8 @@ def test_metro_cv_handrail_required():
     iconf.new_object("handrail")
     iconf.select_association('wagon_handrail',1,2)
     iconf.check()
+    # TODO
+    # Cant ground twice
     iconf.config.show_cv()
     assert len(iconf.config.constraint_violations) ==3
     assert not "Handrail required" in str(iconf.config.constraint_violations)
@@ -60,6 +80,8 @@ def test_metro_multi_wagon():
     iconf = new_metro_iconf()
     iconf.new_object("wagon")
     iconf.new_object("wagon")
+    # TODO 
+    # When adding two objects then it loops....
     iconf.check()
     assert len(iconf.config.constraint_violations) ==7
     assert "Only one wagon allowed" in str(iconf.config.constraint_violations)

@@ -9,7 +9,6 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.9"
-clingo = "^5.5.2"
 graphviz = "^0.20"
 natsort = "^8.1.0"
 pytest = "^7.1.2"

@@ -138,7 +138,7 @@ class  OOASPConfiguration:
                 model: The clingo model
         """
         config= cls(name=name, kb = kb)
-        config.fb = model.facts(unifier=config.unifiers_list,atoms=True,shown=True)
+        config.fb = model.facts(unifier=config.unifiers_list,atoms=True,shown=True,theory=True)
         return config
 
     @property

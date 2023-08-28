@@ -3,7 +3,7 @@
 
 #program base.
 
-#const numerical = 1.
+#const use_dl = false.
 
 % transitive closure
 ooasp_subclass(SUB,SUPER2) :-
@@ -25,10 +25,14 @@ ooasp_attr_hasdomain(C,N) :-
     ooasp_attr_enum(C,N,D).
 
 ooasp_attr_enum(C,N,MIN..MAX):-
+    ooasp_attr(C,N,enumint),
+    ooasp_attr_minInclusive(C,N,MIN),
+    ooasp_attr_maxInclusive(C,N,MAX).
+
+ooasp_attr_fdom(C,N,MIN..MAX):-
     ooasp_attr(C,N,int),
     ooasp_attr_minInclusive(C,N,MIN),
-    ooasp_attr_maxInclusive(C,N,MAX),
-    numerical==1.
+    ooasp_attr_maxInclusive(C,N,MAX).
 
 % leafclasses are classes without subclasses
 ooasp_leafclass(C) :-

@@ -295,48 +295,6 @@ files = [
 pycparser = "*"
 
 [[package]]
-name = "clingcon"
-version = "5.2.0"
-description = "CFFI-based bindings to the clingcon solver."
-optional = false
-python-versions = ">=3.6"
-files = [
-    {file = "clingcon-5.2.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:9c528441f61311e707e023692441cf71cc0c6465c492983198709890cc7fa52e"},
-    {file = "clingcon-5.2.0-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:a2bc22d836e559dbae2dd49982aa57a0f827ebbd4497d256867d7066adbbf178"},
-    {file = "clingcon-5.2.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:110656323b7f04f4a9bca9652097b459387ddda2786a1d0f1d8b51aa289c0789"},
-    {file = "clingcon-5.2.0-cp310-cp310-win_amd64.whl", hash = "sha256:f9587b64b1d9cbfa93e7cbc129375242d206726fd8cc35c64acbb5422cb1525c"},
-    {file = "clingcon-5.2.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:c2151bd810da9c622cf9172f783c928fff1f0d13306f05b182cacc74db0b6a8b"},
-    {file = "clingcon-5.2.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f440d5da19c337b3e492ae9ce89a78f1cf19fd24480d13af26339a4d4d66ee7a"},
-    {file = "clingcon-5.2.0-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:74e567683b813ad201c2afeea03c963c55022997f2130a1b232f1ee3fcde619d"},
-    {file = "clingcon-5.2.0-cp36-cp36m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:9150dd4bdcf6d99eac7639cd5c1dc62ff6a1b766a8b70000efbee1c4fc465003"},
-    {file = "clingcon-5.2.0-cp36-cp36m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:7ec3460295603be5196a84b3bea02558b9dc32cb6639ad92198d04aca54c47b4"},
-    {file = "clingcon-5.2.0-cp36-cp36m-win_amd64.whl", hash = "sha256:fe6cb80ec46b86adc95801e9c21370c48943e24246eea57a7f8cf20a3c7e6858"},
-    {file = "clingcon-5.2.0-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:16cb5e4a815eedfefb67ad15207ae36db67b73d831ce006031806972f7855290"},
-    {file = "clingcon-5.2.0-cp37-cp37m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:171b142c5f165c208dfd4df67a7e8ea28713b03f5cd603afe167ffb0c22bcbf6"},
-    {file = "clingcon-5.2.0-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:38e9818095d4b872fc307b129b0adccc8f77bc4f0f13ff5b7546cfb8e18f7193"},
-    {file = "clingcon-5.2.0-cp37-cp37m-win_amd64.whl", hash = "sha256:70f943f05a85d6cacdc7706b5aa86fbb64d0d40eead16476c87d6698af64042a"},
-    {file = "clingcon-5.2.0-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:d5f29faa104faaf1e7d25115c9e47636663b23cf153e9531d5d5a919cd791bbe"},
-    {file = "clingcon-5.2.0-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:6cbcc89ae16d5db00e518770a6b40f409a8621c839df34f17363bdcfa2502d2f"},
-    {file = "clingcon-5.2.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:27324b1581966b8647563967a374fc37040d81bb4f3db236a31bd7f2b39f0290"},
-    {file = "clingcon-5.2.0-cp38-cp38-win_amd64.whl", hash = "sha256:e0f64f4efac704c6f893e3ad91801d660771c833c8e2412d40389eb20f875656"},
-    {file = "clingcon-5.2.0-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:9bb1fc426be42e7b7ede0e026e5d38780391ec3664f73149970302a7df8a9b27"},
-    {file = "clingcon-5.2.0-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:f2add0821274a8a7b5736ef6e407ecbd5c6ef19c3733e9ecebb0c9b17586dd36"},
-    {file = "clingcon-5.2.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:4f2f949a3669da072c4df89bffff86117e0e72abba457a94b46f3ebb458c3a6f"},
-    {file = "clingcon-5.2.0-cp39-cp39-win_amd64.whl", hash = "sha256:67ec189e67a3f72bc6921401bf95034fe5ca80a86974a1268972012391c2d736"},
-    {file = "clingcon-5.2.0-pp37-pypy37_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:2d704d77c76ba2ef2ecb498e0ab3e60a7452a150bcda1289218abfb9db0195bd"},
-    {file = "clingcon-5.2.0-pp37-pypy37_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:77d270673d333ec9da38e1f245d55e3b22612ca3d51b75a78d12c4f0fe7f1a65"},
-    {file = "clingcon-5.2.0-pp38-pypy38_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:6b287124d31da4a6bc5fe3f9637c7a684c59fd6226faf7423fef771e5b6485cf"},
-    {file = "clingcon-5.2.0-pp38-pypy38_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:8b583592c610f948a9db3086b9cea2d6dce95282b856c28f8971348223dd6f5f"},
-    {file = "clingcon-5.2.0-pp39-pypy39_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:0c0a1be5516f2f440f9aca066589baab72a7892f19b79bc6105b7f96619d4cd3"},
-    {file = "clingcon-5.2.0-pp39-pypy39_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:fc1b56cbed84de1908bea43a2abda879d092149184c4cd432ae7e5e671066919"},
-    {file = "clingcon-5.2.0.tar.gz", hash = "sha256:395b929068c767cf483994cced0b7cb02bb6c2279501c2aeb88d7145b487accf"},
-]
-
-[package.dependencies]
-cffi = "*"
-clingo = "*"
-
-[[package]]
 name = "clingo"
 version = "5.6.2"
 description = "CFFI-based bindings to the clingo solver."
@@ -2758,4 +2716,4 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "de2e521663bd4e78376d1ea59a2faff2906e17bad0207b124afc190e2a40dafb"
+content-hash = "d4fa0732538bc2e056408e62906cedfd1ddfdfa9045df7ecf40489e88b6d8c21"
