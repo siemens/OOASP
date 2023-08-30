@@ -40,7 +40,7 @@ attr(node, Object_id, label, @concat("<<TABLE BORDER='0' CELLBORDER='1' CELLSPAC
 attr(node, Object_id,  (label,class), @stringify(Class,true)):- any_node(Object_id),ooasp_domain(Class,Object_id).
 attr(node, Object_id,  (label,isa), @stringify(Class,true)):- any_node(Object_id),isa_smallest(Class,Object_id).
 attr(node, Object_id,  (label,color), black):- node(Object_id), not domain_node(_,Object_id), user(ooasp_isa(_,Object_id)).
-% Case for objects not isntanciated
+% Case for objects not instantiated
 attr(node, Object_id,  (label,color), grey):- node(Object_id), domain_node(_,Object_id).
 attr(node, Object_id,  (label,color), color_green):- node(Object_id), not user(ooasp_isa(_,Object_id)), ooasp_isa(_,Object_id).
 attr(node, Object_id,  (label,id), Object_id):- any_node(Object_id).
@@ -64,7 +64,6 @@ attr(node, T, width, 0):- node(T).
 attr(node, T, hight, 0):- node(T).
 
 % User selections in green
-% attr(node, Object_id, fontcolor, color_green):- ooasp_isa_leaf(Class,Object_id), not user(ooasp_isa(Class,Object_id)).
 
 % Add arguments to nodes
 attr(node, Object_id, (label,attr,Attr_name), @argument_str(Attr_name,Value,"black")):-
@@ -82,7 +81,6 @@ attr(node, Object_id, (label,cv,(Name,Object_id)), @cv_str(Name,Mes,Args)):-
 % Associations
 edge((Object_id1,Object_id2)) :-ooasp_associated(Name,Object_id1,Object_id2).
 
-% attr(edge, (Object_id1,Object_id2), xlabel, Name) :- ooasp_associated(Name,Object_id1,Object_id2).
 attr(edge,(Object_id1,Object_id2), xlabel, "<{{name}} <br/><FONT POINT-SIZE='10'> {{super}}</FONT>>"):-ooasp_associated(Name,Object_id1,Object_id2).
 attr(edge,(Object_id1,Object_id2), (xlabel,name), Name):-ooasp_associated(Name,Object_id1,Object_id2), not ooasp_assoc_specialization(_,Name).
 attr(edge,(Object_id1,Object_id2), (xlabel,super), Super):-ooasp_associated(Name,Object_id1,Object_id2),ooasp_assoc_specialization(Name,Super).

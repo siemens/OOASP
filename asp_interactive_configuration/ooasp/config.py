@@ -457,7 +457,7 @@ class  OOASPConfiguration:
     
     def consider_as_user(self, facts):
         """
-        All configuration editable facts are added as user symbols
+        All the given facts are added to the current configuration as user input
         """
         for f in  facts:
             self.fb.add(self.UNIFIERS.User(f.symbol))

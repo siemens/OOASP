@@ -326,7 +326,7 @@ class InteractiveConfigurator:
 
     def _new_object(self, object_class, propagate=False)->int:
         """
-        Increses the domain size by one and adds an object of the given class
+        Increases the domain size by one and adds an object of the given class
 
         Args:
             object_class (_type_): Class of the object

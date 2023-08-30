@@ -33,8 +33,8 @@ ooasp_leafclass(C) :-
      not ooasp_subclass(_,C).
 
 
-% ooasp_assoc_limit(ASSOC,min,1,C1,C2MIN)
-% The association ASSOC must be from a C1 object to at least C2MIN objects
+% ooasp_assoc_limit(ASSOC,min,1,C1,C2MIN,C2)
+% The association ASSOC must be from a C1 object to at least C2MIN objects of class C2
 
 ooasp_assoc_limit(ASSOC,min,1,C1,C2MIN,C2):-
 	ooasp_assoc(ASSOC,C1,C1MIN,C1MAX,C2,C2MIN,C2MAX).
@@ -47,8 +47,3 @@ ooasp_assoc_limit(ASSOC,min,2,C2,C1MIN,C1):-
 
 ooasp_assoc_limit(ASSOC,max,2,C2,C1MAX,C1):-
 	ooasp_assoc(ASSOC,C1,C1MIN,C1MAX,C2,C2MIN,C2MAX).
-
-
-is_an_assoc_specialization(ASSOC_S):- ooasp_assoc_specialization(ASSOC_S,ASSOC).
-specialization_priority(ASSOC,1):-is_an_assoc_specialization(ASSOC).
-specialization_priority(ASSOC,20):-not is_an_assoc_specialization(ASSOC), ooasp_assoc(ASSOC,_,_,_,_,_,_).

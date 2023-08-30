@@ -1,7 +1,7 @@
 % Copyright (c) 2022 Siemens AG Oesterreich
 % SPDX-License-Identifier: MIT
 
-% ooasp_cv(NAME,OBEJCT,STR,ARGS)
+% ooasp_cv(NAME,OBJECT,STR,ARGS)
 
 #program domain(new_object, cls).
 
