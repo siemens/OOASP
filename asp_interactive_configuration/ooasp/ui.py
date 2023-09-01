@@ -4,15 +4,36 @@
 import ipywidgets as widgets
 from ipywidgets import Button, VBox, HBox, Label, Layout,GridspecLayout, HTML, Output
 from IPython.display import display, Image
+import cv2 
 
-loader_path = './img/loader.gif'
+loader_img = Image('./img/loader.gif')
+empty_img = Image("img/empty.png")
+nosol_img = Image("img/nosol.png")
 
 def basic_vbox():
     return VBox(layout=Layout(height='auto', width='auto'))
 
 def wraped_label(text):
-    return HTML(value="<style>p{word-wrap: break-word ;color:red}</style> <p>" + text+"</p>")
+    return HTML(value="<style>cv{word-wrap: break-word ;color:red}</style> <p class='cv'>" + text+"</p>")
 
+def resize(baseheight,f_name):
+    baseheight = 300
+    im = cv2.imread(f_name)
+    h, w, _ = im.shape
+    if h>baseheight:
+        hpercent = (baseheight/h)
+        w = int((w*hpercent))
+        resized = cv2.resize(im, (w,baseheight), interpolation = cv2.INTER_AREA)
+        cv2.imwrite(f_name,resized)
+    return w
+
+def config_layout():
+    return Layout(overflow_y='scroll',
+            width='100%',
+            height='300px',
+            flex_flow='row',
+            display='block')
+         
 PSTYLE = "<style>p{word-wrap: break-word; margin-right: 10px;}</style>"
 class OOASPUI:
     """
@@ -24,11 +45,8 @@ class OOASPUI:
         Creates the UI
         """
         self.iconf = iconf
-        self.config_image = widgets.Image(format='png')
-        self.found_config = widgets.Image(format='png')
-        self.config_image.layout.object_fit= 'contain'
-        self.found_config.layout.object_fit= 'contain'
-        # self.history = VBox(layout=Layout(height='300ox', width='auto',overflow_y='auto'))
+        self.config_image = widgets.Image(format='png', width='1000px', layout=Layout(overflow = 'visible',min_width='1000px',height='300px'), unconfined=True)
+        self.found_config = widgets.Image(format='png', width='1000px', layout=Layout(overflow = 'visible',min_width='1000px',height='300px'), unconfined=True)
         self.extend = basic_vbox()
         self.edit = basic_vbox()
         self.edit_object = ''
@@ -45,13 +63,12 @@ class OOASPUI:
         Crates the basic grid structure
         """
         grid = GridspecLayout(3, 6)
-        # grid[0, 4:] = self.history
-        grid[0, :6] = self.config_image
+        grid[0, :6] = HBox(children=[self.config_image], layout=config_layout())
         grid[1, :2] = self.check
         grid[1, 2:4] = self.edit
         grid[1, 4:] = self.extend
         grid[2, 0] = self.browse
-        grid[2, 1:] = self.found_config
+        grid[2, 1:] = HBox(children=[self.found_config], layout=config_layout())
         self.grid = grid
 
 
@@ -74,15 +91,15 @@ class OOASPUI:
         return HTML(value=f'<h2>{text}</h2>')
 
 
-    def call_and_update(self, f, *args):
+    def call_and_update(self, f, **kwargs):
         """
         Calls a function and updates the UI
         """
         def fun(bt):
-            self.found_config.value = Image(loader_path).data
-            f(bt,*args)
+            self.found_config.value = loader_img.data
+            f(bt,**kwargs)
+            self.found_config.value = empty_img.data
             self.update()
-            # self.loading.value = Image("out/empty.png").data
         return fun
 
     def select_edit_object(self, change):
@@ -90,13 +107,13 @@ class OOASPUI:
             return
         self.edit_object = change.owner.value
 
-    def add_leaf(self,change):
+    def add_new_object(self,change,**kwargs):
         """
         Adds a leaf
         """
         if change.type != "change" or change.name != "value":
             return
-        self.iconf.new_object(change.owner.value)
+        self.iconf.new_object(change.owner.value,**kwargs)
 
     def do_edit(self,change):
         """
@@ -124,7 +141,11 @@ class OOASPUI:
         Sets the configuration image
         """
         self.iconf.config.save_png()
-        image = Image(f"out/{self.iconf.config.name}.png")
+        f_name = f"out/{self.iconf.config.name}.png"
+        w = resize(300,f_name)
+        self.config_image.layout.min_width=str(w/1)+"pt"
+        self.config_image.layout.width=str(min([w,1000]))+"pt"
+        image = Image(f_name,unconfined=True)
         self.config_image.value = image.data
 
     def set_found_config(self):
@@ -132,14 +153,16 @@ class OOASPUI:
         Sets the found configuration image
         """
         if self.iconf.found_config is None:
-            image = Image("out/empty.png")
-            self.found_config.value = image.data
+            self.found_config.value = empty_img.data
         elif self.iconf.found_config is False:
-            image = Image("out/nosol.png")
-            self.found_config.value = image.data
+            self.found_config.value = nosol_img.data
         else:
             self.iconf.found_config.save_png("out/found/")
-            image = Image(f"out/found/{self.iconf.found_config.name}.png")
+            f_name = f"out/found/{self.iconf.found_config.name}.png"
+            w = resize(300,f_name)
+            self.found_config.layout.min_width=str(w/1)+"pt"
+            self.found_config.layout.width=str(min([w,1000]))+"pt"
+            image = Image(f_name)
             self.found_config.value = image.data
 
     def set_history(self):
@@ -171,12 +194,20 @@ class OOASPUI:
         dropdown = widgets.Dropdown(
             options=['']+self.iconf.kb.classes,
             value='',
-            description='Add new object',
+            description='Add new object        ',
             disabled=False,
-            style={'description_width': '120px'}
+            style={'description_width': '170px'}
         )
-        dropdown.observe(self.call_and_update(self.add_leaf))
-        self.extend.children= tuple([self.title('Extend'),HBox(children=[domain_lbl,extend_domain]),config_lbl,dropdown])
+        dropdown.observe(self.call_and_update(self.add_new_object))
+        dropdown_propagate = widgets.Dropdown(
+            options=['']+self.iconf.kb.classes,
+            value='',
+            description='Add new object (propagate)',
+            disabled=False,
+            style={'description_width': '170px'}
+        )
+        dropdown_propagate.observe(self.call_and_update(self.add_new_object,propagate=True))
+        self.extend.children= tuple([self.title('Extend'),HBox(children=[domain_lbl,extend_domain]),config_lbl,dropdown,dropdown_propagate])
 
     def str_opt(self, option):
         """
@@ -274,12 +305,12 @@ class OOASPUI:
         """
         check = Button(description='Check',button_style='success')
         check.on_click(self.call_and_update(self.button_wrapper('check')))
-        cvs = self.iconf.config.constraint_violations
-        cvs_labels =[]
-        for c in cvs:
-            cvs_labels.append(wraped_label(self.iconf.config.format_cv(c)))
-        if len(cvs) == 0:
-            cvs_labels.append(Label(value="All checks passed!"))
-        self.check.children= tuple([self.title('Check'), check] + cvs_labels)
+        clear = Button(description='Clear checks',button_style='warning')
+        clear.on_click(self.call_and_update(self.button_wrapper('remove_cvs')))
+        get_inferences = Button(description='Add inferences',button_style='info')
+        get_inferences.on_click(self.call_and_update(self.button_wrapper('add_inferences')))
+        create_required = Button(description='Create required',button_style='info')
+        create_required.on_click(self.call_and_update(self.button_wrapper('create_all_required_objects')))
+        self.check.children= tuple([self.title('Check'), check, clear, get_inferences,create_required])
 
 

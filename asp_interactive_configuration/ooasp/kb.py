@@ -9,6 +9,7 @@ from clorm import Predicate, ConstantField, IntegerField, FactBase, refine_field
 from clingraph.orm import Factbase
 from clingraph.graphviz import compute_graphs, render
 from clingraph.clingo_utils import ClingraphContext
+from functools import cache
 import ooasp.settings as settings
 # pylint: disable=missing-class-docstring
 # pylint: disable=too-few-public-methods
@@ -54,6 +55,12 @@ class  OOASPKnowledgeBase:
             sub_class=ConstantField
             super_class=ConstantField
 
+        class AssocSpecialization(Predicate):
+            class Meta:
+                name = "ooasp_assoc_specialization"
+            sub_class=ConstantField
+            super_class=ConstantField
+
         class Assoc(Predicate):
             class Meta:
                 name = "ooasp_assoc"
@@ -96,14 +103,23 @@ class  OOASPKnowledgeBase:
             name=ConstantField
             val=ConstantField
 
+        class AttrUnique(Predicate):
+            class Meta:
+                name = "ooasp_unique_attr"
+            assoc_name=ConstantField
+            class_name=ConstantField
+            attr_name=ConstantField
+
         self.UNIFIERS = SimpleNamespace(
                 Class=Class,
                 SubClass=SubClass,
                 Assoc=Assoc,
+                AssocSpecialization=AssocSpecialization,
                 Attr=Attr,
                 AttrMin=AttrMin,
                 AttrMax=AttrMax,
                 AttrEnum=AttrEnum,
+                AttrUnique=AttrUnique,
                 KBName=KBName)
 
     @property
@@ -115,6 +131,7 @@ class  OOASPKnowledgeBase:
 
 
     @property
+    # @cache
     def classes(self)->List[Predicate]:
         """
         A list of all classes. Computed via queries to the Factbase

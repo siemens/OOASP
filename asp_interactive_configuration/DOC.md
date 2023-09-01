@@ -324,8 +324,8 @@ Notice that, as before, this rule must consider the `active(new_object)` to defi
 
 We use here two auxiliary predicates to avoid having to repeat the rule:
 
-- **`ooasp_assoc_limit(V,ASSOC,max,POS,C,CMAX)`**
-  The association `ASSOC` has a maximum limit of `CMAX` for objects of class `C` at `POS`, where `POS` is `1` or `2` and refers to one end of the association (1: left end, 2: right end).
+- **`ooasp_assoc_limit(V,ASSOC,max,POS,C,CMAX,C2)`**
+  The association `ASSOC` has a maximum limit of `CMAX` for objects of class `C` at `POS`, where `POS` is `1` or `2` and refers to one end of the association (1: left end, 2: right end), where the other side of the associations are objects of class `C2`.
   *Example: `ooasp_assoc_limit(V,ass,min,1,racks,10)`:
 	In the association `ass`, each `racks` object must be associated to at least `10` elements*
 

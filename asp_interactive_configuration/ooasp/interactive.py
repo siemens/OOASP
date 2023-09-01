@@ -85,6 +85,7 @@ class InteractiveConfigurator:
             additional_files (List[str]): The list of additional lp files
             found_config (OOASPConfig):  The complete configuration found in the browsing
             brave_config (OOASPConfig):  The brave configuration found with all the options
+            cautious_config (OOASPConfig):  The cautious configuration found with all the inferences
             last_size_grounded (int): The last size that was grounded
     """
 
@@ -108,6 +109,7 @@ class InteractiveConfigurator:
         self._init_ctl()
         self.found_config = None
         self.brave_config = None
+        self.cautious_config = None
         self.solution_iterator = None
         self.hdn = None
 
@@ -126,7 +128,6 @@ class InteractiveConfigurator:
         """
         self.ctl = Control(["0",
                 "--warn=none",
-                # "--heuristic=Domain",
                 f"-c config_name={self.config_name}",
                 f"-c kb_name={self.kb.name}"])
         self.ctl.add("base",[],self.kb.fb.asp_str())
@@ -215,6 +216,7 @@ class InteractiveConfigurator:
         if self.domain_size == self.last_size_grounded:
             return
         domains = self.config.domains_from(self.last_size_grounded)
+        s = 0
         for cls, s in domains:
             if s>1:
                 self.ctl.release_external(Function("active", [Number(s-1)]))
@@ -242,6 +244,7 @@ class InteractiveConfigurator:
         """
         self.brave_config=None
         self.found_config=None
+        self.cautious_config=None
         if self.solution_iterator:
             self.hdn.cancel()
         self.solution_iterator = None
@@ -251,9 +254,8 @@ class InteractiveConfigurator:
         Sets all partial configuration as user externals to True.
         This uses special predicate `user/1`
         """
-        for f in self.config.editable_facts:
-            # self.ctl.assign_external(Function("random",[]), True)
-            self.ctl.assign_external(Function("user",[f.symbol]), True)
+        for f in self.config.all_as_user():
+            self.ctl.assign_external(f, True)
 
     def _falsify_user_externals(self,facts:List)->None:
         """
@@ -274,35 +276,44 @@ class InteractiveConfigurator:
         """
         self.ctl.add("domain",[str(self.domain_size)],str(fact)+".")
 
-    def _create_required_objects(self, cls:str, object_id:int, ignore_assoc:List=None)->None:
+    def _create_required_objects(self, object_id:int=None)->int:
         """
         Creates required objects for a given object based on associations in the knowledge base configuration.
         It ensures that the minimum required number of associated objects is met for each association.
         
             Parameters:
-                cls (str): The class (object type) for which required objects are being created.
                 object_id (int): The ID of the object for which required objects are being created.
                 ignore_assoc (List, optional): A list of association names to be ignored during object creation.
                     Defaults to None.
         """
-        if ignore_assoc is None:
-            ignore_assoc = set()
-        assocs = self.config.kb.associations(cls)
-        assocs_added = []
-        for name, class2, min, max in assocs:
-            if name in ignore_assoc:
+        cautious =  self._get_cautious()
+        n_objects_added = 0
+        common_violations = cautious.constraint_violations
+        for cv in common_violations:
+            # TODO maybe improove performance using query
+            if cv.name != 'lowerbound' or cv.object_id != object_id:
                 continue
-            curret_assoc = self.config.associated_by(object_id,name)
-            remaining = min - len(curret_assoc) 
-            assocs_added.append(name)
-            if remaining<0:
-                continue
-            for _ in range(remaining):
-                self._extend_domain(class2,True,assocs_added)
+            assoc, cmin, n, c, opt, _ = cv.args.symbol.arguments
+            for _ in range(n.number,cmin.number):
+                n_objects_added += 1
+                object2 = self._new_object(c.name)
+                if str(opt) == '1':
+                    self.config.add_association(assoc.name,object_id,object2)
+                else:
+                    self.config.add_association(assoc.name,object2,object_id)
+        return n_objects_added
+    
+    def _create_all_required_objects(self)->int:
+        """
+        Creates all the required objects
+        """
+        objs = self.config.smart_objects
+        n_objects_added=0
+        for o in objs:
+            n_objects_added += self._create_required_objects(o.object_id)
+        return n_objects_added
 
-
-
-    def _extend_domain(self, cls='object',propagate=False, ignore_assoc:List=None)->int:
+    def _extend_domain(self, cls='object')->int:
         """
         Increases the domain size by one and adds a new domain(object,N) fact to
         the configuration.
@@ -311,11 +322,24 @@ class InteractiveConfigurator:
         self._outdate_models()
         new_object = self.state.domain_size
         self.config.add_domain(cls,new_object)
-        if propagate:
-            self._create_required_objects(cls, new_object,ignore_assoc)
         return new_object
 
+    def _new_object(self, object_class, propagate=False)->int:
+        """
+        Increases the domain size by one and adds an object of the given class
 
+        Args:
+            object_class (_type_): Class of the object
+            propagate (bool, optional): If it should propagate creation. Defaults to False.
+
+        Returns:
+            int: Identifier of the new object
+        """
+        new_object = self._extend_domain(cls=object_class)
+        self.config.add_object(new_object,object_class)
+        if propagate:
+            self._create_required_objects(new_object)
+        return new_object
 
     # --------- Browsing
 
@@ -329,13 +353,13 @@ class InteractiveConfigurator:
                 The found OOASPConfiguration or None if no solution is found
         """
         self._ground_missing()
-
         if not self.browsing:
             self.ctl.assign_external(Function("guess") , True)
             self.ctl.assign_external(Function("check_permanent_cv"), True)
             self.ctl.assign_external(Function("check_potential_cv"), True)
             self._set_user_externals()
             self.ctl.configuration.solve.enum_mode = 'auto'
+            self.ctl.configuration.solve.opt_mode = 'ignore'
             start = time.time()
             self.hdn = self.ctl.solve(yield_=True)
             end = time.time()
@@ -358,7 +382,7 @@ class InteractiveConfigurator:
             self.found_config=False
             return False
 
-    def _set_config(self,config:OOASPConfiguration):
+    def _set_config(self,config:OOASPConfiguration, set_user_facts = True):
         """
         Sets the current configuration to the given one
             Parameters:
@@ -372,6 +396,9 @@ class InteractiveConfigurator:
             raise RuntimeError("Can't set a configuration with smaller domain size")
         self.state.domain_size = new_size
         self.state.config=config
+        if set_user_facts:
+            config.consider_as_user(config.editable_facts)
+
 
 
     def _add_objects_to_dict(self, config: OOASPConfiguration, options: dict) -> dict:
@@ -475,6 +502,7 @@ class InteractiveConfigurator:
         self.ctl.assign_external(Function("check_potential_cv"), False)
         self._set_user_externals()
         self.ctl.configuration.solve.enum_mode = 'brave'
+        self.ctl.configuration.solve.opt_mode = 'ignore'
         with  self.ctl.solve(yield_=True) as hdn:
             brave_model = None
             for model in hdn:
@@ -499,17 +527,44 @@ class InteractiveConfigurator:
         self.ctl.assign_external(Function("check_potential_cv"), False)
         self._set_user_externals()
         self.ctl.configuration.solve.enum_mode = 'auto'
+        self.ctl.configuration.solve.opt_mode = 'ignore'
         with  self.ctl.solve(yield_=True) as hdn:
             sat = False
             for model in hdn:
                 sat = True
-                self.state.config = OOASPConfiguration.from_model(self.state.config.name,
+                checked_config = OOASPConfiguration.from_model(self.state.config.name,
                     self.kb, model)
-                self.config.remove_user()
+                self._set_config(checked_config)
             if not sat:
                 raise RuntimeError("Got UNSAT while checking for cvs")
 
         return not self.config.has_cv
+
+    def _get_cautious(self)->OOASPConfiguration:
+        if self.browsing:
+            raise RuntimeError("Cant get cautious while browsing")
+        if self.cautious_config:
+            return self.cautious_config
+        self._ground_missing()
+        self.ctl.assign_external(Function("guess"), True)
+        self.ctl.assign_external(Function("check_permanent_cv"), True)
+        self.ctl.assign_external(Function("check_potential_cv"), False)
+        self._set_user_externals()
+        self.ctl.configuration.solve.enum_mode = 'cautious'
+        self.ctl.configuration.solve.opt_mode = 'optN'
+        with  self.ctl.solve(yield_=True) as hdn:
+            cautious_model = None
+            for model in hdn:
+                cautious_model = model
+                cfg = OOASPConfiguration.from_model(self.state.config.name,
+                    self.kb, cautious_model)
+            if cautious_model is None:
+                self.cautious_config = None
+                raise RuntimeError("No available inferences for conflicting configuration")
+            self.cautious_config = OOASPConfiguration.from_model(self.state.config.name,
+                    self.kb, cautious_model)
+        return self.cautious_config
+    
 
     def _remove_association(self,assoc_name:str,object_id1:int,object_id2:int)->None:
         """
@@ -567,6 +622,38 @@ class InteractiveConfigurator:
         self.found_config=found_config
         return self._get_options()
 
+    def add_inferences(self)->None:
+        """
+        Creates a new state.
+        Gets a Configuration where the facts are the intersection of all stable models optimized to minimize errors.
+        Sets this configuration as the current one
+            Returns:
+                An OOASPConfiguration object with all the forced decisions
+        """
+        self._new_state("Add inferences")
+        cautious = self._get_cautious()
+        if cautious:
+            self._set_config(cautious,set_user_facts=True)
+        return 
+    
+    def get_inferences(self)->None:
+        """
+        Creates a new state.
+        Gets a Configuration where the facts are the intersection of all stable models optimized to minimize errors.
+            Returns:
+                An OOASPConfiguration object with all the forced decisions
+        """
+        self._new_state("Obtaining inferences")
+        return self._get_cautious()
+    
+    def create_all_required_objects(self)->None:
+        """
+        Creates a new state.
+        Adds all required objects to the configuration
+        """
+        self._new_state("Creates all required objects")
+        return self._create_all_required_objects()
+    
     def next_solution(self)->OOASPConfiguration:
         """
         Creates a new state.
@@ -629,6 +716,14 @@ class InteractiveConfigurator:
         self._new_state(f"Removed object class for {object_id}",deep=True)
         self._remove_object(object_id)
 
+    def remove_cvs(self)->None:
+        """
+        Creates a state with a new configuration.
+        Removes all the constraint violations
+        """
+        self._new_state(f"Removed constraint violations",deep=True)
+        self.config.remove_cvs()
+
     def select_association(self,assoc_name:str,object_id1:int,object_id2:int)->None:
         """
         Creates a state with a new configuration.
@@ -674,7 +769,7 @@ class InteractiveConfigurator:
             raise e
 
 
-    def extend_domain(self,num:int=1,cls='object',propagate=False)->None:
+    def extend_domain(self,num:int=1,cls='object')->None:
         """
         Creates a state with a new configuration.
         Increases the domain size and adds a new domain(object,N) fact to
@@ -685,9 +780,9 @@ class InteractiveConfigurator:
         self._new_state(f"Extended domain by {num} ",deep=True)
         next_num_objects = self.state.domain_size + num
         for i in range(self.state.domain_size+1,next_num_objects+1):
-            self._extend_domain(cls=cls,propagate=propagate)
+            self._extend_domain(cls=cls)
 
-    def new_object(self,object_class:str)->None:
+    def new_object(self,object_class:str, propagate=False)->None:
         """
         Creates a state with a new configuration.
         Increases the domain size by one and adds a new domain(object,N) fact to
@@ -697,9 +792,8 @@ class InteractiveConfigurator:
                 object_class: The name of the object class
         """
         self._new_state(f"Added object class {object_class}",deep=True)
-        new_object = self._extend_domain(cls=object_class)
         try:
-            self.config.add_object(new_object,object_class)
+            return self._new_object(object_class, propagate)
         except Exception as e:
             self.states.pop()
             raise e
@@ -725,13 +819,16 @@ class InteractiveConfigurator:
         name = "Extend incrementally" if not overshoot else "Extend incrementally overshooting"
         self._new_state(name,deep=True)
         if overshoot:
-            objs = self.config.smart_objects
-            for o in objs:
-                self._create_required_objects(o.class_name, o.object_id)
+            self._create_all_required_objects()
         self.found_config = self._next_solution()
 
-        while not self.found_config  or self.domain_size>domain_limit:
-            self._extend_domain()
+        while not self.found_config  and self.domain_size<domain_limit:
+            n_objects_added = 0
+            if overshoot:
+                self._outdate_models()
+                n_objects_added = self._create_all_required_objects()
+            if n_objects_added==0:
+                self._extend_domain()
             self.found_config = self._next_solution()
 
 
@@ -753,7 +850,7 @@ class InteractiveConfigurator:
         self.set_configuration(current_found_config)
         return None
 
-    def set_configuration(self,config:OOASPConfiguration):
+    def set_configuration(self,config:OOASPConfiguration, set_user_facts=True):
         """
         Sets the current configuration to a new one
             Parameters:
@@ -763,7 +860,7 @@ class InteractiveConfigurator:
                 is smaller.
         """
         self._new_state("Set partial configuration")
-        self._set_config(config)
+        self._set_config(config, set_user_facts=set_user_facts)
 
     #------------- Visualize
 
