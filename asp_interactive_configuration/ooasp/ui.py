@@ -4,7 +4,7 @@
 import ipywidgets as widgets
 from ipywidgets import Button, VBox, HBox, Label, Layout,GridspecLayout, HTML, Output
 from IPython.display import display, Image
-import cv2 
+from PIL import Image as PImage
 
 loader_img = Image('./img/loader.gif')
 empty_img = Image("img/empty.png")
@@ -18,13 +18,13 @@ def wraped_label(text):
 
 def resize(baseheight,f_name):
     baseheight = 300
-    im = cv2.imread(f_name)
-    h, w, _ = im.shape
+    im = PImage.open(f_name)
+    w, h = im.size
     if h>baseheight:
         hpercent = (baseheight/h)
         w = int((w*hpercent))
-        resized = cv2.resize(im, (w,baseheight), interpolation = cv2.INTER_AREA)
-        cv2.imwrite(f_name,resized)
+        resized = im.resize((w,h))
+        resized.save(f_name)
     return w
 
 def config_layout():
