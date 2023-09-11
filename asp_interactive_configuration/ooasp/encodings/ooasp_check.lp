@@ -5,7 +5,7 @@
 
 #program domain(new_object, cls).
 
-% Used to know the missing objects
+% Used when getting inferences to minimize on lowerbound errors
 :~ ooasp_cv(lowerbound,_,_,(ASSOC,CMIN,N,C,OPT,new_object)). [CMIN-N,ASSOC]
 
 :- ooasp_cv(CV,_,_,_),

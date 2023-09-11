@@ -127,11 +127,21 @@ class InteractiveConfigurator:
         self.hdn = None
 
 
-    def _add_grounding_time(self, time):
+    def _add_grounding_time(self, time:int):
+        """
+        Adds time to grounding for benchamrks
+        Args:
+            time (int): time to add
+        """
         self._time_grounding+=time
         self._individual_ground_times[self.domain_size] = time
 
     def _add_solving_time(self, time):
+        """
+        Adds time to solving for benchamrks
+        Args:
+            time (int): time to add
+        """
         self._time_solving+=time
         self._individual_solve_times[self.domain_size] = time
 
@@ -160,6 +170,9 @@ class InteractiveConfigurator:
 
 
     def __str__(self):
+        """
+        String representation
+        """
         s = utils.title('INTERACTIVE CONFIG')
         d = {
             'kb' : self.kb.name,
@@ -410,7 +423,7 @@ class InteractiveConfigurator:
             self.theory_on_model(model)
             end = time.time()
             self._add_solving_time(end -start)
-            found_config = OOASPConfiguration.from_model(self.state.config.name,
+            found_config = OOASPConfiguration.from_model(self.config.name,
                     self.kb, model)
             return found_config
         except StopIteration:
@@ -557,7 +570,6 @@ class InteractiveConfigurator:
                 brave_model = model
             if brave_model is None:
                 self.brave_config = None
-                # raise RuntimeError("No available options for conflicting configuration")
             else:
                 self.brave_config = OOASPConfiguration.from_model(self.state.config.name,
                     self.kb, brave_model)
@@ -583,7 +595,7 @@ class InteractiveConfigurator:
             for model in hdn:
                 self.theory_on_model(model)
                 sat = True
-                checked_config = OOASPConfiguration.from_model(self.state.config.name,
+                checked_config = OOASPConfiguration.from_model(self.config.name,
                     self.kb, model)
                 self._set_config(checked_config)
             if not sat:
@@ -592,6 +604,16 @@ class InteractiveConfigurator:
         return not self.config.has_cv
 
     def _get_cautious(self)->OOASPConfiguration:
+        """
+        Gets the cautious consequences, also incudes an optimization statement 
+        to only consider the models where lowerbound violations are minimized
+
+        Raises:
+            RuntimeError: If the configuration is conflicting and has no models
+
+        Returns:
+            OOASPConfiguration: A configuration with 
+        """
         if self.browsing:
             raise RuntimeError("Cant get cautious while browsing")
         if self.cautious_config:
@@ -608,11 +630,10 @@ class InteractiveConfigurator:
             cautious_model = None
             for model in hdn:
                 cautious_model = model
-                cfg = OOASPConfiguration.from_model(self.state.config.name,
+                cfg = OOASPConfiguration.from_model(self.config.name,
                     self.kb, cautious_model)
             if cautious_model is None:
                 self.cautious_config = None
-                # raise RuntimeError("No available inferences for conflicting configuration")
             else: 
                 self.cautious_config = OOASPConfiguration.from_model(self.state.config.name,
                     self.kb, cautious_model)
@@ -929,7 +950,7 @@ class InteractiveConfigurator:
         """
         Shows the image of the configuration in a jupyter notebook
         """
-        return self.state.config.view()
+        return self.config.view()
 
     def view_found(self)->None:
         """

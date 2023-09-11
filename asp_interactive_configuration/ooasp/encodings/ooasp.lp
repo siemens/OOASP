@@ -2,8 +2,8 @@
 % SPDX-License-Identifier: MIT
 
 % ------------ Base programs
-#const config_name = racks_config_1.
-#const kb_name = v1.
+#const config_name = default_config_name.
+#const kb_name = default_kb_name.
 ooasp_configuration(kb_name,config_name).
 #include "ooasp_aux_kb.lp". % Auxiliary predicates for the KB
 #external guess. % The guessing part is active
