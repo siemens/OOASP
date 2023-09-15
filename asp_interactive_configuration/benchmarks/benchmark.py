@@ -132,6 +132,68 @@ def options_object(ne):
     iconf.get_options()
     return iconf
 
+def incremental_input_before():
+    iteration_nr = 1
+    iconf = new_iconf()
+
+    iterations = int(input("Enter the number of iterations: "))
+    input_list = []
+
+    for _ in range(iterations):
+        input_str = input("Enter the number of elements for each type (- for skip): ")
+        input_list.append(input_str)
+
+    for input_str in input_list:
+        if input_str.lower() == 'q':
+            continue
+        
+        element_counts = input_str.split()
+
+        for i, count_str in enumerate(element_counts):
+            if count_str != "-":
+                elements = int(count_str)
+                element_type = f"element{chr(ord('A') + i)}"
+                for _ in range(elements):
+                    e = iconf.new_object(element_type)
+
+        print("Iteration " + str(iteration_nr) + ":")
+        found = iconf.extend_incrementally(overshoot=True)
+        iconf.select_found_configuration()
+        print(iconf._time_grounding + iconf._time_solving)
+
+        found.save_png()
+        iteration_nr += 1
+    return iconf
+
+
+def incremental_input_in_steps():
+    iteration_nr = 1
+    iconf = new_iconf()
+
+    while True:
+        input_str = input("Enter the number of elements for each type (- for skip) or 'q' to quit: ")
+
+        if input_str.lower() == 'q':
+            break
+
+        element_counts = input_str.split()
+
+        for i, count_str in enumerate(element_counts):
+            if count_str != "-":
+                elements = int(count_str)
+                element_type = f"element{chr(ord('A') + i)}"
+                for _ in range(elements):
+                    e = iconf.new_object(element_type)
+
+        print("Iteration " + str(iteration_nr) + ":")
+        found = iconf.extend_incrementally(overshoot=True)
+        iconf.select_found_configuration()
+        print(iconf._time_grounding + iconf._time_solving)
+
+        found.save_png()
+        iteration_nr += 1
+    return iconf
+
 # --------- Running benchmarks
 
 def run(n_runs,fun,elements,name = "extend_solve"):
