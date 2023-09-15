@@ -100,6 +100,23 @@ def new_iconf():
     racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
     return InteractiveConfigurator(racks_kb,"i1",[settings.racks_example_constraints])
 
+def setup_bm_instance(elemAs, elemBs, elemCs, elemDs):
+    iconf = new_iconf()
+    
+    for i in range(elemAs):
+        iconf.new_object("elementA")
+
+    for i in range(elemBs):
+        iconf.new_object("elementB")
+
+    for i in range(elemCs):
+        iconf.new_object("elementC")
+
+    for i in range(elemDs):
+        iconf.new_object("elementD")
+
+    return iconf
+
 # --------- Functions to benchmark
 def extend_solve(ne):
     iconf = new_iconf()
@@ -193,6 +210,16 @@ def incremental_input_in_steps():
         found.save_png()
         iteration_nr += 1
     return iconf
+
+def case_should_create_rackDouble_does_not_terminate():
+
+    print("-----21 As-----")
+    iconf = setup_bm_instance(21, 0, 0, 0)
+    found = iconf.extend_incrementally(overshoot=False)
+
+    iconf.select_found_configuration()
+    print(iconf._time_grounding + iconf._time_solving)
+    found.save_png("benchmarks/results", "-incrementalRackDouble")
 
 # --------- Running benchmarks
 
