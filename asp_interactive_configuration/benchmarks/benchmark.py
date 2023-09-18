@@ -7,6 +7,7 @@ import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import time
+import threading
 import ooasp.utils as utils
 from ooasp import settings
 
@@ -117,6 +118,19 @@ def setup_bm_instance(elemAs, elemBs, elemCs, elemDs):
 
     return iconf
 
+def extend_incrementally_wrapper(iconf:InteractiveConfigurator):
+        try:
+            return iconf.extend_incrementally(overshoot=True)
+        except Exception as e:
+            if hasattr(e, 'message'):
+                print(e.message)
+            else:
+                print(e)
+
+def add_elements(element:str, n:int, iconf:InteractiveConfigurator):
+    for i in range(n):
+        iconf.new_object(element)
+
 # --------- Functions to benchmark
 def extend_solve(ne):
     iconf = new_iconf()
@@ -210,6 +224,87 @@ def incremental_input_in_steps():
         found.save_png()
         iteration_nr += 1
     return iconf
+
+def run_incremental_benchmark_instance(iconf:InteractiveConfigurator, run_in_seconds):
+
+    #found = []
+    #if interrupted; console wont work anymore
+    #thread = threading.Thread(target=extend_incrementally_wrapper, args=(iconf, found))
+    thread = threading.Thread(target=extend_incrementally_wrapper, args=(iconf,))
+    
+    thread.start()
+    thread.join(run_in_seconds)
+
+    if thread.is_alive():
+        threading.Event().set()
+        print("The extend_incrementally method timed out after", run_in_seconds, "seconds. \n")
+        return
+
+    iconf.select_found_configuration()
+    print(str(iconf._time_grounding + iconf._time_solving) + "\n")
+    #found[0].save_png("benchmarks/results", "-incremental" + str(20))
+
+def run_incremental_benchmarks(run_in_seconds: int):
+
+    count = 0
+    countsingle=1
+    #single iteration benchmarks
+    for num_as in range(0, 22, 7):
+        for num_bs in range(3, 7, 3):
+            for num_cs in range(0, 7, 3):
+                for num_ds in range(3, 7, 3):
+                    print(f"-----{num_as} elemA, {num_bs} elemB, {num_cs} elemC, {num_ds} elemD-----")
+                    iconf = setup_bm_instance(num_as, num_bs, num_cs, num_ds)
+                    run_incremental_benchmark_instance(iconf, run_in_seconds)
+                    count+=1
+                    countsingle +=1
+
+    #two iteration benchmarks
+    countdouble=0
+    num_cs = 0
+    for num_as in [7, 14, 21]:
+        for num_bs in [0, 3, 6]:
+            for num_ds in [0, 3, 6]:
+                print(f"-----{num_as} elemA, {num_bs} elemB, {num_cs} elemC, {num_ds} elemD-----")
+                iconf = setup_bm_instance(num_as, num_bs, 0, num_ds)
+                run_incremental_benchmark_instance(iconf, run_in_seconds)
+            
+                print(f"Adding elements to the previous configuration: {num_as} elemA, {num_bs} elemB, {num_cs} elemC, {num_ds} elemD")
+                add_elements("elementA", num_as, iconf)
+                add_elements("elementB", num_bs, iconf)
+                add_elements("elementD", num_ds, iconf)
+                count+=1
+                countdouble+=1
+                run_incremental_benchmark_instance(iconf, run_in_seconds)
+
+    #three iteration benchmarks
+    counttriple=0
+    num_cs = 0
+    for num_as in [7, 21]:
+        for num_bs in [0, 3]:
+            for num_ds in [0, 6]:
+                print(f"\n-----CURRENT CONFIGURATION: {num_as} As, {num_bs} Bs, {0} Cs, {num_ds} Ds-----")
+                print(f"Adding to configuration: {num_as} As, {num_bs} Bs, {0} Cs, {num_ds} Ds")
+                iconf = setup_bm_instance(num_as, num_bs, 0, num_ds)
+                run_incremental_benchmark_instance(iconf, run_in_seconds)
+
+                add_elements("elementA", num_as, iconf)
+                add_elements("elementB", num_bs, iconf)
+                add_elements("elementD", num_ds, iconf)
+                run_incremental_benchmark_instance(iconf, run_in_seconds)
+
+                for num_additional_as in [7, 14]:
+                    for num_additional_bs in [6]:
+                        for num_additional_ds in [3]:
+                            print(f"Adding furhter elements to the previous configuration: {num_additional_as} As + {num_additional_bs} Bs + {num_additional_ds} Ds")
+
+                            add_elements("elementA", num_additional_as, iconf)
+                            add_elements("elementB", num_additional_bs, iconf)
+                            add_elements("elementD", num_additional_ds, iconf)
+                            count+=1
+                            counttriple+=1
+                            run_incremental_benchmark_instance(iconf, run_in_seconds)
+    print("DONE" + " " + str(count) + "TOTAL - " + str(countsingle) + "SINGLE - " + str(countdouble) + "DOUBLE - " + str(counttriple) + "TRIPLE")
 
 def case_should_create_rackDouble_does_not_terminate():
 
