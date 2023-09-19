@@ -102,6 +102,23 @@ def new_iconf():
     return InteractiveConfigurator(racks_kb,"i1",[settings.racks_example_constraints])
 
 def setup_bm_instance(elemAs, elemBs, elemCs, elemDs):
+    """
+    Set up a benchmark instance with specified element counts.
+
+    This function creates and configuration for benchmarking.
+    It adds the specified number of elementAs, elementBs, elementCs, and elementDs to
+    the configuration and returns it.
+
+    Args:
+        elemAs (int): The number of 'elementA's to add.
+        elemBs (int): The number of 'elementB's to add.
+        elemCs (int): The number of 'elementC's to add.
+        elemDs (int): The number of 'elementD's to add.
+
+    Returns:
+        iconf (InteractiveConfigurator): An instance of the InteractiveConfigurator class
+        with the specified elements added to the configuration.
+    """
     iconf = new_iconf()
     
     for i in range(elemAs):
@@ -119,15 +136,33 @@ def setup_bm_instance(elemAs, elemBs, elemCs, elemDs):
     return iconf
 
 def extend_incrementally_wrapper(iconf:InteractiveConfigurator):
-        try:
-            return iconf.extend_incrementally(overshoot=True)
-        except Exception as e:
-            if hasattr(e, 'message'):
-                print(e.message)
-            else:
-                print(e)
+    """
+    Wrap and call the 'extend_incrementally' method of an InteractiveConfigurator.
+
+    This function wraps the 'extend_incrementally' method of an InteractiveConfigurator instance
+    and calls it with 'overshoot' set to True. If an exception is raised during the method
+    call, it captures and prints the exception message.
+
+    Args:
+        iconf (InteractiveConfigurator): An instance of the InteractiveConfigurator class.
+    """
+    try:
+        return iconf.extend_incrementally(overshoot=True)
+    except Exception as e:
+        if hasattr(e, 'message'):
+            print(e.message)
+        else:
+            print(e)
 
 def add_elements(element:str, n:int, iconf:InteractiveConfigurator):
+    """
+    Add n elements of a specified type to a configuration.
+
+    Args:
+        element (str): The type of element to add (e.g., 'elementA').
+        n (int): The number the specified element is to be added.
+        iconf (InteractiveConfigurator): An instance of the InteractiveConfigurator class.
+    """
     for i in range(n):
         iconf.new_object(element)
 
@@ -164,6 +199,18 @@ def options_object(ne):
     return iconf
 
 def incremental_input_before():
+    """
+    Perform an incremental configuration benchmark based on user input.
+
+    Before running, this function takes user input for the number of iterations and the number of elements
+    for each type in each iteration. It then creates and extends configurations based on
+    this input, and saves the result as a PNG image.
+    The console input follows as for example:   5 - 3 2 
+    (creates 5 elementA, 0 elementB, 3 elementC, 2 elementD)
+
+    Returns:
+        iconf: The configuration after the last iteration.
+    """
     iteration_nr = 1
     iconf = new_iconf()
 
@@ -198,6 +245,18 @@ def incremental_input_before():
 
 
 def incremental_input_in_steps():
+    """
+    Perform an incremental configuration benchmark based on user input.
+
+    This function allows the user to perform multiple iterations by entering the number of elements 
+    in each step. It continues to prompt the user until 'q' is entered to quit. After each step, it 
+    prints information about the iteration and saves the final configuration as a PNG image.
+    The console input follows as for example:   5 - 3 2 
+    (creates 5 elementA, 0 elementB, 3 elementC, 2 elementD)
+    
+    Returns:
+        iconf: The configuration after the last iteration.
+    """
     iteration_nr = 1
     iconf = new_iconf()
 
@@ -226,10 +285,18 @@ def incremental_input_in_steps():
     return iconf
 
 def run_incremental_benchmark_instance(iconf:InteractiveConfigurator, run_in_seconds):
+    """
+    Run an incremental benchmark instance with a specified timeout.
 
-    #found = []
-    #if interrupted; console wont work anymore
-    #thread = threading.Thread(target=extend_incrementally_wrapper, args=(iconf, found))
+    This function runs the `extend_incrementally` method of a configuration using a wrapper method
+    in a separate thread for a specified duration. If the method execution exceeds the
+    given time limit, it terminates the thread and reports a timeout.
+
+    Args:
+        iconf (InteractiveConfigurator): An instance of the InteractiveConfigurator class.
+        run_in_seconds (int): The maximum duration (in seconds) to run the benchmark.
+
+    """
     thread = threading.Thread(target=extend_incrementally_wrapper, args=(iconf,))
     
     thread.start()
@@ -242,9 +309,19 @@ def run_incremental_benchmark_instance(iconf:InteractiveConfigurator, run_in_sec
 
     iconf.select_found_configuration()
     print(str(iconf._time_grounding + iconf._time_solving) + "\n")
-    #found[0].save_png("benchmarks/results", "-incremental" + str(20))
 
 def run_incremental_benchmarks(run_in_seconds: int):
+    """
+    Run a series of incremental benchmarks with varying element counts.
+
+    This function performs a series of incremental benchmarks with different combinations of
+    elementAs, elementBs, elementCs, and elementDs. It execute benchmarks with single, double, 
+    and triple iterations, recording and printing the configuration details and execution 
+    times for each benchmark.
+
+    Args:
+        run_in_seconds (int): The maximum duration (in seconds) to run each benchmark before a timeout occurs.
+    """
 
     count = 0
     countsingle=1
@@ -307,7 +384,12 @@ def run_incremental_benchmarks(run_in_seconds: int):
     print("DONE" + " " + str(count) + "TOTAL - " + str(countsingle) + "SINGLE - " + str(countdouble) + "DOUBLE - " + str(counttriple) + "TRIPLE")
 
 def case_should_create_rackDouble_does_not_terminate():
+    """
+    Run a benchmark case with 21 'elementA's that does not terminate.
 
+    This function sets up a benchmark instance with 21 elementAs and tries to solve it.
+    It's a (currently) faulty case that does not terminate as expected.
+    """
     print("-----21 As-----")
     iconf = setup_bm_instance(21, 0, 0, 0)
     found = iconf.extend_incrementally(overshoot=False)
@@ -334,3 +416,7 @@ def run(n_runs,fun,elements,name = "extend_solve"):
 
     save_results(results,name)
 
+#run_incremental_benchmarks(10)
+#incremental_input_before()
+#incremental_input_in_steps()
+#case_should_create_rackDouble_does_not_terminate()
