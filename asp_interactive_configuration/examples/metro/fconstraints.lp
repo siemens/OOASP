@@ -5,11 +5,11 @@
 %
 #program domain(new_object, cls).
 
-ooasp_potential_cv(nrofseats_eq_attribute_nrseats).
-ooasp_potential_cv(standingroom_iff_handrail).
+ooasp_potential_cv(seats_eq__nrseats).
+ooasp_potential_cv(stand_iff_handrail).
 
 % Paggensers number is calculated
-ooasp_cv(nrpassengers_neq_nrseats_plus_standingroom,new_object,"Number of passenges not adding up",(new_object,)):-
+ooasp_cv(nrpassengers_sum,new_object,"Number of passenges not adding up",(new_object,)):-
     ooasp_isa(wagon,new_object),
     &fsum{ooasp_attr_fvalue(nr_seats,new_object);
           ooasp_attr_fvalue(standing_room,new_object)}!=
@@ -22,7 +22,7 @@ ooasp_cv(only_one_wagon,new_object,"Only one wagon allowed, found also wagon {}"
     new_object>W2.
 
 % Handrail required if standing_room>0
-ooasp_cv(standingroom_iff_handrail,W,"Handrail required if standing room is larger than 0",(new_object,)):-
+ooasp_cv(stand_iff_handrail,W,"Handrail required if standing room is larger than 0",(new_object,)):-
     active(new_object),
     ooasp_isa(wagon,W),
     #count{ID2:ooasp_assoc_gen(wagon_handrail,OPT,W,ID2)}=0,
@@ -30,7 +30,7 @@ ooasp_cv(standingroom_iff_handrail,W,"Handrail required if standing room is larg
 
 
 % the number of associated seats must be equal to the attribute nr_seats
-ooasp_cv(nrofseats_eq_attribute_nrseats,W,"Number of seats should be {} ",(S,new_object)):-
+ooasp_cv(seats_eq__nrseats,W,"Number of seats should be {}, since there are {} Seats associated",(S,new_object)):-
     active(new_object),
     ooasp_isa(wagon,W),
     #count{ID2:ooasp_assoc_gen(wagon_seats,OPT,W,ID2)}=S,

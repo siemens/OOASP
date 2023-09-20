@@ -85,6 +85,14 @@ class  OOASPConfiguration:
             object_id=IntegerField
             attr_value=RawField
 
+        class AttributeInt(Predicate):
+            class Meta:
+                name = "ooasp_attr_int"
+            object_id=IntegerField
+            attr_name=ConstantField
+            min=IntegerField
+            max=IntegerField
+
         class Association(Predicate):
             class Meta:
                 name = "ooasp_associated"
@@ -119,6 +127,7 @@ class  OOASPConfiguration:
 
         self.UNIFIERS = SimpleNamespace(
                 AttributeValue=AttributeValue,
+                AttributeInt=AttributeInt,
                 Association=Association,
                 Leaf=Leaf,
                 ObjectSmallest=ObjectSmallest,
@@ -253,6 +262,14 @@ class  OOASPConfiguration:
         The list of attribute values
         """
         return list(self.fb.query(self.UNIFIERS.AttributeValue).all())
+
+    @property
+    def int_attributes(self)->List[Predicate]:
+        """
+        The list of attribute values
+        """
+        return list(self.fb.query(self.UNIFIERS.AttributeInt).all())
+
 
     @property
     def user_input(self)->List[Symbol]:

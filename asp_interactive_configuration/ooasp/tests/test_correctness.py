@@ -67,7 +67,6 @@ def test_racks_constraints_rack():
 def test_racks_constraints_frame_position():
     """ test assoc constraints """
     iconf = new_racks_iconf()
-    print(iconf.kb)
     iconf.new_object("frame")
     iconf.new_object("rackSingle")
     iconf.select_association('rack_frames',2,1)
@@ -166,8 +165,6 @@ def test_solve_elements():
     for element_type in element_configuration_size.keys():
         iconf = new_racks_iconf()
         iconf.new_object(element_type)
-        print(element_type)
-        print(iconf.config)
         config = iconf.extend_incrementally()
         assert len(config.constraint_violations)==0
         assert config.domain_size == element_configuration_size[element_type]

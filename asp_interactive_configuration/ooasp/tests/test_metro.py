@@ -21,24 +21,42 @@ def test_metro_next():
     found = iconf.next_solution()
     assert not found
 
-
+def test_metro_options():
+    """ test element constraints """
+    iconf = new_metro_iconf()
+    iconf.new_object("wagon")
+    iconf.select_value(1,"standing_room",1)
+    brave = iconf.get_options()
+    opts = iconf._brave_config_as_options()
+    opts_set = set()
+    for o in opts[1]:
+        if o['fun_name']=='select_value' and o['args'][1]=='standing_room':
+            opts_set.add(o['args'][2])
+    assert len(opts_set)==19 #All possible values as options
+    iconf.extend_incrementally()
+    iconf.select_found_configuration()
+    iconf.select_value(1,"nr_passengers",0)
+    brave = iconf.get_options()
+    assert brave is None
+    opts = iconf._brave_config_as_options()
+    fun_names = [f['fun_name'] for f in opts[1]]
+    assert 'remove_value' in fun_names
+    assert 'remove_object_class' in fun_names
+    assert 'remove_association' in fun_names
+    
 def test_metro_cv_wagon_constraints():
     """ test element constraints """
     iconf = new_metro_iconf()
-    print("Created")
     iconf.new_object("wagon")
-    print("New object")
     iconf.check()
-    print("Checked")
     assert len(iconf.config.constraint_violations) ==3
     iconf.select_value(1,"nr_passengers",10)
     iconf.select_value(1,"nr_seats",10)
     iconf.select_value(1,"standing_room",0)
-    print(iconf.config)
     iconf.check()
     iconf.config.show_cv()
     assert len(iconf.config.constraint_violations) ==1
-    assert  "Number of seats should be {} " in str(iconf.config.constraint_violations)
+    assert  "Number of seats should be {}" in str(iconf.config.constraint_violations)
     
 
 def test_metro_cv_wagon_wrong_nr_pass():
@@ -60,7 +78,6 @@ def test_metro_cv_handrail_required():
     iconf = new_metro_iconf()
     iconf.new_object("wagon")
     iconf.select_value(1,"standing_room",10)
-    print(iconf.config)
     iconf.check()
     iconf.config.show_cv()
     assert len(iconf.config.constraint_violations) ==3
@@ -68,10 +85,8 @@ def test_metro_cv_handrail_required():
     iconf.new_object("handrail")
     iconf.select_association('wagon_handrail',1,2)
     iconf.check()
-    # TODO
-    # Cant ground twice
     iconf.config.show_cv()
-    assert len(iconf.config.constraint_violations) ==3
+    assert len(iconf.config.constraint_violations) ==2
     assert not "Handrail required" in str(iconf.config.constraint_violations)
 
 
@@ -80,8 +95,6 @@ def test_metro_multi_wagon():
     iconf = new_metro_iconf()
     iconf.new_object("wagon")
     iconf.new_object("wagon")
-    # TODO 
-    # When adding two objects then it loops....
     iconf.check()
     assert len(iconf.config.constraint_violations) ==7
     assert "Only one wagon allowed" in str(iconf.config.constraint_violations)

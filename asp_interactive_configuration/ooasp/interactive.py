@@ -18,6 +18,7 @@ from clingcon import ClingconTheory
 from fclingo import THEORY, Translator
 from fclingo.__main__ import CSP
 from fclingo.parsing import HeadBodyTransformer
+from fclingo.translator import ConstraintAtom
 
 
 
@@ -174,11 +175,9 @@ class InteractiveConfigurator:
 
     def theory_on_model(self, model):
         model = model.model_
-        # self.theory.on_model(model)
         defined =  [s.arguments[0] for s in model.symbols(shown=True) if str(s).startswith("__def")]
         for key, val in self.theory.assignment(model.thread_id):
             if key in defined:
-                print(f"assigned {key}={val}")
                 f = Function("ooasp_attr_value", key.arguments+[Number(int(str(val)))])
                 model.extend([f])
 
@@ -233,7 +232,6 @@ class InteractiveConfigurator:
     def _ground(self, args):
         start = time.time()
         self.ctl.ground(args)
-        self.ftranslator.translate()
         end = time.time()
         self._add_grounding_time(end -start)
 
@@ -253,6 +251,15 @@ class InteractiveConfigurator:
 
             self.ctl.assign_external(Function("active", [Number(s)]), True)
         self.last_size_grounded=s
+
+    def _translate_fclingo(self)->None:
+        """
+        Fclingo translation that needs to be done before each solve call
+        """
+        new_theory_atoms = set()
+        for atom in self.ctl.theory_atoms:
+            new_theory_atoms.add(ConstraintAtom.copy(atom))
+        self.ftranslator.translate(new_theory_atoms)
 
     def _new_state(self,action:str,deep=False)->State:
         """
@@ -390,6 +397,7 @@ class InteractiveConfigurator:
             self.ctl.configuration.solve.enum_mode = 'auto'
             self.ctl.configuration.solve.opt_mode = 'ignore'
             start = time.time()
+            self._translate_fclingo()
             self.hdn = self.ctl.solve(yield_=True)
             end = time.time()
             self._add_solving_time(end -start)
@@ -464,7 +472,7 @@ class InteractiveConfigurator:
 
         for f in ui.query(config.UNIFIERS.AttributeValue).all():
             options[f.object_id].append(utils.editable_fact_as_remove_action(f,config.UNIFIERS))
-        for f in config.fb.query(config.UNIFIERS.AttributeValue).all():
+        for f in config.attribute_values:
             if str(f) not in user_strs:
                 options[f.object_id].append(utils.editable_fact_as_select_action(f,config.UNIFIERS))
     
@@ -504,15 +512,24 @@ class InteractiveConfigurator:
             options[i]=[]
 
         if self.brave_config is None:
-            # config = self.config
             for f in self.config.user_input:
-                options[f.object_id].append(utils.editable_fact_as_remove_action(f,self.config.UNIFIERS))
+                if f.__class__.__name__ == 'Association':
+                    options[f.object_id1].append(utils.editable_fact_as_remove_action(f,self.config.UNIFIERS))
+                    options[f.object_id2].append(utils.editable_fact_as_remove_action(f,self.config.UNIFIERS))
+                else:
+                    options[f.object_id].append(utils.editable_fact_as_remove_action(f,self.config.UNIFIERS))
             return options
 
 
+        int_attributes = self.brave_config.int_attributes
+        for atti in int_attributes:
+            for v in range(atti.min,atti.max):
+                attr_value = self.brave_config.UNIFIERS.AttributeValue(atti.attr_name,atti.object_id,Number(v))
+                self.brave_config.fb.add(attr_value)
         self._add_objects_to_dict(self.brave_config, options)
         self._add_attributes_to_dict(self.brave_config, options)
         self._add_associations_to_dict(self.brave_config, options)
+
 
         return options
 
@@ -531,6 +548,7 @@ class InteractiveConfigurator:
         self.ctl.assign_external(Function("check_permanent_cv"), True)
         self.ctl.assign_external(Function("check_potential_cv"), False)
         self._set_user_externals()
+        self._translate_fclingo()
         self.ctl.configuration.solve.enum_mode = 'brave'
         self.ctl.configuration.solve.opt_mode = 'ignore'
         with  self.ctl.solve(yield_=True) as hdn:
@@ -557,6 +575,7 @@ class InteractiveConfigurator:
         self.ctl.assign_external(Function("check_permanent_cv"), False)
         self.ctl.assign_external(Function("check_potential_cv"), False)
         self._set_user_externals()
+        self._translate_fclingo()
         self.ctl.configuration.solve.enum_mode = 'auto'
         self.ctl.configuration.solve.opt_mode = 'ignore'
         with  self.ctl.solve(yield_=True) as hdn:
@@ -582,6 +601,7 @@ class InteractiveConfigurator:
         self.ctl.assign_external(Function("check_permanent_cv"), True)
         self.ctl.assign_external(Function("check_potential_cv"), False)
         self._set_user_externals()
+        self._translate_fclingo()
         self.ctl.configuration.solve.enum_mode = 'cautious'
         self.ctl.configuration.solve.opt_mode = 'optN'
         with  self.ctl.solve(yield_=True) as hdn:
