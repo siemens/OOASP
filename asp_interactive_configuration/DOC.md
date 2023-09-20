@@ -152,6 +152,59 @@ The truth value of these externals is defined by the [Interactive Configurator](
 The user externals are generated restricted by the possible classes that an object can have. This is defined by the argument `cls` passed in the grounding, which corresponds to the domain defined by `ooasp_domain(_,cls).`. Therefore, if the new object is grounded for a class `cls`, only valid attributes and associations for `cls` and its subclasses will be considered. This is summarized in the auxiliary predicate `counts_as(O,C)`, which states that object `O` can count as class `C`.
 
 
+## Numerical attributes
+
+Numerical attributes are treated using the system `fclingo`. This systems adds a founded condition while using `clorm` in the background. 
+Attributes whose type is `int`, such as `nr_passengers`, `standing_room`, and `nr_seats` in the Metro example, are treated as variables with this system as explained below. Note that numerical values can also be treated as an enumeration using the type `enumint` instead. This option will consider all values in the defined range for predicate `ooasp_attr_value`, such as `frame_position` in the racks example.
+
+### Usage
+
+When an attribute `ATTR` is of type `int`, their value is defined the `fclingo` variable `ooasp_attr_fvalue(ATTR,O)`, which will be associated to the value of `ATTR` for object `O`.
+These values can be compared using the theory symbol `&fsum`. For instance, in the following rule we use `&fsum{ooasp_attr_fvalue(A,new_object)}<MIN` to state that the value of `A` is smaller than `MIN` leading to a constraint violation. Notice that the variable `MIN` must be defined in a positive literal of the body.
+
+```
+ooasp_cv(value_outside_of_range,new_object,"Value for {} outside min range {}",(A,MIN)) :-
+	 ooasp_attr(C,A,int),
+	 ooasp_isa(C,new_object),
+	 &fsum{ooasp_attr_fvalue(A,new_object)}<MIN,
+	 ooasp_attr_minInclusive(C,A,MIN).
+```
+
+To check if a value is defined one can do so by checking if it is equal to itself. In the case of the next rule, if no value is defined, then the constraint violation is inferred.
+
+```
+ooasp_cv(no_value,new_object,"Missing value for {}",(A,)) :-
+	ooasp_attr(C,A,int),
+	ooasp_isa(C,new_object),
+	not &fsum{ooasp_attr_fvalue(A,new_object)}=ooasp_attr_fvalue(A,new_object).
+```
+
+These type of attributes must be treated differently to the rest, therefore they require rules like to ones above to handle each case. Bellow we show the difference of writing a constraint violation using `ooasp_attr_value/3` and `ooasp_attr_fvalue/2`. Notice that in the second case, we directly compare the values by summing them up.
+
+#### `ooasp_attr_value/3`
+```
+ooasp_cv(nrpassengers_neq_nrseats_plus_standingroom,new_object,"Number of passenges not adding up",(new_object,)):-
+    ooasp_isa(wagon,new_object),
+    ooasp_attr_value(nr_passengers,new_object,NRP),
+    ooasp_attr_value(nr_seats,new_object,NRS),
+    ooasp_attr_value(standing_room,new_object,S),
+    NRP!=NRS+S.
+```
+
+#### `ooasp_attr_fvalue/2`
+```
+ooasp_cv(nrpassengers_sum,new_object,"Number of passenges not adding up",(new_object,)):-
+    ooasp_isa(wagon,new_object),
+    &fsum{ooasp_attr_fvalue(nr_seats,new_object);
+          ooasp_attr_fvalue(standing_room,new_object)}!=
+        ooasp_attr_fvalue(nr_passengers,new_object).
+```
+
+### Interactivity
+
+The assigned values for these attributes are handled internally by the `fclingo `system and are only accessed after the models are found. Therefore, they are not considered in any brave or cautious consequences. This means that we do not know in advanced the possible values an attribute can take for a partial configuration. Interactively, this can be solve in different ways, such as using a slider instead of a dropdown or some other numerical input. For convenience, we keep the usage in the jupyter notebooks with dropdowns and add all possible values for the attribute, even though they might create an invalid configuration. Invialid configurations can still be checked and fixed in the UI. 
+
+
 ----
 
 ## Multi-shot approach
@@ -384,5 +437,23 @@ Notice that in our example the lower bound of how many racks singles are associa
 
 ### Specialized constraint violations
 
+Specialized constraint violations are those used in different instances but not encoded in the knowledge base. Some of them are the following:
 
-## Numerical attributes
+- **(unique)** all attribute values of objects in an association are different 
+- **(same)** all attribute values of objects in an association are equal (exceptions)
+- **(table)** which value combinations are allowed
+- **(specialization)** attribute value determines the type of objects
+
+These constraints can be defined in the knowledge base using the predicate `ooasp_special_cv/2`, where the first argument is the name of the constraint and the second one has any additional information needed. To implement a specialized constraint violation, the file [ooasp/encodings/ooa_checksp.lp](ooasp/encodings_check/ooasp.lp) must be extended with the needed constraints.
+This process was done for the  **unique** constraint violation. It is used in the knowladge base of the racks example, to make sure that the frame positions of all frames associated to a rack are different. In this case the second argument is a tuple `(ASSOCIATION, CLASS, ATTRIBUTE)`
+
+```
+ooasp_special_cv(unique, (rack_frames, frame, frame_position)).
+```
+
+The corresponding rules are defined in [ooasp/encodings/ooasp_check.lp](ooasp/encodings/ooasp_check.lp). 
+
+
+
+
+

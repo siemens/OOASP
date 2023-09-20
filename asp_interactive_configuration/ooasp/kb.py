@@ -5,7 +5,7 @@ from importlib import resources
 from typing import List
 from types import SimpleNamespace
 from clingo import Control
-from clorm import Predicate, ConstantField, IntegerField, FactBase, refine_field, parse_fact_files
+from clorm import Predicate, ConstantField, IntegerField, FactBase, refine_field, parse_fact_files, RawField
 from clingraph.orm import Factbase
 from clingraph.graphviz import compute_graphs, render
 from clingraph.clingo_utils import ClingraphContext
@@ -103,12 +103,11 @@ class  OOASPKnowledgeBase:
             name=ConstantField
             val=ConstantField
 
-        class AttrUnique(Predicate):
+        class SpecialCV(Predicate):
             class Meta:
-                name = "ooasp_unique_attr"
-            assoc_name=ConstantField
-            class_name=ConstantField
-            attr_name=ConstantField
+                name = "ooasp_special_cv"
+            name=ConstantField
+            info=RawField
 
         self.UNIFIERS = SimpleNamespace(
                 Class=Class,
@@ -119,7 +118,7 @@ class  OOASPKnowledgeBase:
                 AttrMin=AttrMin,
                 AttrMax=AttrMax,
                 AttrEnum=AttrEnum,
-                AttrUnique=AttrUnique,
+                SpecialCV=SpecialCV,
                 KBName=KBName)
 
     @property
