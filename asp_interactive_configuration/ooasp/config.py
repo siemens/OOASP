@@ -39,6 +39,9 @@ class  OOASPConfiguration:
         self.fb = FactBase()
 
     def __deepcopy__(self, memo):
+        """
+        Makes a deep copy of the configuration
+        """
         cls = self.__class__
         result = cls.__new__(cls)
         memo[id(self)] = result
@@ -52,7 +55,6 @@ class  OOASPConfiguration:
         Sets the clorm Unifiers based on the name to filter out any other predicates in the program.
         """
 
-        NameField = refine_field(ConstantField,[self.name])
         class ConfigObject(Predicate):
             class Meta:
                 name = "ooasp_configobject"
@@ -217,15 +219,23 @@ class  OOASPConfiguration:
     @property
     def small_objects(self)->List[Predicate]:
         """
-        Small objects
+        All the objects but only considering their most specific instantiated class.
+        It can be used to get only one ooasp_isa for each object.
+
+        For example, if an object is of type Object and Rack this will only return the Rack
         """
         return list(self.fb.query(self.UNIFIERS.ObjectSmallest).all())
     
     @property
     def smart_objects(self)->List[Predicate]:
         """
-        Smart objects
+        A list of objects of type self.UNIFIERS.Object such that only one instance for each object appears.
+        Internally uses the small_objects method and maps them into the Objects class
+
+        Returns:
+            A list of unique objects of type self.UNIFIERS.Object with their smallest class
         """
+
         small_objects = {o.object_id:o.class_name for o in self.small_objects}
         objects = [] 
         for o in self.objects :
@@ -238,14 +248,14 @@ class  OOASPConfiguration:
     @property
     def objects(self)->List[Predicate]:
         """
-        The list of objects
+        The list of all objects
         """
         return list(self.fb.query(self.UNIFIERS.Object).all())
 
     @property
     def unique_objects(self)->List[Predicate]:
         """
-        The list of objects
+        The list of objects. (No specific class is defined)
         """
         return list(self.fb.query(self.UNIFIERS.Object).where(self.UNIFIERS.Object.class_name=='object').all())
     
@@ -281,9 +291,16 @@ class  OOASPConfiguration:
         
         return user_fb
 
-    def associated_by(self, obj, assoc_name)->List[Predicate]:
+    def associated_by(self, obj:int, assoc_name:str)->List[Predicate]:
         """
         The list of associations from object obj via association assoc_name
+
+        Args:
+            obj (int): Object where the association starts, can be right ot left
+            assoc_name (str): The name of the association to get all objects
+
+        Returns:
+            List[Predicate]: List of association from object obj via association assoc_name
         """
         Association = self.UNIFIERS.Association
         q = self.fb.query(Association)
@@ -293,9 +310,14 @@ class  OOASPConfiguration:
         q2 = q2.select(Association.object_id1)
         return list(q1.all()) + list(q2.all())
     
-    def domains_from(self, start_domain)->int:
+    def domains_from(self, start_domain:int)->int:
         """
         The domain size, it is computed by counting the number of objects in the fact base.
+            Args:
+                start_domain (_type_): The domain where the last grounding was done
+
+            Returns:
+                int: The number of objects in the domain larger than start_domain
         """
         q = self.fb.query(self.UNIFIERS.Domain)
         q = q.where(self.UNIFIERS.Domain.object_id>start_domain)
