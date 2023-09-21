@@ -20,6 +20,7 @@ def test_heuristic():
     for i in range(0,24):
         found = iconf.next_solution()
         assert found
+        # print(found)
         assert found.size == 5
         assert "ooasp_isa_leaf(rackSingle,5)." in found.fb.asp_str()
     found = iconf.next_solution()

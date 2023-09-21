@@ -5,8 +5,6 @@
 
 #program domain(new_object, cls).
 
-% Used when getting inferences to minimize on lowerbound errors
-:~ ooasp_cv(lowerbound,_,_,(ASSOC,CMIN,N,C,OPT,new_object)). [CMIN-N,ASSOC]
 
 % Integrity constraints for constraint violations, activated based on the externals
 :- ooasp_cv(CV,_,_,_),

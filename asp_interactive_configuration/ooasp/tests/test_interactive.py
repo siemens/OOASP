@@ -365,8 +365,8 @@ def test_create_all_required_objects():
     iconf = new_racks_iconf()
     iconf.new_object('rackSingle')
     iconf.new_object('frame')
-    objects_added = iconf._create_all_required_objects()
-    assert objects_added == 3
+    objects_added = iconf._create_required_objects()
+    assert len(objects_added) == 3
     config_str = iconf.config.fb.asp_str()
     assert "ooasp_domain(frame,5)." in config_str
     found = iconf.next_solution()
@@ -452,6 +452,15 @@ def test_three_racks():
     found.save_png(directory="./out/test")
 
 
+def test_incremental_adding_multiple_racks():
+    iconf = new_racks_iconf()
+    iconf.new_object('rackSingle')
+    
+    iconf.check()
+    for n in range(5):
+        iconf.new_object('frame')
+    added = iconf.create_all_required_objects()
+    assert len(added)==4 # One rack and three frames
 
 def test_moduleII():
     iconf = new_racks_iconf()
