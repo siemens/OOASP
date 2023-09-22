@@ -159,7 +159,7 @@ Attributes whose type is `int`, such as `nr_passengers`, `standing_room`, and `n
 
 ### Usage
 
-When an attribute `ATTR` is of type `int`, their value is defined the `fclingo` variable `ooasp_attr_fvalue(ATTR,O)`, which will be associated to the value of `ATTR` for object `O`.
+When an attribute `ATTR` is of type `int`, their value is defined using an `fclingo` variable `ooasp_attr_fvalue(ATTR,O)`.  The value of such variable will be associated to the value of attribute `ATTR` for object `O`.
 These values can be compared using the theory symbol `&fsum`. For instance, in the following rule we use `&fsum{ooasp_attr_fvalue(A,new_object)}<MIN` to state that the value of `A` is smaller than `MIN` leading to a constraint violation. Notice that the variable `MIN` must be defined in a positive literal of the body.
 
 ```
@@ -179,7 +179,7 @@ ooasp_cv(no_value,new_object,"Missing value for {}",(A,)) :-
 	not &fsum{ooasp_attr_fvalue(A,new_object)}=ooasp_attr_fvalue(A,new_object).
 ```
 
-These type of attributes must be treated differently to the rest, therefore they require rules like to ones above to handle each case. Bellow we show the difference of writing a constraint violation using `ooasp_attr_value/3` and `ooasp_attr_fvalue/2`. Notice that in the second case, we directly compare the values by summing them up.
+This type of attributes must be treated differently to the rest, therefore they require rules like to ones above to handle each case. Below we show the difference of writing a constraint violation using `ooasp_attr_value/3` and `ooasp_attr_fvalue/2`. Notice that in the second case, we directly compare the values by summing them up.
 
 #### `ooasp_attr_value/3`
 ```
@@ -202,7 +202,7 @@ ooasp_cv(nrpassengers_sum,new_object,"Number of passenges not adding up",(new_ob
 
 ### Interactivity
 
-The assigned values for these attributes are handled internally by the `fclingo `system and are only accessed after the models are found. Therefore, they are not considered in any brave or cautious consequences. This means that we do not know in advanced the possible values an attribute can take for a partial configuration. Interactively, this can be solve in different ways, such as using a slider instead of a dropdown or some other numerical input. For convenience, we keep the usage in the jupyter notebooks with dropdowns and add all possible values for the attribute, even though they might create an invalid configuration. Invialid configurations can still be checked and fixed in the UI. 
+The assigned values for these attributes are handled internally by the `fclingo `system and are only accessed after the models are found. Therefore, they are not considered in any brave or cautious consequences. This means that we do not know in advance the possible values an attribute can take for a partial configuration. Interactively, this can be solved in different ways, such as using a slider instead of a dropdown or some other numerical input. For convenience, we keep the usage in the jupyter notebooks with dropdowns and add all possible values for the attribute, even though they might create an invalid configuration. Invalid configurations can still be checked and fixed in the UI. 
 
 
 ----
@@ -398,16 +398,37 @@ This multi-shot encoding can directly be used for incremental solving. With this
 
 This incremental process find the smallest configuration. However, it has the drawback that right before getting the satisfiable answer the solving time increases since it has to look over the whole search space, which impacts in performance.
 
+Additionally, if there are cases where no configuration can be found, the incremental solving will continue adding objects util the set limit is reached. For instance, in the metro example, if one Wagon is added with number of passengers 0, and a seat object is added, then this partial configuration can not reach a compleat configuration, since it would require two wagons, which is not possible. However, the incremental solving would not know this and continue looking for the answer.
+
+
 ###  Create required
 
-Creates all the objects required by the current objects, which is done as follows:
+Creates all the objects required by the current objects. To do so, we use the cautious consequences of the program for getting the constraint violations that are common to all models, and proceed to solve one of them at a time. For this process we need optimization statements, to get rid of models that include unnecessary  constraint. This optimization is only activate for getting cautious consequences. 
 
-- Gets the cautious consequences for the program where potential cv can be violated
-- This gives us the violations that exist in all the models.
-- This solve call adds an optimization so that we consider lower bond violations that already associated as many objects as possible
-- For every existing objet, we check the lower bound constraint violations associated to that object
-- This predicates already have the information of how many objects where associated and what the minimum was
-- Based on this information we create and associate the required objects of the specific type
+#### Optimize number of lower bond violations
+
+The main optimization with priority `3`, penalizes lower bound violations based on how many objects have not yet been associated `CMIN-N`. This week constraint will prioritize models that associate as many objects as possible. For instance, take a partial configuration with one rack and 3 frames. Since the external `ooasp_potential_cv` is false we would get a model for associating 0,1,2 and 3 frames. We this week constraint we will only get one where 3 frames are associated and the lower bound is only violated with one missing frame for the `rack_frames` association.
+
+```
+:~ ooasp_cv(lowerbound,ID,_,(ASSOC,CMIN,N,C,OPT,new_object)). [CMIN-N@3,(ASSOC,ID)]
+```
+
+#### Optimize associations to smallest objects
+
+This optimization can be viewed like a symmetry constraint. The idea is to try to associate the smallest objects first by penalizing based on the ids of the objects associated. This is done in two constraints to consider both positions for the association. With this in place, we would make sure that if we have one rack and 5 frames, always the frame with the largest id would remain not associated, those making the same constraint violation appear in all stable models and consequently in the cautious consequences. Without this optimization, we would have a model for each frame being left out and no constraint violation would appear in the intersection. 
+
+
+#### Using the cautions consequences to create required objects
+
+1. Gets the cautious consequences for the program where potential cv can be violated and the optimization is activated.
+2. Takes the first lower bound constraint violation. This predicate already has the information of how many objects where associated and what the minimum was. Based on this information it crates and associates the required objects of the specific class
+3. The process repeats as long as objects are still added.
+
+
+When new objects have been added, old cautious constraint violations become outdated. For instance if we have 4 frames, we would get 4 constraint violations of each frame requiring a rack. Fixing one of those constraints would be enough since the rack can be shared among the frames. Attempting to fix all constraint violations at the same time would lead to creating 4 frames.
+
+Notice that this process is not so efficient when we have multiple constraint violations that add a single object. Such is the case in the racks example, when we have many elements, each element generates a constraint violation which adds one module at a time, leading to multiple solve calls. 
+
 
 ### Smart incremental solving 
 

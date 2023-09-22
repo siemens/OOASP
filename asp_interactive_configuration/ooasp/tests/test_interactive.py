@@ -456,11 +456,29 @@ def test_incremental_adding_multiple_racks():
     iconf = new_racks_iconf()
     iconf.new_object('rackSingle')
     
-    iconf.check()
     for n in range(5):
         iconf.new_object('frame')
     added = iconf.create_all_required_objects()
     assert len(added)==4 # One rack and three frames
+
+
+def test_incremental_adding_multiple_frames():
+    iconf = new_racks_iconf()
+    
+    for n in range(5):
+        iconf.new_object('frame')
+    iconf.new_object('rackSingle')
+    added = iconf.create_all_required_objects()
+    assert len(added)==4 # One rack and three frames
+
+def test_incremental_adding_multiple_elements():
+    iconf = new_racks_iconf()
+    
+    for n in range(20):
+        iconf.new_object('elementA')
+    added = iconf.create_all_required_objects()
+    print(iconf)
+    # assert len(added)==4 # 
 
 def test_moduleII():
     iconf = new_racks_iconf()

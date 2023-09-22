@@ -324,37 +324,6 @@ class InteractiveConfigurator:
                 fact: The clorm predicate to be added to the control
         """
         self.ctl.add("domain",[str(self.domain_size)],str(fact)+".")
-
-    # def _create_required_objects(self, object_id:int=None)->int:
-    #     """
-    #     Creates required objects for a given object based on associations in the knowledge base configuration.
-    #     It ensures that the minimum required number of associated objects is met for each association.
-        
-    #         Parameters:
-    #             object_id (int): The ID of the object for which required objects are being created.
-    #             ignore_assoc (List, optional): A list of association names to be ignored during object creation.
-    #                 Defaults to None.
-    #     """
-    #     print(f"Object to check {object_id}")
-    #     cautious =  self._get_cautious()
-    #     objects_added = set([])
-    #     common_violations = cautious.constraint_violations
-    #     cautious.show_cv()
-    #     for cv in common_violations:
-    #         # TODO maybe improove performance using query
-    #         if cv.name != 'lowerbound' or cv.object_id != object_id:
-    #             continue
-    #         assoc, cmin, n, c, opt, _ = cv.args.symbol.arguments
-    #         for _ in range(n.number,cmin.number):
-    #             print(f'----Adding obejct {c.name}')
-    #             object2 = self._new_object(c.name)
-    #             objects_added.add(object2)
-    #             print(f"Added object {object2}")
-    #             if str(opt) == '1':
-    #                 self.config.add_association(assoc.name,object_id,object2)
-    #             else:
-    #                 self.config.add_association(assoc.name,object2,object_id)
-    #     return objects_added
     
     def _create_required_objects(self, interested_object_id:int=None)->int:
         """
@@ -366,12 +335,12 @@ class InteractiveConfigurator:
         create = True
         objects_added = set()
         while(create):
-            # print("\n New round")
+            print("\n New round")
             create = False
             cautious =  self._get_cautious()
             common_violations = cautious.constraint_violations
             # print(cautious)
-            # cautious.show_cv()
+            cautious.show_cv()
             for cv in common_violations:
                 # TODO maybe improove performance using query
                 if cv.name != 'lowerbound':
@@ -383,10 +352,10 @@ class InteractiveConfigurator:
 
                 assoc, cmin, n, c, opt, _ = cv.args.symbol.arguments
                 for _ in range(n.number,cmin.number):
-                    # print(f'----Adding obejct {c.name}')
+                    print(f'----Adding obejct {c.name}')
                     object2 = self._new_object(c.name)
                     objects_added.add(object2)
-                    # print(f"Added object {object2}")
+                    print(f"Added object {object2}")
                     if str(opt) == '1':
                         self.config.add_association(assoc.name,object_id,object2)
                     else:
@@ -396,23 +365,6 @@ class InteractiveConfigurator:
 
         return objects_added
 
-
-    # def _create_all_required_objects_old(self)->int:
-    #     """
-    #     Creates all the required objects
-    #     """
-        
-
-    #     objects_to_check = set([o.object_id for o in self.config.smart_objects])
-    #     objects_added = set()
-    #     # We do it in reverse to start with last objects that are not associated thanks to the weak constraint
-    #     while(len(objects_to_check)>0):
-    #         o = objects_to_check.pop()
-    #         added = self._create_required_objects(o)
-    #         objects_added = objects_added.union(added)
-    #         objects_to_check = objects_to_check.union(added)
-    #         print(f"Still to check {objects_to_check}")
-    #     return objects_added
     
     def _extend_domain(self, cls='object')->int:
         """
@@ -669,7 +621,6 @@ class InteractiveConfigurator:
         if self.browsing:
             raise RuntimeError("Cant get cautious while browsing")
         if self.cautious_config:
-            print("reusing last cautious")
             return self.cautious_config
         self._ground_missing()
         self.ctl.assign_external(Function("guess"), True)
@@ -683,10 +634,6 @@ class InteractiveConfigurator:
             cautious_model = None
             for model in hdn:
                 cautious_model = model
-                # print(model.cost)
-                # cfg = OOASPConfiguration.from_model(self.config.name,self.kb, cautious_model)
-                # print(cfg)
-                # print("\n\n")
             if cautious_model is None:
                 self.cautious_config = None
             else: 
