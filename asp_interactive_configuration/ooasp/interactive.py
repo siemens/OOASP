@@ -361,7 +361,8 @@ class InteractiveConfigurator:
             self.ctl.configuration.solve.enum_mode = 'auto'
             self.ctl.configuration.solve.opt_mode = 'ignore'
             start = time.time()
-            self.hdn = self.ctl.solve(yield_=True)
+            self.hdn = self.ctl.solve(yield_=True, async_=True)
+            self.hdn.wait(10)
             end = time.time()
             self._add_solving_time(end -start)
 
