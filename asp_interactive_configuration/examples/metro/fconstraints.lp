@@ -9,7 +9,7 @@ ooasp_potential_cv(seats_eq__nrseats).
 ooasp_potential_cv(stand_iff_handrail).
 
 % Paggensers number is calculated
-ooasp_cv(nrpassengers_sum,new_object,"Number of passenges not adding up",(new_object,)):-
+ooasp_cv(nrpassengers_sum,new_object,"Number of passengers not adding up",(new_object,)):-
     ooasp_isa(wagon,new_object),
     &fsum{ooasp_attr_fvalue(nr_seats,new_object);
           ooasp_attr_fvalue(standing_room,new_object)}!=

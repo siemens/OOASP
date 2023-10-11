@@ -183,7 +183,7 @@ This type of attributes must be treated differently to the rest, therefore they 
 
 #### `ooasp_attr_value/3`
 ```
-ooasp_cv(nrpassengers_neq_nrseats_plus_standingroom,new_object,"Number of passenges not adding up",(new_object,)):-
+ooasp_cv(nrpassengers_neq_nrseats_plus_standingroom,new_object,"Number of passengers not adding up",(new_object,)):-
     ooasp_isa(wagon,new_object),
     ooasp_attr_value(nr_passengers,new_object,NRP),
     ooasp_attr_value(nr_seats,new_object,NRS),
@@ -193,7 +193,7 @@ ooasp_cv(nrpassengers_neq_nrseats_plus_standingroom,new_object,"Number of passen
 
 #### `ooasp_attr_fvalue/2`
 ```
-ooasp_cv(nrpassengers_sum,new_object,"Number of passenges not adding up",(new_object,)):-
+ooasp_cv(nrpassengers_sum,new_object,"Number of passengers not adding up",(new_object,)):-
     ooasp_isa(wagon,new_object),
     &fsum{ooasp_attr_fvalue(nr_seats,new_object);
           ooasp_attr_fvalue(standing_room,new_object)}!=

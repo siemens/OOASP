@@ -9,7 +9,7 @@ ooasp_potential_cv(nrofseats_eq_attribute_nrseats).
 ooasp_potential_cv(standingroom_iff_handrail).
 
 % Paggensers number is calculated
-ooasp_cv(nrpassengers_neq_nrseats_plus_standingroom,new_object,"Number of passenges not adding up",(new_object,)):-
+ooasp_cv(nrpassengers_neq_nrseats_plus_standingroom,new_object,"Number of passengers not adding up",(new_object,)):-
     ooasp_isa(wagon,new_object),
     ooasp_attr_value(nr_passengers,new_object,NRP),
     ooasp_attr_value(nr_seats,new_object,NRS),
@@ -23,7 +23,7 @@ ooasp_cv(only_one_wagon,new_object,"Only one wagon allowed, found also wagon {}"
     new_object>W2.
 
 % Handrail required if standing_room>0
-ooasp_cv(standingroom_iff_handrail,W,"Handrail required if stanfing rum is {}",(STANDINGROOM,new_object)):-
+ooasp_cv(standingroom_iff_handrail,W,"Handrail required if standing room is {}",(STANDINGROOM,new_object)):-
     active(new_object),
     #count{ID2:ooasp_assoc_gen(wagon_handrail,OPT,W,ID2)}=0,
     ooasp_attr_value(standing_room,W,STANDINGROOM),
