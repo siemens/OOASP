@@ -435,12 +435,6 @@ class  OOASPConfiguration:
         q = self.fb.query(AttributeValue)
         q = q.where(((AttributeValue.object_id == object_id) & (AttributeValue.attr_name == attr_name)))
         values = list(q.all())
-        
-        # print(f"object_id :{object_id}")
-        # print(f"attr_name :{attr_name}")
-        # print(list(self.fb.query(AttributeValue).where(AttributeValue.object_id == object_id).all()))
-        # print("To remove")
-        # print(values)
         self._remove_facts(values)
         return values
 

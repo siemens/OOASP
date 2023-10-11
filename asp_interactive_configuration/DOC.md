@@ -427,7 +427,7 @@ This optimization can be viewed like a symmetry constraint. The idea is to try t
 
 When new objects have been added, old cautious constraint violations become outdated. For instance if we have 4 frames, we would get 4 constraint violations of each frame requiring a rack. Fixing one of those constraints would be enough since the rack can be shared among the frames. Attempting to fix all constraint violations at the same time would lead to creating 4 frames.
 
-Notice that this process is not so efficient when we have multiple constraint violations that add a single object. Such is the case in the racks example, when we have many elements, each element generates a constraint violation which adds one module at a time, leading to multiple solve calls. 
+Notice that this process is not so efficient when we have multiple constraint violations that add a single object. Such is the case in the racks example, when we have many Elements, each Element generates a constraint violation which adds one module at a time, leading to multiple solve calls. 
 
 
 ### Smart incremental solving 

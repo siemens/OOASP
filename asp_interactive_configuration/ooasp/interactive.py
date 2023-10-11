@@ -21,6 +21,12 @@ from fclingo.parsing import HeadBodyTransformer
 from fclingo.translator import ConstraintAtom
 
 
+def log(x):
+    """
+    Logs some given input in string format
+    Can be activated or deactivated for debugging
+    """
+    pass
 
 class State:
     """
@@ -335,12 +341,11 @@ class InteractiveConfigurator:
         create = True
         objects_added = set()
         while(create):
-            print("\n New round")
+            log("\n New round")
             create = False
             cautious =  self._get_cautious()
             common_violations = cautious.constraint_violations
-            # print(cautious)
-            cautious.show_cv()
+            log(cautious)
             for cv in common_violations:
                 # TODO maybe improove performance using query
                 if cv.name != 'lowerbound':
@@ -348,14 +353,14 @@ class InteractiveConfigurator:
                 object_id = cv.object_id
                 if interested_object_id and object_id!= interested_object_id:
                     continue
-                # print(f"========== Object to check {object_id}")
+                log(f"========== Object to check {object_id}")
 
                 assoc, cmin, n, c, opt, _ = cv.args.symbol.arguments
                 for _ in range(n.number,cmin.number):
-                    print(f'----Adding obejct {c.name}')
+                    log(f'----Adding obejct {c.name}')
                     object2 = self._new_object(c.name)
                     objects_added.add(object2)
-                    print(f"Added object {object2}")
+                    log(f"Added object {object2}")
                     if str(opt) == '1':
                         self.config.add_association(assoc.name,object_id,object2)
                     else:

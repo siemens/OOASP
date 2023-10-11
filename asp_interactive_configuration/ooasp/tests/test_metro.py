@@ -54,7 +54,6 @@ def test_metro_cv_wagon_constraints():
     iconf.select_value(1,"nr_seats",10)
     iconf.select_value(1,"standing_room",0)
     iconf.check()
-    iconf.config.show_cv()
     assert len(iconf.config.constraint_violations) ==1
     assert  "Number of seats should be {}" in str(iconf.config.constraint_violations)
     
@@ -69,7 +68,6 @@ def test_metro_cv_wagon_wrong_nr_pass():
     iconf.select_value(1,"nr_seats",10)
     iconf.select_value(1,"standing_room",0)
     iconf.check()
-    iconf.config.show_cv()
     assert len(iconf.config.constraint_violations) ==2
     assert not "Number of passengers calculated" in str(iconf.config.constraint_violations)
 
@@ -79,13 +77,11 @@ def test_metro_cv_handrail_required():
     iconf.new_object("wagon")
     iconf.select_value(1,"standing_room",10)
     iconf.check()
-    iconf.config.show_cv()
     assert len(iconf.config.constraint_violations) ==3
     assert "Handrail required" in str(iconf.config.constraint_violations)
     iconf.new_object("handrail")
     iconf.select_association('wagon_handrail',1,2)
     iconf.check()
-    iconf.config.show_cv()
     assert len(iconf.config.constraint_violations) ==2
     assert not "Handrail required" in str(iconf.config.constraint_violations)
 

@@ -474,11 +474,10 @@ def test_incremental_adding_multiple_frames():
 def test_incremental_adding_multiple_elements():
     iconf = new_racks_iconf()
     
-    for n in range(20):
+    for n in range(4):
         iconf.new_object('elementA')
     added = iconf.create_all_required_objects()
-    print(iconf)
-    # assert len(added)==4 # 
+    assert len(added)==9 
 
 def test_moduleII():
     iconf = new_racks_iconf()
