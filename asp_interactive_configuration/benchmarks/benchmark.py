@@ -221,7 +221,7 @@ def run(n_runs,fun,elements,name = "extend_solve",**kwargs):
 # run(1,incremental,[9,10,11,12],"inc_elem",cls = 'element')
 
 # Metro
-run(1,wagons,[50,60,70],"wagon_people", example="metro")
-# run(1,wagons,[50,60,70],"wagon_people_f", example="metrof")
+# run(1,wagons,[50,60,70],"wagon_people", example="metro")
+run(1,wagons,[50,60,70],"wagon_people_f", example="metrof")
 
 sys.exit(0)
