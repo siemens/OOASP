@@ -15,7 +15,7 @@ grounding_cm = mpl.colormaps['Set2'].resampled(8)
 def get_results(name="bm"):
     """Gets the results for a given benchamrk name
 
-    Args:
+    Parameters:
         name (str, optional): The name/path of the benchmark. Defaults to "bm".
 
     Returns:
@@ -32,7 +32,7 @@ grounding_cm = mpl.colormaps['Set2'].resampled(8)
 def plot_gs(bm_names, title, cls="element"):
     """Compare different benchmarks outputs
 
-    Args:
+    Parameters:
         bm_names : The name of the benchmark files to compare
         title : The title of the plot and output file
     """
@@ -81,7 +81,7 @@ def plot_gs(bm_names, title, cls="element"):
 def plot_domain(bm_name, title, name):
     """Plotting the times for a single call devided per domain
 
-    Args:
+    Parameters:
         bm_name : The name of the benchmark file saved
         title : The title of the plot and output file
         name : The domain name (Number)
@@ -105,9 +105,11 @@ def plot_domain(bm_name, title, name):
     plt.savefig(f'benchmarks/results/{title}.png')
     # plt.show()
 
-# plot_gs(['inc_elem', 'inc_elem_overshoot', 'inc_elem_step_4'],"Compare incremental elem","Element")
+plot_gs(['inc_elem', 'inc_elem_overshoot', 'inc_elem_overshoot_assumption', 'inc_elem_step_4'],"Compare incremental elem","Element")
 # plot_gs(['inc_rack', 'inc_rack_overshoot', 'inc_rack_step'],"Compare incremental rack","RackDouble")
-plot_gs(['wagon_people_f', 'wagon_people'],"Compare numerical","nr_passengers")
+# plot_gs(['inc_rack', 'inc_rack_overshoot', 'inc_rack_overshoot_assumption','inc_rack_step'],"Compare incremental rack","RackDouble")
+plot_gs(['wagon_people_f', 'wagon_people', 'wagon_people_f_no_external','wagon_people_no_external'],"Compare numerical","nr_passengers")
+plot_gs(['wagon_people_f', 'wagon_people_f_no_external'],"Compare numerical","nr_passengers")
 
 
 # plot_gs(['inc_elem','inc_elem_overshoot','inc_elem_step_2','inc_elem_step_3','inc_elem_step_4'],"Compare incremental elem","Element")

@@ -125,7 +125,7 @@ class BM:
 def save_results(bms, name="bm"):
     """Saves the results as a json file
 
-    Args:
+    Parameters:
         bms: Benchmarks
         name (str, optional): Name. Defaults to "bm".
     """
@@ -181,9 +181,12 @@ def options_object(iconf, ne):
     iconf.get_options()
     return iconf
 
-def wagons(iconf, ne, overshoot=False, step_size=1):
+def wagons(iconf, ne, overshoot=False, step_size=1, intopt = 'enumint'):
     iconf.new_object("wagon")
-    iconf.select_value(1,"nr_passengers",ne)
+    if intopt=='enumint':
+        iconf.select_value(1,"nr_passengers",ne)
+    else:
+        iconf.select_fvalue(1,"nr_passengers",ne)
     found = iconf.extend_incrementally(overshoot=overshoot, step_size=step_size)
     iconf.select_found_configuration()
     print(found)
@@ -194,7 +197,7 @@ def wagons(iconf, ne, overshoot=False, step_size=1):
 def run(n_runs,fun,elements,name = "extend_solve",**kwargs):
     """Main function called to run a benchmark
 
-    Args:
+    Parameters:
         n_runs: Number of types to run the function
         fun: function to benchmark
         elements: the elements used for each run
@@ -207,7 +210,7 @@ def run(n_runs,fun,elements,name = "extend_solve",**kwargs):
     save_results(results,name)
 
 # Racks
-# run(1,incremental,[1,2,3,4,5,6],"inc_rack_step",cls = 'rackDouble',step_size=3)
+# run(1,incremental,[1,2,3,4,5,6],"inc_rack_overshoot_assumption",cls = 'rackDouble', overshoot=True)
 # run(1,incremental,[1,2,3,4,5,6],"inc_rack_overshoot",cls = 'rackDouble',overshoot=True)
 # run(1,incremental,[1,2,3,4,5,6],"inc_rack",cls = 'rackDouble')
 
@@ -218,10 +221,12 @@ def run(n_runs,fun,elements,name = "extend_solve",**kwargs):
 # run(1,incremental,[9,10,11,12],"inc_elem_step_6",cls = 'element',step_size=6)
 # run(1,incremental,[9,10,11,12],"inc_elem_step_7",cls = 'element',step_size=7)
 # run(1,incremental,[9,10,11,12],"inc_elem_overshoot",cls = 'element',overshoot=True)
+# run(1,incremental,[9,10,11,12],"inc_elem_overshoot_assumption",cls = 'element',overshoot=True)
 # run(1,incremental,[9,10,11,12],"inc_elem",cls = 'element')
 
 # Metro
-run(1,wagons,[50,60,70],"wagon_people", example="metro")
-# run(1,wagons,[50,60,70],"wagon_people_f", example="metrof")
+# run(1,wagons,[50,60,70],"wagon_people", example="metro")
+# run(1,wagons,[50,60,70],"wagon_people_f_no_external", example="metrof", intopt='int')
+run(1,wagons,[50,60,70],"wagon_people_no_external", example="metro", intopt='enumint')
 
 sys.exit(0)

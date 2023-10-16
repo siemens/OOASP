@@ -25,17 +25,19 @@ def test_metro_options():
     """ test element constraints """
     iconf = new_metrof_iconf()
     iconf.new_object("wagon")
-    iconf.select_value(1,"standing_room",1)
+    iconf.select_fvalue(1,"standing_room",1)
     brave = iconf.get_options()
     opts = iconf._brave_config_as_options()
     opts_set = set()
     for o in opts[1]:
         if o['fun_name']=='select_value' and o['args'][1]=='standing_room':
             opts_set.add(o['args'][2])
-    assert len(opts_set)==19 #All possible values as options
+    print(opts_set)
+    assert len(opts_set)==20 #All possible values as options
     iconf.extend_incrementally()
     iconf.select_found_configuration()
-    iconf.select_value(1,"nr_passengers",0)
+    print(iconf.config)
+    iconf.select_fvalue(1,"nr_passengers",0)
     brave = iconf.get_options()
     assert brave is None
     opts = iconf._brave_config_as_options()

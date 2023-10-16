@@ -295,7 +295,7 @@ class  OOASPConfiguration:
         """
         The list of associations from object obj via association assoc_name
 
-        Args:
+        Parameters:
             obj (int): Object where the association starts, can be right ot left
             assoc_name (str): The name of the association to get all objects
 
@@ -313,7 +313,7 @@ class  OOASPConfiguration:
     def domains_from(self, start_domain:int)->int:
         """
         The domain size, it is computed by counting the number of objects in the fact base.
-            Args:
+            Parameters:
                 start_domain (_type_): The domain where the last grounding was done
 
             Returns:

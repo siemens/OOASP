@@ -5,7 +5,7 @@ import time
 from importlib import resources
 from clorm.clingo import Control
 from clingo import Number, Function
-from clingo.ast import ProgramBuilder, parse_files
+from clingo.ast import ProgramBuilder, parse_files, parse_string
 from clorm import Predicate, unify
 from ooasp.config import OOASPConfiguration
 from ooasp.kb import OOASPKnowledgeBase
@@ -26,7 +26,7 @@ def log(x):
     Logs some given input in string format
     Can be activated or deactivated for debugging
     """
-    # print(x)
+    print(x)
     pass
 
 class State:
@@ -137,7 +137,7 @@ class InteractiveConfigurator:
     def _add_grounding_time(self, time:int):
         """
         Adds time to grounding for benchamrks
-        Args:
+        Parameters:
             time (int): time to add
         """
         self._time_grounding+=time
@@ -146,7 +146,7 @@ class InteractiveConfigurator:
     def _add_solving_time(self, time):
         """
         Adds time to solving for benchamrks
-        Args:
+        Parameters:
             time (int): time to add
         """
         self._time_solving+=time
@@ -320,6 +320,14 @@ class InteractiveConfigurator:
         for f in self.config.all_as_user():
             self.ctl.assign_external(f, True)
 
+    def _get_user_assumptions(self)->List:
+        """
+        Sets all partial configuration as user externals to True.
+        This uses special predicate `user/1`
+        """
+        return [(f.symbol, True) for f in self.config.editable_facts]
+
+
     def _falsify_user_externals(self,facts:List)->None:
         """
         Makes user externals false for the given facts. This is needed when a
@@ -342,7 +350,7 @@ class InteractiveConfigurator:
     def _create_required_objects(self, interested_object_id:int=None)->int:
         """
         Creates all the required objects
-        Args:
+        Parameters:
             interested_object_id: An optional object id to only add objects associated to this object
 
         """
@@ -394,7 +402,7 @@ class InteractiveConfigurator:
         """
         Increases the domain size by one and adds an object of the given class
 
-        Args:
+        Parameters:
             object_class (_type_): Class of the object
             propagate (bool, optional): If it should propagate creation. Defaults to False.
 
@@ -424,12 +432,13 @@ class InteractiveConfigurator:
             self.ctl.assign_external(Function("guess") , True)
             self.ctl.assign_external(Function("check_permanent_cv"), True)
             self.ctl.assign_external(Function("check_potential_cv"), True)
-            self._set_user_externals()
+            # self._set_user_externals()
+            user_assumptions = self._get_user_assumptions()
             self.ctl.configuration.solve.enum_mode = 'auto'
             self.ctl.configuration.solve.opt_mode = 'ignore'
             start = time.time()
             self._translate_fclingo()
-            self.hdn = self.ctl.solve(yield_=True)
+            self.hdn = self.ctl.solve(yield_=True, assumptions=user_assumptions)
             end = time.time()
             self._add_solving_time(end -start)
 
@@ -580,11 +589,12 @@ class InteractiveConfigurator:
         self.ctl.assign_external(Function("check_permanent_cv"), True)
         self.ctl.assign_external(Function("check_potential_cv"), False)
         self._set_user_externals()
+        user_assumptions = self._get_user_assumptions()
         self._translate_fclingo()
         self.ctl.configuration.solve.enum_mode = 'brave'
         self.ctl.configuration.solve.opt_mode = 'ignore'
         start = time.time()
-        with  self.ctl.solve(yield_=True) as hdn:
+        with  self.ctl.solve(yield_=True, assumptions=user_assumptions) as hdn:
             brave_model = None
             for model in hdn:
                 brave_model = model
@@ -608,12 +618,13 @@ class InteractiveConfigurator:
         self.ctl.assign_external(Function("guess"), False)
         self.ctl.assign_external(Function("check_permanent_cv"), False)
         self.ctl.assign_external(Function("check_potential_cv"), False)
-        self._set_user_externals()
+        # self._set_user_externals()
+        user_assumptions = self._get_user_assumptions()
         self._translate_fclingo()
         self.ctl.configuration.solve.enum_mode = 'auto'
         self.ctl.configuration.solve.opt_mode = 'ignore'
         start = time.time()
-        with  self.ctl.solve(yield_=True) as hdn:
+        with  self.ctl.solve(yield_=True, assumptions=user_assumptions) as hdn:
             sat = False
             for model in hdn:
                 self.theory_on_model(model)
@@ -647,12 +658,13 @@ class InteractiveConfigurator:
         self.ctl.assign_external(Function("guess"), True)
         self.ctl.assign_external(Function("check_permanent_cv"), True)
         self.ctl.assign_external(Function("check_potential_cv"), False)
-        self._set_user_externals()
+        # self._set_user_externals()
+        user_assumptions = self._get_user_assumptions()
         self._translate_fclingo()
         self.ctl.configuration.solve.enum_mode = 'cautious'
         self.ctl.configuration.solve.opt_mode = 'optN'
         start = time.time()
-        with  self.ctl.solve(yield_=True) as hdn:
+        with  self.ctl.solve(yield_=True, assumptions=user_assumptions) as hdn:
             cautious_model = None
             for model in hdn:
                 cautious_model = model
@@ -849,6 +861,28 @@ class InteractiveConfigurator:
         self._new_state(f"Set {object_id}.{attr_name}={attr_value}",deep=True)
         self._remove_value(object_id,attr_name)
         self.config.add_value(object_id,attr_name,attr_value)
+
+    def select_fvalue(self,object_id:int,attr_name:str,attr_value)->None:
+        """
+        Creates a state with a new configuration.
+        Removes any current selection for the attribute.
+        Selects the value the attribute.
+            Parameters:
+                object_id: Id of the object
+                attr_name: Name of the attribute
+                attr_value: Value of the attribute
+        """
+        self._new_state(f"Set {object_id}.{attr_name}={attr_value}",deep=True)
+        # self._remove_value(object_id,attr_name)
+        rule = f":- not &fsum{{ ooasp_attr_fvalue({attr_name},{object_id}) }}= {attr_value}."
+        with ProgramBuilder(self.ctl) as pb:
+            hbt = HeadBodyTransformer()
+            parse_string(
+                rule,
+                lambda ast: self.theory.rewrite_ast(ast, lambda stm: pb.add(hbt.visit(stm))),
+            )
+
+        self._ground([("base",[])])
 
     def select_object_class(self,object_id:int,object_class:str)->None:
         """
