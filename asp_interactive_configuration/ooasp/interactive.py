@@ -26,6 +26,7 @@ def log(x):
     Logs some given input in string format
     Can be activated or deactivated for debugging
     """
+    # print(x)
     pass
 
 class State:
@@ -149,7 +150,10 @@ class InteractiveConfigurator:
             time (int): time to add
         """
         self._time_solving+=time
-        self._individual_solve_times[self.domain_size] = time
+        if not self.domain_size in self._individual_solve_times:
+            self._individual_solve_times[self.domain_size] = 0
+
+        self._individual_solve_times[self.domain_size] += time
 
     def _init_ctl(self):
         """
@@ -301,7 +305,11 @@ class InteractiveConfigurator:
         self.found_config=None
         self.cautious_config=None
         if self.solution_iterator:
-            self.hdn.cancel()
+            if not self.hdn.wait(0):
+                print("Handler still not done, can't be canceled") 
+                self.hdn = None
+            elif self.hdn:
+                self.hdn    .cancel()
         self.solution_iterator = None
 
     def _set_user_externals(self)->None:
@@ -410,6 +418,7 @@ class InteractiveConfigurator:
             Returns:
                 The found OOASPConfiguration or None if no solution is found
         """
+        log(f"Finding solution with {self.domain_size}")
         self._ground_missing()
         if not self.browsing:
             self.ctl.assign_external(Function("guess") , True)
@@ -438,7 +447,8 @@ class InteractiveConfigurator:
         except StopIteration:
             end = time.time()
             self._add_solving_time(end -start)
-            self.hdn.cancel()
+            if self.hdn:
+                self.hdn.cancel()
             self.found_config=False
             return False
 
@@ -573,6 +583,7 @@ class InteractiveConfigurator:
         self._translate_fclingo()
         self.ctl.configuration.solve.enum_mode = 'brave'
         self.ctl.configuration.solve.opt_mode = 'ignore'
+        start = time.time()
         with  self.ctl.solve(yield_=True) as hdn:
             brave_model = None
             for model in hdn:
@@ -582,6 +593,8 @@ class InteractiveConfigurator:
             else:
                 self.brave_config = OOASPConfiguration.from_model(self.state.config.name,
                     self.kb, brave_model)
+        end = time.time()
+        self._add_solving_time(end -start)
         return self.brave_config
 
     def _check(self)->bool:
@@ -599,6 +612,7 @@ class InteractiveConfigurator:
         self._translate_fclingo()
         self.ctl.configuration.solve.enum_mode = 'auto'
         self.ctl.configuration.solve.opt_mode = 'ignore'
+        start = time.time()
         with  self.ctl.solve(yield_=True) as hdn:
             sat = False
             for model in hdn:
@@ -610,6 +624,8 @@ class InteractiveConfigurator:
             if not sat:
                 raise RuntimeError("Got UNSAT while checking for cvs")
 
+        end = time.time()
+        self._add_solving_time(end -start)
         return not self.config.has_cv
 
     def _get_cautious(self)->OOASPConfiguration:
@@ -635,6 +651,7 @@ class InteractiveConfigurator:
         self._translate_fclingo()
         self.ctl.configuration.solve.enum_mode = 'cautious'
         self.ctl.configuration.solve.opt_mode = 'optN'
+        start = time.time()
         with  self.ctl.solve(yield_=True) as hdn:
             cautious_model = None
             for model in hdn:
@@ -644,6 +661,8 @@ class InteractiveConfigurator:
             else: 
                 self.cautious_config = OOASPConfiguration.from_model(self.state.config.name,
                     self.kb, cautious_model)
+        end = time.time()
+        self._add_solving_time(end -start)
         return self.cautious_config
     
 
@@ -879,7 +898,7 @@ class InteractiveConfigurator:
             self.states.pop()
             raise e
 
-    def extend_incrementally(self, domain_limit:int=100, overshoot:bool=False)->OOASPConfiguration:
+    def extend_incrementally(self, domain_limit:int=100, overshoot:bool=False, step_size=1)->OOASPConfiguration:
         """
         Creates a state with a new configuration.
         Trys to find a solution for the current domain size, if a solution is
@@ -908,8 +927,9 @@ class InteractiveConfigurator:
             if overshoot:
                 self._outdate_models()
                 n_objects_added = len(self._create_required_objects())
-            if n_objects_added==0:
+            while n_objects_added<step_size:
                 self._extend_domain()
+                n_objects_added += 1
             self.found_config = self._next_solution()
 
 
@@ -925,7 +945,6 @@ class InteractiveConfigurator:
         """
         current_found_config = self.found_config
         if not current_found_config:
-            print("No configuration found")
             return
         current_found_config.remove_user()
         self.set_configuration(current_found_config)

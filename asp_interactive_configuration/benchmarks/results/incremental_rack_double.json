@@ -1,0 +1,50 @@
+{
+    "1": {
+        "time": 2.0084730784098306,
+        "time-solving": 0.0,
+        "time-grounding": 0.0,
+        "timeout": 1,
+        "size": 0,
+        "domain_size": 0
+    },
+    "2": {
+        "time": 2.0078437328338623,
+        "time-solving": 0.0,
+        "time-grounding": 0.0,
+        "timeout": 1,
+        "size": 0,
+        "domain_size": 0
+    },
+    "3": {
+        "time": 2.023526668548584,
+        "time-solving": 0.0,
+        "time-grounding": 0.0,
+        "timeout": 1,
+        "size": 0,
+        "domain_size": 0
+    },
+    "4": {
+        "time": 2.003958543141683,
+        "time-solving": 0.0,
+        "time-grounding": 0.0,
+        "timeout": 1,
+        "size": 0,
+        "domain_size": 0
+    },
+    "5": {
+        "time": 2.0077767372131348,
+        "time-solving": 0.0,
+        "time-grounding": 0.0,
+        "timeout": 1,
+        "size": 0,
+        "domain_size": 0
+    },
+    "6": {
+        "time": 2.0100273291269937,
+        "time-solving": 0.0,
+        "time-grounding": 0.0,
+        "timeout": 1,
+        "size": 0,
+        "domain_size": 0
+    }
+}

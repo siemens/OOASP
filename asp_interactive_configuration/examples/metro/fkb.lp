@@ -20,15 +20,15 @@ ooasp_subclass(seat,object).
 ooasp_assoc(wagon_handrail,wagon,1,1,handrail,0,1).
 ooasp_assoc(wagon_seats,wagon,1,1,seat,0,80).
 
-ooasp_attr(wagon,nr_passengers,enumint).
+ooasp_attr(wagon,nr_passengers,int).
 ooasp_attr_minInclusive(wagon,nr_passengers,50).
 ooasp_attr_maxInclusive(wagon,nr_passengers,200).
 
-ooasp_attr(wagon,nr_seats,enumint).
+ooasp_attr(wagon,nr_seats,int).
 ooasp_attr_minInclusive(wagon,nr_seats,0).
 ooasp_attr_maxInclusive(wagon,nr_seats,200).
 
-ooasp_attr(wagon,standing_room,enumint).
+ooasp_attr(wagon,standing_room,int).
 ooasp_attr_minInclusive(wagon,standing_room,0).
 ooasp_attr_maxInclusive(wagon,standing_room,60).
 

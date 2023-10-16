@@ -1,0 +1,42 @@
+{
+    "8": {
+        "time": 60.01544189453125,
+        "time-solving": 0.0,
+        "time-grounding": 0.0,
+        "timeout": 1,
+        "size": 0,
+        "domain_size": 0
+    },
+    "9": {
+        "time": 1099.0547580718994,
+        "time-solving": 0.0,
+        "time-grounding": 0.0,
+        "timeout": 1,
+        "size": 0,
+        "domain_size": 0
+    },
+    "10": {
+        "time": 659.2813391685486,
+        "time-solving": 0.0,
+        "time-grounding": 0.0,
+        "timeout": 1,
+        "size": 0,
+        "domain_size": 0
+    },
+    "11": {
+        "time": 310.8407349586487,
+        "time-solving": 0.0,
+        "time-grounding": 0.0,
+        "timeout": 1,
+        "size": 0,
+        "domain_size": 0
+    },
+    "12": {
+        "time": 964.7065989971161,
+        "time-solving": 0.0,
+        "time-grounding": 0.0,
+        "timeout": 1,
+        "size": 0,
+        "domain_size": 0
+    }
+}

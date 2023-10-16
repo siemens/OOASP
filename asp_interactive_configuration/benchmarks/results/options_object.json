@@ -1,0 +1,38 @@
+{
+    "10": {
+        "time": 0.858323891957601,
+        "time-solving": 0.0,
+        "time-grounding": 0.24652409553527832,
+        "size": 0,
+        "domain_size": 10,
+        "per-domain-grounding": {
+            "0": 0.0014063517252604167,
+            "10": 0.057378927866617836
+        },
+        "per-domain-solving": {}
+    },
+    "11": {
+        "time": 1.2191160519917805,
+        "time-solving": 0.0,
+        "time-grounding": 0.3183768590291341,
+        "size": 0,
+        "domain_size": 11,
+        "per-domain-grounding": {
+            "0": 0.0012413660685221355,
+            "11": 0.07352201143900554
+        },
+        "per-domain-solving": {}
+    },
+    "12": {
+        "time": 1.8298622767130535,
+        "time-solving": 0.0,
+        "time-grounding": 0.42635464668273926,
+        "size": 0,
+        "domain_size": 12,
+        "per-domain-grounding": {
+            "0": 0.0012580553690592449,
+            "12": 0.08921567598978679
+        },
+        "per-domain-solving": {}
+    }
+}
