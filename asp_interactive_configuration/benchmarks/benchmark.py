@@ -57,7 +57,6 @@ class BM:
             if thread.is_alive() or total_time>TIMEOUT:
                 print("Time out")
                 print(results[n].domain_size)
-                # print(results[n])
                 threading.Event().set()
                 total_time = TIMEOUT
                 self.timeout = 1
@@ -68,21 +67,14 @@ class BM:
         self.set_final_results()
 
     def add_run_results(self, time, iconf, timeout):
-        # print("adding results")
         result = {
            "time": time,
            "timeout": timeout,
            "size": 0 if timeout else iconf.config.size ,
            "domain_size": iconf.domain_size,
         }
-        # print("Update")
-        # print(iconf)
-        # print(iconf._statistics)
         result.update(iconf._statistics)
-        # print("Updated")
-        # print(result)
         self.runs[len(self.runs)]=result
-        # print("Done")
 
 
     def set_final_results(self):
@@ -99,9 +91,6 @@ class BM:
             if t in self.final_results:
                 self.final_results[t]=self.final_results[t]/self.n_runs
 
-        # if self.final_results['timeout']:
-            # return 
-        
         times_per_domain = ["per-domain-grounding","per-domain-solving"]
         for tpd in times_per_domain:
             g_times = {v:r[tpd] for  v,r in self.runs.items()}

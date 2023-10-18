@@ -154,8 +154,12 @@ class OOASPUI:
         Sets the found configuration image
         """
         if self.iconf.found_config is None:
+            self.found_config.layout.min_width="400pt"
+            self.found_config.layout.width="400pt"
             self.found_config.value = empty_img.data
         elif self.iconf.found_config is False:
+            self.found_config.layout.min_width="400pt"
+            self.found_config.layout.width="400pt"
             self.found_config.value = nosol_img.data
         else:
             self.iconf.found_config.save_png("out/found/")

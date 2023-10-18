@@ -204,6 +204,7 @@ ooasp_cv(nrpassengers_sum,new_object,"Number of passengers not adding up",(new_o
 
 The assigned values for these attributes are handled internally by the `fclingo `system and are only accessed after the models are found. Therefore, they are not considered in any brave or cautious consequences. This means that we do not know in advance the possible values an attribute can take for a partial configuration. Interactively, this can be solved in different ways, such as using a slider instead of a dropdown or some other numerical input. For convenience, we keep the usage in the jupyter notebooks with dropdowns and add all possible values for the attribute, even though they might create an invalid configuration. Invalid configurations can still be checked and fixed in the UI. 
 
+In this version, externals are used for every possible value to allow user input. However, this is not efficient. Another version is proposed in branch `efficient-fclingo` where externals are added on demand. However. This option does not allow for the task `check`, since it requires the choices to be active. 
 
 ----
 

@@ -26,7 +26,6 @@ def log(x):
     Logs some given input in string format
     Can be activated or deactivated for debugging
     """
-    # print(x)
     pass
 
 class State:
