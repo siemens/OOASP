@@ -4,14 +4,14 @@
 from ooasp.interactive import InteractiveConfigurator
 from ooasp.kb import OOASPKnowledgeBase
 from ooasp import settings
-from ooasp.tests.utils import new_metrof_iconf
+from ooasp.tests.utils import new_iconf
 
 import pytest
 from importlib import reload
 
 def test_metro_next():
     """ test element constraints """
-    iconf = new_metrof_iconf()
+    iconf = new_iconf("metrof_small")
     iconf.new_object("wagon")
     found = iconf.next_solution()
     assert found
@@ -23,7 +23,7 @@ def test_metro_next():
 
 def test_metro_options():
     """ test element constraints """
-    iconf = new_metrof_iconf()
+    iconf = new_iconf("metrof_small")
     iconf.new_object("wagon")
     iconf.select_value(1,"standing_room",1)
     brave = iconf.get_options()
@@ -46,7 +46,7 @@ def test_metro_options():
     
 def test_metro_cv_wagon_constraints():
     """ test element constraints """
-    iconf = new_metrof_iconf()
+    iconf = new_iconf("metrof_small")
     iconf.new_object("wagon")
     iconf.check()
     assert len(iconf.config.constraint_violations) ==3
@@ -60,7 +60,7 @@ def test_metro_cv_wagon_constraints():
 
 def test_metro_cv_wagon_wrong_nr_pass():
     """ test element constraints """
-    iconf = new_metrof_iconf()
+    iconf = new_iconf("metrof_small")
     iconf.new_object("wagon")
     iconf.check()
     assert len(iconf.config.constraint_violations) ==3
@@ -73,7 +73,7 @@ def test_metro_cv_wagon_wrong_nr_pass():
 
 def test_metro_cv_handrail_required():
     """ test element constraints """
-    iconf = new_metrof_iconf()
+    iconf = new_iconf("metrof_small")
     iconf.new_object("wagon")
     iconf.select_value(1,"standing_room",10)
     iconf.check()
@@ -88,7 +88,7 @@ def test_metro_cv_handrail_required():
 
 def test_metro_multi_wagon():
     """ test element constraints """
-    iconf = new_metrof_iconf()
+    iconf = new_iconf("metrof_small")
     iconf.new_object("wagon")
     iconf.new_object("wagon")
     iconf.check()
@@ -101,7 +101,7 @@ def test_metro_multi_wagon():
 
 def test_metro_cv_wagon():
     """ test element constraints """
-    iconf = new_metrof_iconf()
+    iconf = new_iconf("metrof_small")
     iconf.new_object("wagon")
     iconf.extend_domain(5)
     for i in range(20):
@@ -120,7 +120,7 @@ def test_metro_cv_wagon():
 
 def test_metro_cv_seat_color():
     """ test element constraints """
-    iconf = new_metrof_iconf()
+    iconf = new_iconf("metrof_small")
     iconf.new_object("wagon")
     iconf.new_object("seat")
     iconf.new_object("seat")
