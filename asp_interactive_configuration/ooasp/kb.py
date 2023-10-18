@@ -151,7 +151,13 @@ class  OOASPKnowledgeBase:
         leafs = [c for c in q if self.is_leaf(c)]
         return leafs
 
-
+    @property
+    def int_attr(self)->List[str]:
+        """
+        A list of all attribute names that are of type int
+        """
+        return self.fb.query(self.UNIFIERS.Attr).select(self.UNIFIERS.Attr.name).where(self.UNIFIERS.Attr.type == "int").all()
+    
     def load_facts_from_file(self, file_path:str)->None:
         """
         Adds the facts from a file into the KB factbase

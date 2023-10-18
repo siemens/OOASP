@@ -51,5 +51,7 @@
 % Numerical Attributes (fclingo)
 
 &fin{MIN..MAX} =: ooasp_attr_fvalue(A,new_object):- 
+	% ooasp_isa(C,new_object),
+	% ooasp_attr(C,A,int),
 	ooasp_attr_int(new_object, A, MIN, MAX),
     guess.

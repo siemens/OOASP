@@ -5,7 +5,7 @@ import time
 from importlib import resources
 from clorm.clingo import Control
 from clingo import Number, Function
-from clingo.ast import ProgramBuilder, parse_files
+from clingo.ast import ProgramBuilder, parse_files, parse_string
 from clorm import Predicate, unify
 from ooasp.config import OOASPConfiguration
 from ooasp.kb import OOASPKnowledgeBase
@@ -132,6 +132,8 @@ class InteractiveConfigurator:
         self.cautious_config = None
         self.solution_iterator = None
         self.hdn = None
+        self.user_int_externals = {}
+        self._user_prg_num = 0 
 
 
     def _add_grounding_time(self, time:int):
@@ -159,6 +161,7 @@ class InteractiveConfigurator:
         """
         Initializes the control object
         """
+        self.user_int_externals = {}
         self.ctl = Control(["0",
                 "--warn=none",
                 f"-c config_name={self.config_name}",
@@ -317,6 +320,39 @@ class InteractiveConfigurator:
         Sets all partial configuration as user externals to True.
         This uses special predicate `user/1`
         """
+        new_prg = ""
+        int_attr = list(self.kb.int_attr)
+        user_attr = self.config.attribute_values
+        for u in user_attr:
+            us = str(u)
+            if us not in self.user_int_externals and us.startswith("ooasp_attr_value") and u.attr_name in int_attr:
+                self.user_int_externals[us]=u
+                new_external = f"user_int({us})"
+                new_prg+=f"#external {new_external}.\n" 
+                new_prg+=f":-{new_external}, not &fsum{{ ooasp_attr_fvalue({u.attr_name},{u.object_id}) }}= {u.attr_value}, guess.\n"
+                # new_prg+=f"&fsum{{ ooasp_attr_fvalue({u.attr_name},{u.object_id}) }}= {u.attr_value}:-{new_external}.\n"
+
+        if new_prg != "":
+            user_prg_name = f"user{self._user_prg_num}"
+            self._user_prg_num += 1
+            new_prg = f"#program {user_prg_name}.\n" + new_prg
+            with ProgramBuilder(self.ctl) as pb:
+                hbt = HeadBodyTransformer()
+                parse_string(
+                    new_prg,
+                    lambda ast: self.theory.rewrite_ast(ast, lambda stm: pb.add(hbt.visit(stm))),
+                )
+
+            self._ground([(user_prg_name,[])])
+        
+        user_attr_str= [str(u) for u in user_attr]
+        for fs, f in self.user_int_externals.items():
+            symbol = (Function("user_int",[f.symbol]))
+            if fs in user_attr_str:
+                self.ctl.assign_external(symbol, True)
+            else:
+                self.ctl.assign_external(symbol, False)
+
         for f in self.config.all_as_user():
             self.ctl.assign_external(f, True)
 

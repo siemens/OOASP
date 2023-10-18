@@ -41,12 +41,3 @@ ooasp_associated(AS,ID1,new_object) :-
 
 ooasp_attr_value(A,new_object,V) :-
 	user(ooasp_attr_value(A,new_object,V)).
-
-% Numerical
-#external user(ooasp_attr_value(A,new_object,V)):
-	ooasp_attr_fdom(C,A,V),
-	counts_as(new_object,C).
-&fsum{ooasp_attr_fvalue(A,new_object)} = V :-
-	ooasp_attr(C,A,int),
-	ooasp_isa(C,new_object),
-	user(ooasp_attr_value(A,new_object,V)).

@@ -60,6 +60,7 @@ def test_s_interactive_add_leaf_extend_browse():
 
     iconf.new_object('frame')
     found = iconf.next_solution()
+    print(found)
     assert not found
     assert parse_term("ooasp_isa(frame,1)") in  iconf.state.config.assumptions
     assert iconf.domain_size == 1
@@ -210,6 +211,16 @@ def test_s_interactive_check_custom_cv():
     iconf.check()
     assert '(upperbound,1,"Upperbound for {} exceeded: {}",(rack_framesS,4,' in iconf.state.config.fb.asp_str()
     
+
+
+
+def test_s_interactive_basic_select():
+    iconf = new_iconf()
+    iconf.extend_domain(1)
+    iconf.select_object_class(1,'frame')
+    passed = iconf.check()
+    iconf.select_value(1,'frame_position',4)
+    assert not passed
 
 
 
