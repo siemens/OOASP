@@ -4,13 +4,13 @@
 from ooasp.interactive import InteractiveConfigurator
 from ooasp.kb import OOASPKnowledgeBase
 from ooasp import settings
-from ooasp.tests.utils import new_racks_iconf
+from ooasp.tests.utils import new_iconf
 
 from importlib import reload
 
 def test_heuristic():
     """ test element constraints """
-    iconf = new_racks_iconf()
+    iconf = new_iconf()
     iconf.extend_domain(6)
     # First empty
     found = iconf.next_solution()
@@ -32,7 +32,7 @@ def test_heuristic():
 
 def test_heuristic_module():
     """ test element constraints """
-    iconf = new_racks_iconf()
+    iconf = new_iconf()
     iconf.new_object('rackSingle')
     found = iconf.extend_incrementally()
     assert found.size==5

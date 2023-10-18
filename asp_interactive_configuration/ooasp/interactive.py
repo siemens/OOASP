@@ -137,7 +137,7 @@ class InteractiveConfigurator:
     def _add_grounding_time(self, time:int):
         """
         Adds time to grounding for benchamrks
-        Args:
+        Parameters:
             time (int): time to add
         """
         self._time_grounding+=time
@@ -146,7 +146,7 @@ class InteractiveConfigurator:
     def _add_solving_time(self, time):
         """
         Adds time to solving for benchamrks
-        Args:
+        Parameters:
             time (int): time to add
         """
         self._time_solving+=time
@@ -342,7 +342,7 @@ class InteractiveConfigurator:
     def _create_required_objects(self, interested_object_id:int=None)->int:
         """
         Creates all the required objects
-        Args:
+        Parameters:
             interested_object_id: An optional object id to only add objects associated to this object
 
         """
@@ -394,7 +394,7 @@ class InteractiveConfigurator:
         """
         Increases the domain size by one and adds an object of the given class
 
-        Args:
+        Parameters:
             object_class (_type_): Class of the object
             propagate (bool, optional): If it should propagate creation. Defaults to False.
 

@@ -7,14 +7,14 @@ from clorm.clingo import Control
 from ooasp.kb import OOASPKnowledgeBase
 from ooasp.interactive import InteractiveConfigurator
 from ooasp import settings
-from ooasp.tests.utils import new_racks_iconf
+from ooasp.tests.utils import new_iconf
 from ooasp.config import OOASPConfiguration
 
 import pytest
 from importlib import reload
 
 def test_specialization():
-    iconf = new_racks_iconf()
+    iconf = new_iconf()
 
     iconf.extend_domain(5)
     iconf.select_object_class(1, 'rackSingle')
@@ -31,20 +31,20 @@ def test_specialization():
     assert len(iconf.config.constraint_violations) == 4
 
 def test_specialization_extend():
-    iconf = new_racks_iconf()
+    iconf = new_iconf()
     iconf.new_object('rackSingle')
     found = iconf.extend_incrementally()    
     assert found
     assert found.size == 5
 
-    iconf = new_racks_iconf()
+    iconf = new_iconf()
     iconf.new_object('rackDouble')
     found = iconf.extend_incrementally()    
     assert found
     assert found.size == 9
 
 def test_s_interactive_extend_incrementally_overshooting_rack_specialization():
-    iconf = new_racks_iconf()
+    iconf = new_iconf()
     iconf.new_object('rack')
     found = iconf.extend_incrementally(overshoot=True)
     assert found
@@ -64,7 +64,7 @@ def test_s_interactive_extend_incrementally_overshooting_rack_specialization():
 
 
 def test_specialization_cautious_double():
-    iconf = new_racks_iconf()
+    iconf = new_iconf()
     iconf.new_object('rackDouble')
     iconf.new_object('frame')
     cautious = iconf._get_cautious()
@@ -76,7 +76,7 @@ def test_specialization_cautious_double():
     assert('ooasp_cv(lowerbound,1,"Lowerbound for {} is {} but has {} {}",(rack_framesD,8,4,frame') in cautious.fb.asp_str()
 
 def test_specialization_cautious_rack():
-    iconf = new_racks_iconf()
+    iconf = new_iconf()
     iconf.new_object('rack')
     iconf.new_object('frame')
     cautious = iconf._get_cautious()
@@ -89,7 +89,7 @@ def test_specialization_cautious_rack():
     assert('ooasp_associated(rack_framesS,1,2)') in cautious.fb.asp_str()
 
 def test_old_wierd():
-    iconf = new_racks_iconf()
+    iconf = new_iconf()
     iconf.new_object('rackDouble')
     for i in range(2,10):
         iconf.new_object('frame')
@@ -104,7 +104,7 @@ def test_old_wierd():
     assert found
 
 def test_wierd():
-    iconf = new_racks_iconf()
+    iconf = new_iconf()
     iconf.new_object('rackDouble',propagate=True)
     iconf.new_object('rackSingle',propagate=True)
     found = iconf.next_solution()
