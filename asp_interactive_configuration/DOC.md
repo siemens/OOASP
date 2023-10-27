@@ -33,7 +33,7 @@ The following tasks correspond to the only points of the interactive process whe
 
 1. *Complete:* Getting a complete configuration extending `C`.
 2. *Check:* Checking `C` for errors.
-3. *Options:* Obtaining all possible classes, values, and associations to complete `C`.
+3. *Options:* Obtaining all possible classes for the objects, values for the attributes, and associations to complete `C`.
 4. *Inferences:* Obtaining the inferences that are obtained from `C` optimized to minimize errors. This means that it is the intersection of all stable models, where the lower bound constraint violations are minimized so that as many objects are associated as possible.
 
 
@@ -85,6 +85,7 @@ Auxiliary predicates used for both Knowledge Bases and Configurations can be fou
 - [ooasp/encodings/ooasp_aux_kb.lp](ooasp/encodings/ooasp_aux_kb.lp)
 - [ooasp/encodings/ooasp_aux_config.lp](ooasp/encodings/ooasp_aux_config.lp)
 
+One of such predicates is `ooasp_domain(I,clsD)` which expresses that the object with id `ID` is of class `CLS`. These predicate encapsulates the parameters used for the grounding of the program corresponding to this object. For details see section [multi-shot](#multi-shot-approach).
 
 ### Guess
 
@@ -149,7 +150,7 @@ The user input corresponds to the current partial configuration `C` that is bein
 
 The truth value of these externals is defined by the [Interactive Configurator](#interactive-configurator) based on the current (partial) configuration that is being constructed using an object of class [OOASPConfiguration](#configuration).
 
-The user externals are generated restricted by the possible classes that an object can have. This is defined by the argument `cls` passed in the grounding, which corresponds to the domain defined by `ooasp_domain(_,cls).`. Therefore, if the new object is grounded for a class `cls`, only valid attributes and associations for `cls` and its subclasses will be considered. This is summarized in the auxiliary predicate `counts_as(O,C)`, which states that object `O` can count as class `C`.
+The user externals are generated restricted by the possible classes that an object can have. This is defined by the argument `cls` passed in the grounding (see [multi-shot](#multi-shot-approach)). This class is stored in the predicate `ooasp_domain(_,cls).`. Therefore, if the new object is grounded for a class `cls`, only valid attributes and associations for `cls` and its subclasses will be considered. This is summarized in the auxiliary predicate `counts_as(O,C)`, which states that object `O` can count as class `C`.
 
 
 ## Numerical attributes
@@ -224,7 +225,7 @@ This means the `new_object` (which is the parameter of the grounding) must appea
 Take for instance the following rule:
 
 ```prolog
-#program domain(new_object).
+#program domain(new_object, cls).
 ooasp_cv(no_instance_for_attribute,new_object,"Attribute {} not of selected class",(ATTR,)) :-
 	ooasp_attribute(C1,ATTR,T),
 	ooasp_attribute_value(ATTR,new_object,VALUE),
@@ -404,7 +405,7 @@ Additionally, if there are cases where no configuration can be found, the increm
 
 ###  Create required
 
-Creates all the objects required by the current objects. To do so, we use the cautious consequences of the program for getting the constraint violations that are common to all models, and proceed to solve one of them at a time. For this process we need optimization statements, to get rid of models that include unnecessary  constraint. This optimization is only activate for getting cautious consequences. 
+Creates all the objects required by the current objects. To do so, we use the cautious consequences of the program for getting the constraint violations that are common to all models, and proceed to solve one of them at a time. For this process we need optimization statements, to get rid of models that include unnecessary constraint. This optimization is only active for getting cautious consequences. 
 
 #### Optimize number of lower bound violations
 

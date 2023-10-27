@@ -296,7 +296,7 @@ class  OOASPConfiguration:
         The list of associations from object obj via association assoc_name
 
         Parameters:
-            obj (int): Object where the association starts, can be right ot left
+            obj (int): The identifier for the object. The method returns association for the object being in either the right or left positions of the given association.
             assoc_name (str): The name of the association to get all objects
 
         Returns:

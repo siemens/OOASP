@@ -135,7 +135,7 @@ class InteractiveConfigurator:
 
     def _add_grounding_time(self, time:int):
         """
-        Adds time to grounding for benchamrks
+        Adds time to grounding for benchmarks
         Parameters:
             time (int): time to add
         """
@@ -636,7 +636,7 @@ class InteractiveConfigurator:
             RuntimeError: If the configuration is conflicting and has no models
 
         Returns:
-            OOASPConfiguration: A configuration with 
+            OOASPConfiguration: A configuration with the intersection of all optimal models.
         """
         if self.browsing:
             raise RuntimeError("Cant get cautious while browsing")
