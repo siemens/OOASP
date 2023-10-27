@@ -103,7 +103,7 @@ def cv_str(name,message,args):
     formatted_message = f"{message.string.format(*args_symbols)}"
     s_wrap_list = textwrap.wrap(formatted_message, 40)
     message_wraped = "<br ALIGN='left'/>   ".join(s_wrap_list)
-    s = f"<FONT COLOR='red'><I> "+ message_wraped  + "</I> (" + str(name) + ") </FONT><br ALIGN='left'/> "
+    s = f"<FONT COLOR='red'><I> "+ message_wrapped  + "</I> (" + str(name) + ") </FONT><br ALIGN='left'/> "
     return String(s)
 
 #end.

@@ -233,7 +233,7 @@ class  OOASPConfiguration:
         Internally uses the small_objects method and maps them into the Objects class
 
         Returns:
-            A list of unique objects of type self.UNIFIERS.Object with their smallest class
+            A list of unique objects of type self.UNIFIERS.Object with their most specific instantiated class
         """
 
         small_objects = {o.object_id:o.class_name for o in self.small_objects}

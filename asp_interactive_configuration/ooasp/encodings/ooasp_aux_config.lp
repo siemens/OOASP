@@ -76,6 +76,6 @@ ooasp_associated(ASSOC_S,ID1,new_object) :-
 
 ooasp_attr_int(new_object, A, MIN, MAX):-
 	ooasp_isa(C,new_object),
-    ooasp_attr_minInclusive(C,A,MIN),
+	ooasp_attr_minInclusive(C,A,MIN),
 	ooasp_attr_maxInclusive(C,A,MAX),
 	ooasp_attr(C,A,int).

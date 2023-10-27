@@ -98,14 +98,14 @@ ooasp_cv(wrongtypeinassoc,ID,"Associated by {} but is not of class {}",(ASSOC,C2
 %=======================================
 
 
-%--- Missing atribute value
+%--- Missing attribute value
 ooasp_cv(no_value,new_object,"Missing value for {}",(A,)) :-
 	 ooasp_attr(C,A,enumint),
 	 ooasp_attr_enum(C,A,_),
 	 ooasp_isa(C,new_object),
 	 not ooasp_attr_value(A,new_object,_).
 
-%--- Missing atribute value (Integer)
+%--- Missing attribute value (Integer)
 ooasp_cv(no_value,new_object,"Missing value for {}",(A,)) :-
 	ooasp_attr(C,A,int),
 	ooasp_isa(C,new_object),

@@ -159,8 +159,8 @@ Attributes whose type is `int`, such as `nr_passengers`, `standing_room`, and `n
 
 ### Usage
 
-When an attribute `ATTR` is of type `int`, their value is defined using an `fclingo` variable `ooasp_attr_fvalue(ATTR,O)`.  The value of such variable will be associated to the value of attribute `ATTR` for object `O`.
-These values can be compared using the theory symbol `&fsum`. For instance, in the following rule we use `&fsum{ooasp_attr_fvalue(A,new_object)}<MIN` to state that the value of `A` is smaller than `MIN` leading to a constraint violation. Notice that the variable `MIN` must be defined in a positive literal of the body.
+When an attribute `ATTR` is of type `int`, their value is defined using an `fclingo` variable `ooasp_attr_fvalue(ATTR,O)`.  The value of such a variable will be associated to the value of attribute `ATTR` for object `O`.
+These values can be compared using the theory symbol `&fsum`. For instance, in the following rule we use `&fsum{ooasp_attr_fvalue(A,new_object)}<MIN` to state that the value of `A` being smaller than `MIN` will lead to a constraint violation. Notice that the variable `MIN` must be defined in a positive literal of the body.
 
 ```
 ooasp_cv(value_outside_of_range,new_object,"Value for {} outside min range {}",(A,MIN)) :-
@@ -179,7 +179,7 @@ ooasp_cv(no_value,new_object,"Missing value for {}",(A,)) :-
 	not &fsum{ooasp_attr_fvalue(A,new_object)}=ooasp_attr_fvalue(A,new_object).
 ```
 
-This type of attributes must be treated differently to the rest, therefore they require rules like to ones above to handle each case. Below we show the difference of writing a constraint violation using `ooasp_attr_value/3` and `ooasp_attr_fvalue/2`. Notice that in the second case, we directly compare the values by summing them up.
+This type of attributes must be treated differently to the rest, therefore they require rules like the ones above to handle each case. Below we show the difference of writing a constraint violation using `ooasp_attr_value/3` and `ooasp_attr_fvalue/2`. Notice that in the second case, we directly compare the values by summing them up.
 
 #### `ooasp_attr_value/3`
 ```
@@ -204,7 +204,7 @@ ooasp_cv(nrpassengers_sum,new_object,"Number of passengers not adding up",(new_o
 
 The assigned values for these attributes are handled internally by the `fclingo `system and are only accessed after the models are found. Therefore, they are not considered in any brave or cautious consequences. This means that we do not know in advance the possible values an attribute can take for a partial configuration. Interactively, this can be solved in different ways, such as using a slider instead of a dropdown or some other numerical input. For convenience, we keep the usage in the jupyter notebooks with dropdowns and add all possible values for the attribute, even though they might create an invalid configuration. Invalid configurations can still be checked and fixed in the UI. 
 
-In this version, externals are used for every possible value to allow user input. However, this is not efficient. Another version is proposed in branch `efficient-fclingo` where externals are added on demand. However. This option does not allow for the task `check`, since it requires the choices to be active. 
+In this version, externals are used for every possible value to allow user input. However, this is not efficient. Another version is proposed in branch `efficient-fclingo` where externals are added on demand. However, this option does not allow for the task `check`, since it requires the choices to be active. 
 
 ----
 
@@ -257,7 +257,7 @@ There are some rules that depend on atoms that are computed in an accumulative w
 Consider the following rule:
 
 ```prolog
-arity(new_object,ASSOC,ARITY):- ARITY = #count{ID2:ooasp_assoc(ASSOC,new_object,_,_,ID2,_,_)}.
+arity(new_object,ASSOC,ARITY) :- ARITY = #count{ID2:ooasp_assoc(ASSOC,new_object,_,_,ID2,_,_)}.
 ```
 
 This rule will gather the number of objects that `new_object` is associated to in association `ASSOC`. While this is correct at the moment you ground `new_object` this value will no longer be correct when new identifiers are grounded. This is because they were not part of the aggregate `#count` calculated before. Therefore, associations of `new_object` with any `ID>new_object` will not be counted.
@@ -395,20 +395,20 @@ We use here two auxiliary predicates to avoid having to repeat the rule:
 
 ## Incremental solving
 
-This multi-shot encoding can directly be used for incremental solving. With this idea we ground for the current objects and try to find a configuration using Task 1 *Complete*, if there is no complete configuration (returns UNSAT) with this number of objects, we ground for one more object and repeat the process until we have a satisfiable answer.
+This multi-shot encoding can directly be used for incremental solving. With this idea we ground for the current objects and try to find a configuration using Task 1 *Complete*, and if there is no complete configuration (returns UNSAT) with this number of objects, we ground for one more object and repeat the process until we have a satisfiable answer.
 
-This incremental process find the smallest configuration. However, it has the drawback that right before getting the satisfiable answer the solving time increases since it has to look over the whole search space, which impacts in performance.
+This incremental process finds the smallest configuration. However, it has the drawback that right before getting the satisfiable answer the solving time increases since the solver has to look over the whole search space, which impacts its performance.
 
-Additionally, if there are cases where no configuration can be found, the incremental solving will continue adding objects util the set limit is reached. For instance, in the metro example, if one Wagon is added with number of passengers 0, and a seat object is added, then this partial configuration can not reach a compleat configuration, since it would require two wagons, which is not possible. However, the incremental solving would not know this and continue looking for the answer.
+Additionally, if there are cases where no configuration can be found, the incremental solving will continue adding objects util the set limit is reached. For instance, in the metro example, if one Wagon is added with number of passengers 0, and a seat object is added, then this partial configuration can not reach a complete configuration, since it would require two wagons, which is not possible. However, the incremental solving would not know this and continue looking for the answer.
 
 
 ###  Create required
 
 Creates all the objects required by the current objects. To do so, we use the cautious consequences of the program for getting the constraint violations that are common to all models, and proceed to solve one of them at a time. For this process we need optimization statements, to get rid of models that include unnecessary  constraint. This optimization is only activate for getting cautious consequences. 
 
-#### Optimize number of lower bond violations
+#### Optimize number of lower bound violations
 
-The main optimization with priority `3`, penalizes lower bound violations based on how many objects have not yet been associated `CMIN-N`. This week constraint will prioritize models that associate as many objects as possible. For instance, take a partial configuration with one rack and 3 frames. Since the external `ooasp_potential_cv` is false we would get a model for associating 0,1,2 and 3 frames. We this week constraint we will only get one where 3 frames are associated and the lower bound is only violated with one missing frame for the `rack_frames` association.
+The main optimization with priority `3` penalizes lower bound violations based on how many objects have not yet been associated `CMIN-N`. This weak constraint will prioritize models that associate as many objects as possible. For instance, take a partial configuration with one rack and 3 frames. Since the external `ooasp_potential_cv` is false we would get a model for associating 0,1,2 and 3 frames. With this weak constraint we will only get one where 3 frames are associated and the lower bound is only violated with one missing frame for the `rack_frames` association.
 
 ```
 :~ ooasp_cv(lowerbound,ID,_,(ASSOC,CMIN,N,C,OPT,new_object)). [CMIN-N@3,(ASSOC,ID)]
@@ -422,7 +422,7 @@ This optimization can be viewed like a symmetry constraint. The idea is to try t
 #### Using the cautions consequences to create required objects
 
 1. Gets the cautious consequences for the program where potential cv can be violated and the optimization is activated.
-2. Takes the first lower bound constraint violation. This predicate already has the information of how many objects where associated and what the minimum was. Based on this information it crates and associates the required objects of the specific class
+2. Takes the first lower bound constraint violation. This predicate already has the information of how many objects were associated and what the minimum was. Based on this information it creates and associates the required objects of the specific class.
 3. The process repeats as long as objects are still added.
 
 
@@ -451,23 +451,23 @@ This is done using the create required task in three steps:
 Association specializations will specialize the lower and upper bound of an association for subclasses.
 
 For example, the association `rack_frames` between class `rack` and `frame` is defined by the atom `ooasp_assoc(rack_frames,rack,1,1,frame,4,8)`.
-The racks example limits the number of racks associated to the racks subclass `rackSingle` to be exactly `4`. This is achieved by adding an association specialization with name `rack_framesS` which specializes `rack_frames`, by the atom `ooasp_assoc_specialization(rack_framesS,rack_frames)`. This means that all `rack_frameS` associations are also `rack_frames` associations. Then, the upper and lowe bound can be redefined when the association is defined in `ooasp_assoc(rack_framesS,rackSingle,0,1,frame,4,4)`. 
+The racks example limits the number of racks associated to the racks subclass `rackSingle` to be exactly `4`. This is achieved by adding an association specialization with name `rack_framesS` which specializes `rack_frames`, by the atom `ooasp_assoc_specialization(rack_framesS,rack_frames)`. This means that all `rack_framesS` associations are also `rack_frames` associations. Then, the upper and lower bound can be redefined when the association is defined in `ooasp_assoc(rack_framesS,rackSingle,0,1,frame,4,4)`. 
 
 While upper bounds can be restricted, lower bounds are relaxed. So that the lower bounds of an association specialization are smaller or equal to the original one.
 Notice that in our example the lower bound of how many racks singles are associated to a frame is now `0`, otherwise frames would be forced to be associated to a `rackSingle`. The requirement of having some rack associated comes from the super association `rack_frames`. 
 
 
-### Specialized constraint violations
+### Special constraint violations
 
-Specialized constraint violations are those used in different instances but not encoded in the knowledge base. Some of them are the following:
+Special constraint violations are those used in different instances but not encoded in the knowledge base. Some of them are the following:
 
 - **(unique)** all attribute values of objects in an association are different 
 - **(same)** all attribute values of objects in an association are equal (exceptions)
 - **(table)** which value combinations are allowed
 - **(specialization)** attribute value determines the type of objects
 
-These constraints can be defined in the knowledge base using the predicate `ooasp_special_cv/2`, where the first argument is the name of the constraint and the second one has any additional information needed. To implement a specialized constraint violation, the file [ooasp/encodings/ooa_checksp.lp](ooasp/encodings_check/ooasp.lp) must be extended with the needed constraints.
-This process was done for the  **unique** constraint violation. It is used in the knowladge base of the racks example, to make sure that the frame positions of all frames associated to a rack are different. In this case the second argument is a tuple `(ASSOCIATION, CLASS, ATTRIBUTE)`
+These constraints can be defined in the knowledge base using the predicate `ooasp_special_cv/2`, where the first argument is the name of the constraint and the second one has any additional information needed. To implement a special constraint violation, the file [ooasp/encodings/ooa_checksp.lp](ooasp/encodings_check/ooasp.lp) must be extended with the needed constraints.
+This process was done for the  **unique** constraint violation. It is used in the knowledge base of the racks example, to make sure that the frame positions of all frames associated to a rack are different. In this case the second argument is a tuple `(ASSOCIATION, CLASS, ATTRIBUTE)`
 
 ```
 ooasp_special_cv(unique, (rack_frames, frame, frame_position)).
