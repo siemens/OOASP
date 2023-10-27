@@ -86,11 +86,20 @@ class State:
         }
         return utils.pretty_dic(info)
 
-class Config:
-    def __init__(self, max_int, min_int, print_trans) -> None:
-        self.max_int = max_int
+
+DEF = "__def"
+
+class FclingoConfig:
+    """
+    Class for application specific options.
+    """
+
+    def __init__(self, min_int, max_int, print_translation, print_auxiliary):
+        self.print_aux = print_auxiliary
+        self.print_trans = print_translation
         self.min_int = min_int
-        self.print_trans = print_trans
+        self.max_int = max_int
+        self.defined = DEF
 
 class InteractiveConfigurator:
 
@@ -163,7 +172,7 @@ class InteractiveConfigurator:
                 f"-c config_name={self.config_name}",
                 f"-c kb_name={self.kb.name}"])
         self.theory.register(self.ctl)
-        self.ftranslator = Translator(self.ctl, Config(0, 1000, False))
+        self.ftranslator = Translator(self.ctl, FclingoConfig(0, 1000, False, False))
         self.ctl.add("base", [], THEORY)
         self.ctl.add("base",[],self.kb.fb.asp_str())
         self.ctl.add("base",[],self.additional_prg)
@@ -637,6 +646,7 @@ class InteractiveConfigurator:
 
         Returns:
             OOASPConfiguration: A configuration with the intersection of all optimal models.
+
         """
         if self.browsing:
             raise RuntimeError("Cant get cautious while browsing")

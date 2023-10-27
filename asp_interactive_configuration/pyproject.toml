@@ -21,7 +21,7 @@ pandas = "^2.0.3"
 matplotlib = "^3.7.2"
 opencv-python = "^4.8.0.76"
 pillow = "^10.0.0"
-fclingo = "^0.1"
+fclingo = "0.1.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.2"
@@ -36,4 +36,5 @@ build-backend = "poetry.core.masonry.api"
 [[tool.poetry.source]]
 name = "test"
 url = "https://test.pypi.org/simple/"
-secondary = true
+priority = "supplemental"
+
