@@ -256,7 +256,7 @@ class OOASPUI:
         dropdown_object.observe(self.call_and_update(self.select_edit_object))
         o = self.edit_object
         edit_dropdowns = []
-        names = {'object_class':'Class','value':'Attribuite-Value','association':'Association'}
+        names = {'object_class':'Class','value':'Attribute-Value','association':'Association'}
         if o!='':
             obj_opts =  opts[o]
             self.opts = {o['str']:o for o in obj_opts}
