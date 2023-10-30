@@ -74,7 +74,7 @@ attr(node, Object_id, (label,attr,Attr_name), @argument_str(Attr_name,Value,colo
     not user(ooasp_attr_value(Attr_name,Object_id,Value)).
 
 % Add cvs to nodes
-attr(node, Object_id, (label,cv,(Name,Object_id)), @cv_str(Name,Mes,Args)):-
+attr(node, Object_id, (label,cv,(Name,Object_id,Args)), @cv_str(Name,Mes,Args)):-
     ooasp_cv(Name,Object_id,Mes,Args).
 
 
@@ -103,7 +103,7 @@ def cv_str(name,message,args):
     formatted_message = f"{message.string.format(*args_symbols)}"
     s_wrap_list = textwrap.wrap(formatted_message, 40)
     message_wraped = "<br ALIGN='left'/>   ".join(s_wrap_list)
-    s = f"<FONT COLOR='red'>(" + str(name) + ") " + "<I> "+ message_wraped  + "</I></FONT><br ALIGN='left'/> "
+    s = f"<FONT COLOR='red'><I> "+ message_wrapped  + "</I> (" + str(name) + ") </FONT><br ALIGN='left'/> "
     return String(s)
 
 #end.

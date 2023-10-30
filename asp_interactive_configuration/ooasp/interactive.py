@@ -5,6 +5,7 @@ import time
 from importlib import resources
 from clorm.clingo import Control
 from clingo import Number, Function
+from clingo.ast import ProgramBuilder, parse_files
 from clorm import Predicate, unify
 from ooasp.config import OOASPConfiguration
 from ooasp.kb import OOASPKnowledgeBase
@@ -13,7 +14,19 @@ from copy import deepcopy
 import ooasp.utils as utils
 from typing import List
 import ooasp.settings as settings
+from clingcon import ClingconTheory
+from fclingo import THEORY, Translator
+from fclingo.__main__ import CSP
+from fclingo.parsing import HeadBodyTransformer
+from fclingo.translator import ConstraintAtom
 
+
+def log(x):
+    """
+    Logs some given input in string format
+    Can be activated or deactivated for debugging
+    """
+    pass
 
 class State:
     """
@@ -74,6 +87,20 @@ class State:
         return utils.pretty_dic(info)
 
 
+DEF = "__def"
+
+class FclingoConfig:
+    """
+    Class for application specific options.
+    """
+
+    def __init__(self, min_int, max_int, print_translation, print_auxiliary):
+        self.print_aux = print_auxiliary
+        self.print_trans = print_translation
+        self.min_int = min_int
+        self.max_int = max_int
+        self.defined = DEF
+
 class InteractiveConfigurator:
 
     """
@@ -106,6 +133,7 @@ class InteractiveConfigurator:
         self._time_solving = 0
         self._individual_ground_times = {}
         self._individual_solve_times = {}
+        self.theory = ClingconTheory()
         self._init_ctl()
         self.found_config = None
         self.brave_config = None
@@ -114,13 +142,26 @@ class InteractiveConfigurator:
         self.hdn = None
 
 
-    def _add_grounding_time(self, time):
+    def _add_grounding_time(self, time:int):
+        """
+        Adds time to grounding for benchmarks
+        Parameters:
+            time (int): time to add
+        """
         self._time_grounding+=time
         self._individual_ground_times[self.domain_size] = time
 
     def _add_solving_time(self, time):
+        """
+        Adds time to solving for benchamrks
+        Parameters:
+            time (int): time to add
+        """
         self._time_solving+=time
-        self._individual_solve_times[self.domain_size] = time
+        if not self.domain_size in self._individual_solve_times:
+            self._individual_solve_times[self.domain_size] = 0
+
+        self._individual_solve_times[self.domain_size] += time
 
     def _init_ctl(self):
         """
@@ -130,17 +171,26 @@ class InteractiveConfigurator:
                 "--warn=none",
                 f"-c config_name={self.config_name}",
                 f"-c kb_name={self.kb.name}"])
+        self.theory.register(self.ctl)
+        self.ftranslator = Translator(self.ctl, FclingoConfig(0, 1000, False, False))
+        self.ctl.add("base", [], THEORY)
         self.ctl.add("base",[],self.kb.fb.asp_str())
         self.ctl.add("base",[],self.additional_prg)
-        file = settings.encodings_path.joinpath("ooasp.lp")
-        self.ctl.load(str(file))
-        for f in self.additional_files:
-            self.ctl.load(f)
+        files = [str(settings.encodings_path.joinpath("ooasp.lp"))] + self.additional_files
+        with ProgramBuilder(self.ctl) as pb:
+            hbt = HeadBodyTransformer()
+            parse_files(
+                files,
+                lambda ast: self.theory.rewrite_ast(ast, lambda stm: pb.add(hbt.visit(stm))),
+            )
         self._ground([("base",[])])
         self.last_size_grounded = 0
 
 
     def __str__(self):
+        """
+        String representation
+        """
         s = utils.title('INTERACTIVE CONFIG')
         d = {
             'kb' : self.kb.name,
@@ -153,6 +203,14 @@ class InteractiveConfigurator:
         s+= str(self.state)
 
         return s
+
+    def theory_on_model(self, model):
+        model = model.model_
+        defined =  [s.arguments[0] for s in model.symbols(shown=True) if str(s).startswith("__def")]
+        for key, val in self.theory.assignment(model.thread_id):
+            if key in defined:
+                f = Function("ooasp_attr_value", key.arguments+[Number(int(str(val)))])
+                model.extend([f])
 
     @property
     def state(self):
@@ -225,6 +283,15 @@ class InteractiveConfigurator:
             self.ctl.assign_external(Function("active", [Number(s)]), True)
         self.last_size_grounded=s
 
+    def _translate_fclingo(self)->None:
+        """
+        Fclingo translation that needs to be done before each solve call
+        """
+        new_theory_atoms = set()
+        for atom in self.ctl.theory_atoms:
+            new_theory_atoms.add(ConstraintAtom.copy(atom))
+        self.ftranslator.translate(new_theory_atoms)
+
     def _new_state(self,action:str,deep=False)->State:
         """
         Creates a new state
@@ -246,7 +313,11 @@ class InteractiveConfigurator:
         self.found_config=None
         self.cautious_config=None
         if self.solution_iterator:
-            self.hdn.cancel()
+            if not self.hdn.wait(0):
+                print("Handler still not done, can't be canceled") 
+                self.hdn = None
+            elif self.hdn:
+                self.hdn    .cancel()
         self.solution_iterator = None
 
     def _set_user_externals(self)->None:
@@ -275,44 +346,47 @@ class InteractiveConfigurator:
                 fact: The clorm predicate to be added to the control
         """
         self.ctl.add("domain",[str(self.domain_size)],str(fact)+".")
-
-    def _create_required_objects(self, object_id:int=None)->int:
-        """
-        Creates required objects for a given object based on associations in the knowledge base configuration.
-        It ensures that the minimum required number of associated objects is met for each association.
-        
-            Parameters:
-                object_id (int): The ID of the object for which required objects are being created.
-                ignore_assoc (List, optional): A list of association names to be ignored during object creation.
-                    Defaults to None.
-        """
-        cautious =  self._get_cautious()
-        n_objects_added = 0
-        common_violations = cautious.constraint_violations
-        for cv in common_violations:
-            # TODO maybe improove performance using query
-            if cv.name != 'lowerbound' or cv.object_id != object_id:
-                continue
-            assoc, cmin, n, c, opt, _ = cv.args.symbol.arguments
-            for _ in range(n.number,cmin.number):
-                n_objects_added += 1
-                object2 = self._new_object(c.name)
-                if str(opt) == '1':
-                    self.config.add_association(assoc.name,object_id,object2)
-                else:
-                    self.config.add_association(assoc.name,object2,object_id)
-        return n_objects_added
     
-    def _create_all_required_objects(self)->int:
+    def _create_required_objects(self, interested_object_id:int=None)->int:
         """
         Creates all the required objects
-        """
-        objs = self.config.smart_objects
-        n_objects_added=0
-        for o in objs:
-            n_objects_added += self._create_required_objects(o.object_id)
-        return n_objects_added
+        Parameters:
+            interested_object_id: An optional object id to only add objects associated to this object
 
+        """
+        create = True
+        objects_added = set()
+        while(create):
+            log("\n New round")
+            create = False
+            cautious =  self._get_cautious()
+            common_violations = cautious.constraint_violations
+            log(cautious)
+            for cv in common_violations:
+                # TODO maybe improove performance using query
+                if cv.name != 'lowerbound':
+                    continue
+                object_id = cv.object_id
+                if interested_object_id and object_id!= interested_object_id:
+                    continue
+                log(f"========== Object to check {object_id}")
+
+                assoc, cmin, n, c, opt, _ = cv.args.symbol.arguments
+                for _ in range(n.number,cmin.number):
+                    log(f'----Adding obejct {c.name}')
+                    object2 = self._new_object(c.name)
+                    objects_added.add(object2)
+                    log(f"Added object {object2}")
+                    if str(opt) == '1':
+                        self.config.add_association(assoc.name,object_id,object2)
+                    else:
+                        self.config.add_association(assoc.name,object2,object_id)
+                create = True
+                break
+
+        return objects_added
+
+    
     def _extend_domain(self, cls='object')->int:
         """
         Increases the domain size by one and adds a new domain(object,N) fact to
@@ -328,7 +402,7 @@ class InteractiveConfigurator:
         """
         Increases the domain size by one and adds an object of the given class
 
-        Args:
+        Parameters:
             object_class (_type_): Class of the object
             propagate (bool, optional): If it should propagate creation. Defaults to False.
 
@@ -352,6 +426,7 @@ class InteractiveConfigurator:
             Returns:
                 The found OOASPConfiguration or None if no solution is found
         """
+        log(f"Finding solution with {self.domain_size}")
         self._ground_missing()
         if not self.browsing:
             self.ctl.assign_external(Function("guess") , True)
@@ -361,6 +436,7 @@ class InteractiveConfigurator:
             self.ctl.configuration.solve.enum_mode = 'auto'
             self.ctl.configuration.solve.opt_mode = 'ignore'
             start = time.time()
+            self._translate_fclingo()
             self.hdn = self.ctl.solve(yield_=True)
             end = time.time()
             self._add_solving_time(end -start)
@@ -370,15 +446,17 @@ class InteractiveConfigurator:
         start = time.time()
         try:
             model = next(self.solution_iterator)
+            self.theory_on_model(model)
             end = time.time()
             self._add_solving_time(end -start)
-            found_config = OOASPConfiguration.from_model(self.state.config.name,
+            found_config = OOASPConfiguration.from_model(self.config.name,
                     self.kb, model)
             return found_config
         except StopIteration:
             end = time.time()
             self._add_solving_time(end -start)
-            self.hdn.cancel()
+            if self.hdn:
+                self.hdn.cancel()
             self.found_config=False
             return False
 
@@ -401,7 +479,7 @@ class InteractiveConfigurator:
 
 
 
-    def _add_objects_to_dict(self, config: OOASPConfiguration, options: dict) -> dict:
+    def _add_objects_to_dict(self, config: OOASPConfiguration, options: dict) -> None:
         """
         Adds the objects from the brave configuration to the provided dictionary
 
@@ -412,16 +490,14 @@ class InteractiveConfigurator:
                 The updated dictionary, now containing the objects from the configuration
         """
         user_strs = [str(s) for s in config.user_input]
-
         for f in config.unique_objects:
             options[f.object_id].append(utils.editable_fact_as_remove_action(f,config.UNIFIERS))
         for f in config.small_objects:
             if str(f) not in user_strs:
                 options[f.object_id].append(utils.editable_fact_as_select_action(f,config.UNIFIERS))
-        return options
     
 
-    def _add_attributes_to_dict(self, config: OOASPConfiguration, options: dict) -> dict:
+    def _add_attributes_to_dict(self, config: OOASPConfiguration, options: dict) -> None:
         """
         Adds the attributes from the brave configuration to the provided dictionary
 
@@ -431,18 +507,17 @@ class InteractiveConfigurator:
             Returns:
                 The updated dictionary, now containing the attributes from the configuration
         """
-        user_strs = [str(s) for s in config.user_input]
-        user_fb = unify(config.editable_unifiers, config.user_input)
+        ui = config.user_input
+        user_strs = [str(s) for s in ui]
 
-        for f in user_fb.query(config.UNIFIERS.AttributeValue).all():
+        for f in ui.query(config.UNIFIERS.AttributeValue).all():
             options[f.object_id].append(utils.editable_fact_as_remove_action(f,config.UNIFIERS))
-        for f in config.fb.query(config.UNIFIERS.AttributeValue).all():
+        for f in config.attribute_values:
             if str(f) not in user_strs:
                 options[f.object_id].append(utils.editable_fact_as_select_action(f,config.UNIFIERS))
-        return options
     
 
-    def _add_associations_to_dict(self, config: OOASPConfiguration, options: dict) -> dict:
+    def _add_associations_to_dict(self, config: OOASPConfiguration, options: dict) -> None:
         """
         Adds the associations from the brave configuration to the provided dictionary
 
@@ -452,17 +527,16 @@ class InteractiveConfigurator:
             Returns:
                 The updated dictionary, now containing the associations from the configuration
         """
-        user_strs = [str(s) for s in config.user_input]
-        user_fb = unify(config.editable_unifiers, config.user_input)
+        ui = config.user_input
+        user_strs = [str(s) for s in ui]
 
-        for f in user_fb.query(config.UNIFIERS.Association).all():
+        for f in ui.query(config.UNIFIERS.Association).all():
             options[f.object_id1].append(utils.editable_fact_as_remove_action(f,self.brave_config.UNIFIERS))
             options[f.object_id2].append(utils.editable_fact_as_remove_action(f,self.brave_config.UNIFIERS))      
         for f in config.fb.query(config.UNIFIERS.Association).all():
             if str(f) not in user_strs:
                 options[f.object_id1].append(utils.editable_fact_as_select_action(f,self.brave_config.UNIFIERS))
                 options[f.object_id2].append(utils.editable_fact_as_select_action(f,self.brave_config.UNIFIERS))
-        return options
 
 
     def _brave_config_as_options(self) -> dict:
@@ -473,16 +547,29 @@ class InteractiveConfigurator:
                 The dictionary with ids of objects as keys and list of dicionaries as value
                 representing the possible options
         """
-        if self.brave_config is None:
-            raise RuntimeError("A brave configuration must be computed to get it as options")
-        config = self.brave_config
         options = {}
-        for i in range(1,config.domain_size+1):
+        for i in range(1,self.config.domain_size+1):
             options[i]=[]
 
-        options = self._add_objects_to_dict(config, options)
-        options = self._add_attributes_to_dict(config, options)
-        options = self._add_associations_to_dict(config, options)
+        if self.brave_config is None:
+            for f in self.config.user_input:
+                if f.__class__.__name__ == 'Association':
+                    options[f.object_id1].append(utils.editable_fact_as_remove_action(f,self.config.UNIFIERS))
+                    options[f.object_id2].append(utils.editable_fact_as_remove_action(f,self.config.UNIFIERS))
+                else:
+                    options[f.object_id].append(utils.editable_fact_as_remove_action(f,self.config.UNIFIERS))
+            return options
+
+
+        int_attributes = self.brave_config.int_attributes
+        for atti in int_attributes:
+            for v in range(atti.min,atti.max):
+                attr_value = self.brave_config.UNIFIERS.AttributeValue(atti.attr_name,atti.object_id,Number(v))
+                self.brave_config.fb.add(attr_value)
+        self._add_objects_to_dict(self.brave_config, options)
+        self._add_attributes_to_dict(self.brave_config, options)
+        self._add_associations_to_dict(self.brave_config, options)
+
 
         return options
 
@@ -501,17 +588,21 @@ class InteractiveConfigurator:
         self.ctl.assign_external(Function("check_permanent_cv"), True)
         self.ctl.assign_external(Function("check_potential_cv"), False)
         self._set_user_externals()
+        self._translate_fclingo()
         self.ctl.configuration.solve.enum_mode = 'brave'
         self.ctl.configuration.solve.opt_mode = 'ignore'
+        start = time.time()
         with  self.ctl.solve(yield_=True) as hdn:
             brave_model = None
             for model in hdn:
                 brave_model = model
             if brave_model is None:
                 self.brave_config = None
-                raise RuntimeError("No available options for conflicting configuration")
-            self.brave_config = OOASPConfiguration.from_model(self.state.config.name,
+            else:
+                self.brave_config = OOASPConfiguration.from_model(self.state.config.name,
                     self.kb, brave_model)
+        end = time.time()
+        self._add_solving_time(end -start)
         return self.brave_config
 
     def _check(self)->bool:
@@ -526,21 +617,37 @@ class InteractiveConfigurator:
         self.ctl.assign_external(Function("check_permanent_cv"), False)
         self.ctl.assign_external(Function("check_potential_cv"), False)
         self._set_user_externals()
+        self._translate_fclingo()
         self.ctl.configuration.solve.enum_mode = 'auto'
         self.ctl.configuration.solve.opt_mode = 'ignore'
+        start = time.time()
         with  self.ctl.solve(yield_=True) as hdn:
             sat = False
             for model in hdn:
+                self.theory_on_model(model)
                 sat = True
-                checked_config = OOASPConfiguration.from_model(self.state.config.name,
+                checked_config = OOASPConfiguration.from_model(self.config.name,
                     self.kb, model)
                 self._set_config(checked_config)
             if not sat:
                 raise RuntimeError("Got UNSAT while checking for cvs")
 
+        end = time.time()
+        self._add_solving_time(end -start)
         return not self.config.has_cv
 
     def _get_cautious(self)->OOASPConfiguration:
+        """
+        Gets the cautious consequences, also incudes an optimization statement 
+        to only consider the models where lowerbound violations are minimized
+
+        Raises:
+            RuntimeError: If the configuration is conflicting and has no models
+
+        Returns:
+            OOASPConfiguration: A configuration with the intersection of all optimal models.
+
+        """
         if self.browsing:
             raise RuntimeError("Cant get cautious while browsing")
         if self.cautious_config:
@@ -550,19 +657,21 @@ class InteractiveConfigurator:
         self.ctl.assign_external(Function("check_permanent_cv"), True)
         self.ctl.assign_external(Function("check_potential_cv"), False)
         self._set_user_externals()
+        self._translate_fclingo()
         self.ctl.configuration.solve.enum_mode = 'cautious'
         self.ctl.configuration.solve.opt_mode = 'optN'
+        start = time.time()
         with  self.ctl.solve(yield_=True) as hdn:
             cautious_model = None
             for model in hdn:
                 cautious_model = model
-                cfg = OOASPConfiguration.from_model(self.state.config.name,
-                    self.kb, cautious_model)
             if cautious_model is None:
                 self.cautious_config = None
-                raise RuntimeError("No available inferences for conflicting configuration")
-            self.cautious_config = OOASPConfiguration.from_model(self.state.config.name,
+            else: 
+                self.cautious_config = OOASPConfiguration.from_model(self.state.config.name,
                     self.kb, cautious_model)
+        end = time.time()
+        self._add_solving_time(end -start)
         return self.cautious_config
     
 
@@ -646,13 +755,13 @@ class InteractiveConfigurator:
         self._new_state("Obtaining inferences")
         return self._get_cautious()
     
-    def create_all_required_objects(self)->None:
+    def create_all_required_objects(self)->int:
         """
         Creates a new state.
         Adds all required objects to the configuration
         """
         self._new_state("Creates all required objects")
-        return self._create_all_required_objects()
+        return self._create_required_objects()
     
     def next_solution(self)->OOASPConfiguration:
         """
@@ -747,7 +856,7 @@ class InteractiveConfigurator:
                 attr_value: Value of the attribute
         """
         self._new_state(f"Set {object_id}.{attr_name}={attr_value}",deep=True)
-        self._remove_value(attr_name,object_id)
+        self._remove_value(object_id,attr_name)
         self.config.add_value(object_id,attr_name,attr_value)
 
     def select_object_class(self,object_id:int,object_class:str)->None:
@@ -798,7 +907,7 @@ class InteractiveConfigurator:
             self.states.pop()
             raise e
 
-    def extend_incrementally(self, domain_limit:int=100, overshoot:bool=False)->OOASPConfiguration:
+    def extend_incrementally(self, domain_limit:int=100, overshoot:bool=False, step_size=1)->OOASPConfiguration:
         """
         Creates a state with a new configuration.
         Trys to find a solution for the current domain size, if a solution is
@@ -819,16 +928,17 @@ class InteractiveConfigurator:
         name = "Extend incrementally" if not overshoot else "Extend incrementally overshooting"
         self._new_state(name,deep=True)
         if overshoot:
-            self._create_all_required_objects()
+            self._create_required_objects()
         self.found_config = self._next_solution()
 
         while not self.found_config  and self.domain_size<domain_limit:
             n_objects_added = 0
             if overshoot:
                 self._outdate_models()
-                n_objects_added = self._create_all_required_objects()
-            if n_objects_added==0:
+                n_objects_added = len(self._create_required_objects())
+            while n_objects_added<step_size:
                 self._extend_domain()
+                n_objects_added += 1
             self.found_config = self._next_solution()
 
 
@@ -844,7 +954,6 @@ class InteractiveConfigurator:
         """
         current_found_config = self.found_config
         if not current_found_config:
-            print("No configuration found")
             return
         current_found_config.remove_user()
         self.set_configuration(current_found_config)
@@ -876,7 +985,7 @@ class InteractiveConfigurator:
         """
         Shows the image of the configuration in a jupyter notebook
         """
-        return self.state.config.view()
+        return self.config.view()
 
     def view_found(self)->None:
         """

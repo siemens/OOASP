@@ -41,11 +41,15 @@
 	ooasp_attr_enum(C,A,_),
 	guess.
 
-% TODO: this rule is only used if MAX-MIN < 30
 1 { ooasp_attr_value(A,new_object,V):V=MIN..MAX } 1:-
-	ooasp_attr(C,A,T),
+	ooasp_attr(C,A,enumint),
 	ooasp_isa(C,new_object),
 	ooasp_attr_minInclusive(C,A,MIN),
 	ooasp_attr_maxInclusive(C,A,MAX),
-	%(MAX-MIN)<30,
 	guess.
+
+% Numerical Attributes (fclingo)
+
+&fin{MIN..MAX} =: ooasp_attr_fvalue(A,new_object):- 
+	ooasp_attr_int(new_object, A, MIN, MAX),
+    guess.

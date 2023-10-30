@@ -6,7 +6,7 @@ from typing import List
 from types import SimpleNamespace
 from clingo import Model, parse_term, Function
 from clorm.clingo import Control
-from clorm import Symbol, Predicate, ConstantField, IntegerField, FactBase, RawField, refine_field, Raw, StringField
+from clorm import Symbol, Predicate, ConstantField, IntegerField, FactBase, RawField, refine_field, Raw, StringField, unify
 from clingraph.orm import Factbase
 from clingraph.graphviz import compute_graphs, render
 from clingraph.clingo_utils import ClingraphContext
@@ -39,6 +39,9 @@ class  OOASPConfiguration:
         self.fb = FactBase()
 
     def __deepcopy__(self, memo):
+        """
+        Makes a deep copy of the configuration
+        """
         cls = self.__class__
         result = cls.__new__(cls)
         memo[id(self)] = result
@@ -52,7 +55,6 @@ class  OOASPConfiguration:
         Sets the clorm Unifiers based on the name to filter out any other predicates in the program.
         """
 
-        NameField = refine_field(ConstantField,[self.name])
         class ConfigObject(Predicate):
             class Meta:
                 name = "ooasp_configobject"
@@ -84,6 +86,14 @@ class  OOASPConfiguration:
             attr_name=ConstantField
             object_id=IntegerField
             attr_value=RawField
+
+        class AttributeInt(Predicate):
+            class Meta:
+                name = "ooasp_attr_int"
+            object_id=IntegerField
+            attr_name=ConstantField
+            min=IntegerField
+            max=IntegerField
 
         class Association(Predicate):
             class Meta:
@@ -119,6 +129,7 @@ class  OOASPConfiguration:
 
         self.UNIFIERS = SimpleNamespace(
                 AttributeValue=AttributeValue,
+                AttributeInt=AttributeInt,
                 Association=Association,
                 Leaf=Leaf,
                 ObjectSmallest=ObjectSmallest,
@@ -138,7 +149,7 @@ class  OOASPConfiguration:
                 model: The clingo model
         """
         config= cls(name=name, kb = kb)
-        config.fb = model.facts(unifier=config.unifiers_list,atoms=True,shown=True)
+        config.fb = model.facts(unifier=config.unifiers_list,atoms=True,shown=True,theory=True)
         return config
 
     @property
@@ -208,15 +219,23 @@ class  OOASPConfiguration:
     @property
     def small_objects(self)->List[Predicate]:
         """
-        Small objects
+        All the objects but only considering their most specific instantiated class.
+        It can be used to get only one ooasp_isa for each object.
+
+        For example, if an object is of type Object and Rack this will only return the Rack
         """
         return list(self.fb.query(self.UNIFIERS.ObjectSmallest).all())
     
     @property
     def smart_objects(self)->List[Predicate]:
         """
-        Smart objects
+        A list of objects of type self.UNIFIERS.Object such that only one instance for each object appears.
+        Internally uses the small_objects method and maps them into the Objects class
+
+        Returns:
+            A list of unique objects of type self.UNIFIERS.Object with their most specific instantiated class
         """
+
         small_objects = {o.object_id:o.class_name for o in self.small_objects}
         objects = [] 
         for o in self.objects :
@@ -229,14 +248,14 @@ class  OOASPConfiguration:
     @property
     def objects(self)->List[Predicate]:
         """
-        The list of objects
+        The list of all objects
         """
         return list(self.fb.query(self.UNIFIERS.Object).all())
 
     @property
     def unique_objects(self)->List[Predicate]:
         """
-        The list of objects
+        The list of objects. (No specific class is defined)
         """
         return list(self.fb.query(self.UNIFIERS.Object).where(self.UNIFIERS.Object.class_name=='object').all())
     
@@ -255,16 +274,33 @@ class  OOASPConfiguration:
         return list(self.fb.query(self.UNIFIERS.AttributeValue).all())
 
     @property
+    def int_attributes(self)->List[Predicate]:
+        """
+        The list of attribute values
+        """
+        return list(self.fb.query(self.UNIFIERS.AttributeInt).all())
+
+
+    @property
     def user_input(self)->List[Symbol]:
         """
         The of symbols inside a user predicate
         """
         input_facts = list(self.fb.query(self.UNIFIERS.User).select(self.UNIFIERS.User.predicate).all())
-        return [f.symbol for f in input_facts]
+        user_fb  = unify(self.editable_unifiers, [f.symbol if type(f)==Raw else f for f in input_facts])
+        
+        return user_fb
 
-    def associated_by(self, obj, assoc_name)->List[Predicate]:
+    def associated_by(self, obj:int, assoc_name:str)->List[Predicate]:
         """
         The list of associations from object obj via association assoc_name
+
+        Parameters:
+            obj (int): The identifier for the object. The method returns association for the object being in either the right or left positions of the given association.
+            assoc_name (str): The name of the association to get all objects
+
+        Returns:
+            List[Predicate]: List of association from object obj via association assoc_name
         """
         Association = self.UNIFIERS.Association
         q = self.fb.query(Association)
@@ -274,9 +310,14 @@ class  OOASPConfiguration:
         q2 = q2.select(Association.object_id1)
         return list(q1.all()) + list(q2.all())
     
-    def domains_from(self, start_domain)->int:
+    def domains_from(self, start_domain:int)->int:
         """
         The domain size, it is computed by counting the number of objects in the fact base.
+            Parameters:
+                start_domain (_type_): The domain where the last grounding was done
+
+            Returns:
+                int: The number of objects in the domain larger than start_domain
         """
         q = self.fb.query(self.UNIFIERS.Domain)
         q = q.where(self.UNIFIERS.Domain.object_id>start_domain)
@@ -299,7 +340,7 @@ class  OOASPConfiguration:
         for f in facts:
             self.fb.remove(f)
             if remove_user:
-                self.fb.remove(self.UNIFIERS.User(f.symbol))
+                self.fb.remove(self.UNIFIERS.User(Raw(f.symbol)))
 
     def add_domain(self, class_name:str, object_id:int)->Predicate:
         """
@@ -460,8 +501,7 @@ class  OOASPConfiguration:
         All the given facts are added to the current configuration as user input
         """
         for f in  facts:
-            self.fb.add(self.UNIFIERS.User(f.symbol))
-    
+            self.fb.add(self.UNIFIERS.User(Raw(f.symbol)))
     
     def save_png(self,directory:str="./out"):
         """

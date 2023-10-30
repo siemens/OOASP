@@ -6,13 +6,13 @@ from clingo import parse_term
 from ooasp.kb import OOASPKnowledgeBase
 from ooasp.interactive import InteractiveConfigurator
 from ooasp import settings
-from ooasp.tests.utils import new_racks_iconf
+from ooasp.tests.utils import new_iconf
 
 import pytest
 from importlib import reload
 
 def test_s_interactive_extend_browse_basic():
-    iconf = new_racks_iconf()
+    iconf = new_iconf()
     iconf.extend_domain(2,cls='element')
     brave = iconf.get_options()
     conf_str = brave.fb.asp_str()
@@ -26,7 +26,7 @@ def test_s_interactive_extend_browse_basic():
 
 
 def test_s_interactive_extend_browse():
-    iconf = new_racks_iconf()
+    iconf = new_iconf()
     iconf.extend_domain(5)
     assert iconf.domain_size == 5
     found = iconf.next_solution()
@@ -49,14 +49,14 @@ def test_s_interactive_extend_browse():
 
 
 def test_s_interactive_add_leaf_non_class():
-    iconf = new_racks_iconf()
+    iconf = new_iconf()
 
     with pytest.raises(Exception) as e_info:
         iconf.new_object('other')
     assert iconf.domain_size == 0
 
 def test_s_interactive_add_leaf_extend_browse():
-    iconf = new_racks_iconf()
+    iconf = new_iconf()
 
     iconf.new_object('frame')
     found = iconf.next_solution()
@@ -76,7 +76,7 @@ def test_s_interactive_add_leaf_extend_browse():
     found = iconf.next_solution()
 
 def test_s_interactive_add_object_extend_browse():
-    iconf = new_racks_iconf()
+    iconf = new_iconf()
 
     iconf.new_object('rack')
     found = iconf.next_solution()
@@ -98,7 +98,7 @@ def test_s_interactive_add_object_extend_browse():
     assert "ooasp_isa_leaf(frame,4)." in found.fb.asp_str()
 
 def test_s_interactive_extend_incrementally():
-    iconf = new_racks_iconf()
+    iconf = new_iconf()
     iconf.new_object('frame')
     found = iconf.extend_incrementally()
     assert found
@@ -114,7 +114,7 @@ def test_s_interactive_extend_incrementally():
     assert len(iconf.states)==3
 
 def test_s_interactive_extend_incrementally_overshooting():
-    iconf = new_racks_iconf()
+    iconf = new_iconf()
     iconf.new_object('frame')
     found = iconf.extend_incrementally(overshoot=True)
     assert found
@@ -130,7 +130,7 @@ def test_s_interactive_extend_incrementally_overshooting():
     assert len(iconf.states)==3
 
 def test_s_interactive_extend_incrementally_overshooting_rack():
-    iconf = new_racks_iconf()
+    iconf = new_iconf()
     iconf.new_object('rack')
     found = iconf.extend_incrementally(overshoot=True)
     assert found
@@ -151,7 +151,7 @@ def test_s_interactive_extend_incrementally_overshooting_rack():
 
 
 def test_s_interactive_extend_incrementally_overshooting_leaving_object():
-    iconf = new_racks_iconf()
+    iconf = new_iconf()
     iconf.new_object('frame')
     iconf.new_object('frame')
     found = iconf.extend_incrementally(overshoot=True)
@@ -166,7 +166,7 @@ def test_s_interactive_extend_incrementally_overshooting_leaving_object():
 
 
 def test_s_interactive_select_full():
-    iconf = new_racks_iconf()
+    iconf = new_iconf()
     iconf.new_object('frame')
     found = iconf.extend_incrementally()
     assert found
@@ -182,7 +182,7 @@ def test_s_interactive_select_full():
 
 
 def test_s_interactive_ccheck():
-    iconf = new_racks_iconf()
+    iconf = new_iconf()
     iconf.check()
     assert len(iconf.config.constraint_violations) == 0
     iconf.new_object('frame')
@@ -198,7 +198,7 @@ def test_s_interactive_ccheck():
     assert 'ooasp_cv(no_value,3,"Missing value for {}",(frame_position,))' in iconf.state.config.fb.asp_str()
 
 def test_s_interactive_check_custom_cv():
-    iconf = new_racks_iconf()
+    iconf = new_iconf()
     iconf.check()
     assert len(iconf.config.constraint_violations) == 0
     iconf.new_object('rackSingle')
@@ -214,7 +214,7 @@ def test_s_interactive_check_custom_cv():
 
 
 def test_s_interactive_select():
-    iconf = new_racks_iconf()
+    iconf = new_iconf()
     iconf.extend_domain(1)
     iconf.select_object_class(1,'frame')
     objects = iconf.config.objects
@@ -242,7 +242,7 @@ def test_s_interactive_select():
 
 
 def test_s_options():
-    iconf = new_racks_iconf()
+    iconf = new_iconf()
     iconf.extend_domain(1)
 
     brave_conf = iconf.get_options()
@@ -296,13 +296,13 @@ def test_s_options():
 
 def test_s_json():
 
-    iconf = new_racks_iconf()
+    iconf = new_iconf()
 
 
 
 
 def test_normal_extend():
-    iconf = new_racks_iconf()
+    iconf = new_iconf()
     iconf.new_object('rackSingle')
     found = iconf.extend_incrementally()
     found_str = found.fb.asp_str()
@@ -313,7 +313,7 @@ def test_normal_extend():
     assert "ooasp_isa_leaf(rackSingle,1)." in found_str
 
 def test_new_propagate():
-    iconf = new_racks_iconf()
+    iconf = new_iconf()
     iconf.new_object('rackSingle',propagate=True)
     conf_str = iconf.config.fb.asp_str()
     assert 'ooasp_domain(rackSingle,1).' in conf_str
@@ -328,7 +328,7 @@ def test_new_propagate():
 
 
 def test_extend_propagate_symmetry():
-    iconf = new_racks_iconf()
+    iconf = new_iconf()
     # iconf.extend_domain(5,cls='object',propagate=True)
     iconf.extend_domain(1,cls='rackSingle')
     iconf.extend_domain(4,cls='frame')
@@ -338,7 +338,7 @@ def test_extend_propagate_symmetry():
     assert found
 
 
-    iconf = new_racks_iconf()
+    iconf = new_iconf()
     iconf.extend_domain(4,cls='frame')
     iconf.extend_domain(1,cls='rackSingle')
     found = iconf.next_solution()
@@ -347,7 +347,7 @@ def test_extend_propagate_symmetry():
     assert found
 
 def test_create_required_objects():
-    iconf = new_racks_iconf()
+    iconf = new_iconf()
     iconf.new_object('rackSingle')
     iconf.extend_domain(3,cls='frame')
     iconf.select_association('rack_frames',1,2)
@@ -362,11 +362,11 @@ def test_create_required_objects():
     assert found.domain_size == 5
 
 def test_create_all_required_objects():
-    iconf = new_racks_iconf()
+    iconf = new_iconf()
     iconf.new_object('rackSingle')
     iconf.new_object('frame')
-    objects_added = iconf._create_all_required_objects()
-    assert objects_added == 3
+    objects_added = iconf._create_required_objects()
+    assert len(objects_added) == 3
     config_str = iconf.config.fb.asp_str()
     assert "ooasp_domain(frame,5)." in config_str
     found = iconf.next_solution()
@@ -375,7 +375,7 @@ def test_create_all_required_objects():
     assert found.domain_size == 5
 
 def test_custom_interactive_add_leaf_extend_browse():
-    iconf = new_racks_iconf()
+    iconf = new_iconf()
 
     iconf.new_object('frame')
     found = iconf.next_solution()
@@ -397,7 +397,7 @@ def test_custom_interactive_add_leaf_extend_browse():
     assert found
 
 def test_not_a_subclass():
-    iconf = new_racks_iconf()
+    iconf = new_iconf()
 
     iconf.extend_domain(1,'rackSingle')
     iconf.select_object_class(1, 'rackDouble')
@@ -405,7 +405,7 @@ def test_not_a_subclass():
     assert ok # Its ok because the rackDouble is ignored since it no external is grounded for user(ooasp_isa(1,rackDouble))
 
 def test_add_remove_assoc():
-    iconf = new_racks_iconf()
+    iconf = new_iconf()
     
     iconf.extend_domain(1,'object')
     iconf.extend_domain(1,'object')
@@ -443,7 +443,7 @@ def test_add_remove_assoc():
 
 
 def test_three_racks():
-    iconf = new_racks_iconf()
+    iconf = new_iconf()
 
     iconf.new_object('rackSingle')
     iconf.new_object('rackSingle')
@@ -452,9 +452,35 @@ def test_three_racks():
     found.save_png(directory="./out/test")
 
 
+def test_incremental_adding_multiple_racks():
+    iconf = new_iconf()
+    iconf.new_object('rackSingle')
+    
+    for n in range(5):
+        iconf.new_object('frame')
+    added = iconf.create_all_required_objects()
+    assert len(added)==4 # One rack and three frames
+
+
+def test_incremental_adding_multiple_frames():
+    iconf = new_iconf()
+    
+    for n in range(5):
+        iconf.new_object('frame')
+    iconf.new_object('rackSingle')
+    added = iconf.create_all_required_objects()
+    assert len(added)==4 # One rack and three frames
+
+def test_incremental_adding_multiple_elements():
+    iconf = new_iconf()
+    
+    for n in range(4):
+        iconf.new_object('elementA')
+    added = iconf.create_all_required_objects()
+    assert len(added)==9 
 
 def test_moduleII():
-    iconf = new_racks_iconf()
+    iconf = new_iconf()
 
     iconf.new_object('moduleII',propagate=True)
     iconf.add_inferences()

@@ -53,6 +53,7 @@ class OOASPUI:
         self.browse = basic_vbox()
         self.check = basic_vbox()
         self.opts = None
+        self.invalid = False
         self.update()
         self.create_structure()
         
@@ -153,8 +154,12 @@ class OOASPUI:
         Sets the found configuration image
         """
         if self.iconf.found_config is None:
+            self.found_config.layout.min_width="400pt"
+            self.found_config.layout.width="400pt"
             self.found_config.value = empty_img.data
         elif self.iconf.found_config is False:
+            self.found_config.layout.min_width="400pt"
+            self.found_config.layout.width="400pt"
             self.found_config.value = nosol_img.data
         else:
             self.iconf.found_config.save_png("out/found/")
@@ -239,10 +244,8 @@ class OOASPUI:
             return
         if not self.iconf.brave_config:
             self.iconf._get_options()
+        self.invalid = self.iconf.brave_config is None
         opts = self.iconf._brave_config_as_options()
-        if opts is None:
-            self.edit.children= tuple([self.title('Edit')] + [Label(value="No options for conflicting configuration")])
-            return
         dropdown_object = widgets.Dropdown(
                 options=['']+[o for o in opts.keys()],
                 value=self.edit_object,
@@ -284,14 +287,16 @@ class OOASPUI:
         """
         Sets the browse section buttons
         """
+        colora = 'danger' if self.invalid else 'primary'
+        colorb = 'danger' if self.invalid else 'info'
         b_layout = Layout(height='auto', width='auto')
-        incremental = Button(description='Find incrementally',button_style='primary',layout=b_layout)
+        incremental = Button(description='Find incrementally',button_style=colora, disabled=self.invalid, layout=b_layout)
         incremental.on_click(self.call_and_update(self.button_wrapper('extend_incrementally')))
-        incrementalos = Button(description='Find incrementally (overshoot)',button_style='primary',layout=b_layout)
+        incrementalos = Button(description='Find incrementally (overshoot)',button_style=colora, disabled=self.invalid, layout=b_layout)
         incrementalos.on_click(self.call_and_update(self.button_wrapper('extend_incrementally',overshoot=True)))
         select_found = Button(description='Select',button_style='success',layout=b_layout)
         select_found.on_click(self.call_and_update(self.button_wrapper('select_found_configuration')))
-        next_solution = Button(description='Next solution',button_style='info',layout=b_layout)
+        next_solution = Button(description='Next solution',button_style=colorb, disabled=self.invalid, layout=b_layout)
         next_solution.on_click(self.call_and_update(self.button_wrapper('next_solution')))
         end_browsing = Button(description='End browsing',syle='danger',layout=b_layout)
         end_browsing.on_click(self.call_and_update(self.button_wrapper('end_browsing')))
@@ -303,14 +308,19 @@ class OOASPUI:
         """
         Sets the check section
         """
+        color = 'danger' if self.invalid else 'info'
         check = Button(description='Check',button_style='success')
         check.on_click(self.call_and_update(self.button_wrapper('check')))
         clear = Button(description='Clear checks',button_style='warning')
         clear.on_click(self.call_and_update(self.button_wrapper('remove_cvs')))
-        get_inferences = Button(description='Add inferences',button_style='info')
+        get_inferences = Button(description='Add inferences',button_style=color, disabled=self.invalid)
         get_inferences.on_click(self.call_and_update(self.button_wrapper('add_inferences')))
-        create_required = Button(description='Create required',button_style='info')
+        create_required = Button(description='Create required',button_style=color, disabled=self.invalid)
         create_required.on_click(self.call_and_update(self.button_wrapper('create_all_required_objects')))
-        self.check.children= tuple([self.title('Check'), check, clear, get_inferences,create_required])
+        elements = [check, clear, get_inferences,create_required]
+        if self.invalid:
+            invalid = HTML(value='<p style="color:red"><b>Invalid configuration</b></p>')
+            elements = [invalid] + elements
+        self.check.children= tuple([self.title('Check'),]+elements)
 
 

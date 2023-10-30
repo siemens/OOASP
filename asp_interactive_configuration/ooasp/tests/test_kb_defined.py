@@ -11,7 +11,7 @@ def test_kb_create():
     racks_kb = OOASPKnowledgeBase.from_file("racks_v1",settings.racks_example_kb)
     assert racks_kb.name=="racks_v1"
     assert "ooasp_assoc(rack_frames,rack,1,1,frame,4,8)." in racks_kb.fb.asp_str()
-    assert "ooasp_attr(frame,frame_position,int)." in racks_kb.fb.asp_str()
+    assert "ooasp_attr(frame,frame_position,enumint)." in racks_kb.fb.asp_str()
     assert "ooasp_attr_maxInclusive(frame,frame_position,8)." in racks_kb.fb.asp_str()
     assert "ooasp_class(object)." in racks_kb.fb.asp_str()
     assert "ooasp_class(rack)." in racks_kb.fb.asp_str()

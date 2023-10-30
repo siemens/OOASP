@@ -57,8 +57,6 @@ ooasp_associated(ASSOC,ID1,new_object) :-
     ooasp_isa(C1,ID1),
     ooasp_isa(C2,new_object).
 
-
-
 ooasp_associated(ASSOC_S,new_object,ID2) :-
     ooasp_associated(ASSOC,new_object,ID2),
     ooasp_assoc_specialization(ASSOC_S,ASSOC),
@@ -72,3 +70,12 @@ ooasp_associated(ASSOC_S,ID1,new_object) :-
     ooasp_assoc(ASSOC_S,C1,_,_,C2,_,_),
     ooasp_isa(C1,ID1),
     ooasp_isa(C2,new_object).
+
+
+% Int attributes
+
+ooasp_attr_int(new_object, A, MIN, MAX):-
+	ooasp_isa(C,new_object),
+	ooasp_attr_minInclusive(C,A,MIN),
+	ooasp_attr_maxInclusive(C,A,MAX),
+	ooasp_attr(C,A,int).
