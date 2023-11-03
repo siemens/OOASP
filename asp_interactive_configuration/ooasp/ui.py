@@ -16,13 +16,13 @@ def basic_vbox():
 def wraped_label(text):
     return HTML(value="<style>cv{word-wrap: break-word ;color:red}</style> <p class='cv'>" + text+"</p>")
 
-def resize(baseheight,f_name):
-    baseheight = 300
+def resize(f_name,baseheight=300):
     im = PImage.open(f_name)
     w, h = im.size
     if h>baseheight:
         hpercent = (baseheight/h)
         w = int((w*hpercent))
+        h = baseheight
         resized = im.resize((w,h))
         resized.save(f_name)
     return w
@@ -143,7 +143,7 @@ class OOASPUI:
         """
         self.iconf.config.save_png()
         f_name = f"out/{self.iconf.config.name}.png"
-        w = resize(300,f_name)
+        w = resize(f_name,300)
         self.config_image.layout.min_width=str(w/1)+"pt"
         self.config_image.layout.width=str(min([w,1000]))+"pt"
         image = Image(f_name,unconfined=True)
@@ -164,7 +164,7 @@ class OOASPUI:
         else:
             self.iconf.found_config.save_png("out/found/")
             f_name = f"out/found/{self.iconf.found_config.name}.png"
-            w = resize(300,f_name)
+            w = resize(f_name,300)
             self.found_config.layout.min_width=str(w/1)+"pt"
             self.found_config.layout.width=str(min([w,1000]))+"pt"
             image = Image(f_name)
@@ -256,7 +256,7 @@ class OOASPUI:
         dropdown_object.observe(self.call_and_update(self.select_edit_object))
         o = self.edit_object
         edit_dropdowns = []
-        names = {'object_class':'Class','value':'Attribuite-Value','association':'Association'}
+        names = {'object_class':'Class','value':'Attribute-Value','association':'Association'}
         if o!='':
             obj_opts =  opts[o]
             self.opts = {o['str']:o for o in obj_opts}
