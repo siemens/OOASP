@@ -1,6 +1,7 @@
 # Copyright (c) 2022 Siemens AG Oesterreich
 # SPDX-License-Identifier: MIT
 
+from ooasp import settings
 
 import json
 COLORS = {
@@ -39,11 +40,11 @@ def opt(name:str,args):
 
 def editable_fact_as_select_action(fact,unifiers):
     """
-    Gets the editable fact (Leafs, AttrValue and Associations) as
+    Gets the editable fact (Objects, AttrValue and Associations) as
     a select option.
     """
-    if isinstance(fact,unifiers.Leaf):
-        return opt('select_leaf_class',(fact.object_id,fact.class_name))
+    if isinstance(fact,unifiers.Object) or isinstance(fact,unifiers.Leaf) or isinstance(fact,unifiers.ObjectSmallest):
+        return opt('select_object_class',(fact.object_id,fact.class_name))
     elif isinstance(fact,unifiers.AttributeValue):
         return opt('select_value',(fact.object_id,fact.attr_name,fact.attr_value))
     elif isinstance(fact,unifiers.Association):
@@ -53,11 +54,11 @@ def editable_fact_as_select_action(fact,unifiers):
 
 def editable_fact_as_remove_action(fact,unifiers):
     """
-    Gets the editable facts (Leafs, AttrValue and Associations) as
+    Gets the editable facts (Objects, AttrValue and Associations) as
     a remove option.
     """
-    if isinstance(fact,unifiers.Leaf):
-        return opt('remove_leaf_class',(fact.object_id,))
+    if isinstance(fact,unifiers.Object) or isinstance(fact,unifiers.Leaf) or isinstance(fact,unifiers.ObjectSmallest):
+        return opt('remove_object_class',(fact.object_id,))
     elif isinstance(fact,unifiers.AttributeValue):
         return opt('remove_value',(fact.object_id,fact.attr_name))
     elif isinstance(fact,unifiers.Association):

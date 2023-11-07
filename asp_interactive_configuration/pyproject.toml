@@ -9,14 +9,25 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.9"
-clingo = "^5.5.2"
 graphviz = "^0.20"
 natsort = "^8.1.0"
 pytest = "^7.1.2"
 clingraph = ">=1.0.0"
 pylint = "^2.14.4"
 Clorm = "^1.4.0"
-ipywidgets = "^7.7.1"
+ipywidgets = "^8.1.1"
+pyperf = "^2.6.1"
+pandas = "^2.0.3"
+matplotlib = "^3.7.2"
+opencv-python = "^4.8.0.76"
+pillow = "^10.0.0"
+fclingo = "0.1.1"
+copier = "^9.0.1"
+jinja2-time = "^0.2.0"
+jupyterlab = "^4.0.7"
+jupyterlab-widgets = "^3.0.9"
+jupyterlab-pygments = "^0.2.2"
+jupyter = "^1.0.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.2"
@@ -27,3 +38,9 @@ ipykernel = "^6.13.0"
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[[tool.poetry.source]]
+name = "test"
+url = "https://test.pypi.org/simple/"
+priority = "supplemental"
+

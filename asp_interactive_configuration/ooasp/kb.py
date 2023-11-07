@@ -5,13 +5,12 @@ from importlib import resources
 from typing import List
 from types import SimpleNamespace
 from clingo import Control
-from clorm import Predicate, ConstantField, IntegerField, FactBase, refine_field, parse_fact_files
+from clorm import Predicate, ConstantField, IntegerField, FactBase, refine_field, parse_fact_files, RawField
 from clingraph.orm import Factbase
 from clingraph.graphviz import compute_graphs, render
 from clingraph.clingo_utils import ClingraphContext
-import ooasp.encodings
-import ooasp.encodings_simple
-
+from functools import cache
+import ooasp.settings as settings
 # pylint: disable=missing-class-docstring
 # pylint: disable=too-few-public-methods
 
@@ -24,14 +23,13 @@ class  OOASPKnowledgeBase:
             UNIFIERS (Namespace): All clorm unifiers (classes) used to link objects with predicates
     """
 
-    def __init__(self, name:str, simplified_encodings=False):
+    def __init__(self, name:str):
         """
         Creates a knowledge base
             Parameters:
                 name: The name of the knowledge base
         """
         self.name:str = name
-        self.simplified_encodings = simplified_encodings
         self.set_unifiers()
         self.fb = FactBase()
 
@@ -45,29 +43,27 @@ class  OOASPKnowledgeBase:
         class KBName(Predicate):
             class Meta:
                 name = "ooasp_kb"
-            if not self.simplified_encodings:
-                kb=NameField
 
         class Class(Predicate):
             class Meta:
                 name = "ooasp_class"
-            if not self.simplified_encodings:
-                kb=NameField
             name=ConstantField
 
         class SubClass(Predicate):
             class Meta:
                 name = "ooasp_subclass"
-            if not self.simplified_encodings:
-                kb=NameField
+            sub_class=ConstantField
+            super_class=ConstantField
+
+        class AssocSpecialization(Predicate):
+            class Meta:
+                name = "ooasp_assoc_specialization"
             sub_class=ConstantField
             super_class=ConstantField
 
         class Assoc(Predicate):
             class Meta:
                 name = "ooasp_assoc"
-            if not self.simplified_encodings:
-                kb=NameField
             name= ConstantField
             class1=ConstantField
             min1=IntegerField
@@ -77,64 +73,52 @@ class  OOASPKnowledgeBase:
             max2=IntegerField
 
         TypeField = refine_field(ConstantField,
-        ["int","str","bool"])
+        ["int","str","bool","enumint"])
 
         class Attr(Predicate):
             class Meta:
-                if not self.simplified_encodings:
-                    name = "ooasp_attribute"
-                else:
-                    name = "ooasp_attr"
-            if not self.simplified_encodings:
-                kb=NameField
+                name = "ooasp_attr"
             class_name=ConstantField
             name=ConstantField
             type=TypeField
 
         class AttrMin(Predicate):
             class Meta:
-                if not self.simplified_encodings:
-                    name = "ooasp_attribute_minInclusive"
-                else:
-                    name = "ooasp_attr_minInclusive"
-            if not self.simplified_encodings:
-                kb=NameField
+                name = "ooasp_attr_minInclusive"
             class_name=ConstantField
             name=ConstantField
             val=IntegerField
 
         class AttrMax(Predicate):
             class Meta:
-                if not self.simplified_encodings:
-                    name = "ooasp_attribute_maxInclusive"
-                else:
-                    name = "ooasp_attr_maxInclusive"
-            if not self.simplified_encodings:
-                kb=NameField
+                name = "ooasp_attr_maxInclusive"
             class_name=ConstantField
             name=ConstantField
             val=IntegerField
 
         class AttrEnum(Predicate):
             class Meta:
-                if not self.simplified_encodings:
-                    name = "ooasp_attribute_enum"
-                else:
-                    name = "ooasp_attr_enum"
-            if not self.simplified_encodings:
-                kb=NameField
+                name = "ooasp_attr_enum"
             class_name=ConstantField
             name=ConstantField
             val=ConstantField
+
+        class SpecialCV(Predicate):
+            class Meta:
+                name = "ooasp_special_cv"
+            name=ConstantField
+            info=RawField
 
         self.UNIFIERS = SimpleNamespace(
                 Class=Class,
                 SubClass=SubClass,
                 Assoc=Assoc,
+                AssocSpecialization=AssocSpecialization,
                 Attr=Attr,
                 AttrMin=AttrMin,
                 AttrMax=AttrMax,
                 AttrEnum=AttrEnum,
+                SpecialCV=SpecialCV,
                 KBName=KBName)
 
     @property
@@ -143,6 +127,20 @@ class  OOASPKnowledgeBase:
         The list of all unifiers classes
         """
         return self.UNIFIERS.__dict__.values()
+
+
+    @property
+    # @cache
+    def classes(self)->List[Predicate]:
+        """
+        A list of all classes. Computed via queries to the Factbase
+        """
+        cls = set(self.fb.query(self.UNIFIERS.Class).select(self.UNIFIERS.Class.name).all())
+        cls.remove('object')
+        cls = list(cls)
+        cls.sort()
+        cls=['object'] +cls
+        return cls
 
     @property
     def leafs(self)->List[Predicate]:
@@ -162,13 +160,22 @@ class  OOASPKnowledgeBase:
         self.fb.update(fb)
 
     @classmethod
-    def from_file(cls, name:str, file_path:str, simplified_encodings=False):
+    def from_file(cls, name:str, file_path:str):
         """
         Creates a knowledge base from a file
         """
-        kb = cls(name,simplified_encodings)
+        kb = cls(name)
         kb.load_facts_from_file(file_path)
         return kb
+
+    def direct_superclasses(self, class_name:str)->List:
+        """
+        Gets all the direct superclsses of a class
+            Parameters:
+                class_name: The name of the subclass
+        """
+        SubClass= self.UNIFIERS.SubClass
+        return list(self.fb.query(SubClass).where(SubClass.sub_class == class_name).select(SubClass.super_class).all())
 
     def direct_subclasses(self, class_name:str)->List:
         """
@@ -180,6 +187,26 @@ class  OOASPKnowledgeBase:
         return list(self.fb.query(SubClass).where(SubClass.super_class == class_name).select(SubClass.sub_class).all())
 
 
+    def associations(self, class_name:str)->List:
+        """
+        Gets all the associations of a class
+            Parameters:
+                class_name: The name of the class
+        """
+        SubClass= self.UNIFIERS.SubClass
+        Assoc= self.UNIFIERS.Assoc
+        super_classes = self.direct_superclasses(class_name)
+        assocs = set()
+        for sc in super_classes:
+            super_assoc = self.associations(sc)
+            assocs.update(super_assoc)
+        left = set(self.fb.query(Assoc).where(Assoc.class1 == class_name).select(Assoc.name, Assoc.class2, Assoc.min2, Assoc.max2).all())
+        right = set(self.fb.query(Assoc).where(Assoc.class2 == class_name).select(Assoc.name, Assoc.class1, Assoc.min1, Assoc.max1).all())
+        assocs.update(left)
+        assocs.update(right)
+        return assocs
+
+
     def is_leaf(self, class_name:str)->bool:
         """
         Checks if a class name is a leaf by quering the factbase for any subclasses
@@ -188,6 +215,13 @@ class  OOASPKnowledgeBase:
         """
         return len(self.direct_subclasses(class_name))==0
 
+    def is_class(self, class_name:str)->bool:
+        """
+        Checks if a class name
+            Parameters:
+                class_name: The name of the class
+        """
+        return class_name in self.classes
 
     def save_png(self,directory:str="./out")->None:
         """
@@ -195,12 +229,8 @@ class  OOASPKnowledgeBase:
         """
         ctl = Control()
         fbs = []
-        if self.simplified_encodings:
-            path = resources.files(ooasp.encodings_simple).joinpath("viz_kb.lp")
-            ctl.load(str(path))
-        else:
-            path = resources.files(ooasp.encodings).joinpath("viz_kb.lp")
-            ctl.load(str(path))
+        path = settings.encodings_path.joinpath("viz_kb.lp")
+        ctl.load(str(path))
         ctl.add("base",[],self.fb.asp_str())
         ctl.ground([("base", [])],ClingraphContext())
         ctl.solve(on_model=lambda m: fbs.append(Factbase.from_model(m,default_graph="kb")))

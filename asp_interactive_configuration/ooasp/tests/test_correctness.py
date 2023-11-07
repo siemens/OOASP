@@ -3,41 +3,42 @@
 
 from ooasp.interactive import InteractiveConfigurator
 from ooasp.kb import OOASPKnowledgeBase
+from ooasp import settings
+from ooasp.tests.utils import new_iconf
+
+import pytest
+from importlib import reload
 
 def test_racks_constraints_element():
     """ test element constraints """
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb.lp")
-    iconf = InteractiveConfigurator(racks_kb,"i1",["./examples/racks/constraints.lp"])
-    iconf.new_leaf("elementA")
+    iconf = new_iconf()
+    iconf.new_object("elementA")
     iconf.check()
-    assert len(iconf.config.constraint_violations)==2
+    assert len(iconf.config.constraint_violations)==1
     assert "lowerbound" in str(iconf.config.constraint_violations)
-    assert "customlowerbound" in str(iconf.config.constraint_violations)
+    assert '(element_modules1,1,0,module' in str(iconf.config.constraint_violations)
 
-def test_racks_constraints_module():
+def test_racks_constraints_moduleI():
     """ test module constraints """
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb.lp")
-    iconf = InteractiveConfigurator(racks_kb,"i1",["./examples/racks/constraints.lp"])
-    iconf.new_leaf("moduleI")
+    iconf = new_iconf()
+    iconf.new_object("moduleI")
     iconf.check()
     assert len(iconf.config.constraint_violations)==2
     assert "lowerbound" in str(iconf.config.constraint_violations)
-    assert "module_requires_element" in str(iconf.config.constraint_violations)
+    assert "(element_modules1,1,0,elementA" in str(iconf.config.constraint_violations)
 
 def test_racks_constraints_moduleV():
     """ the moduleV constraints """
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb.lp")
-    iconf = InteractiveConfigurator(racks_kb,"i1",["./examples/racks/constraints.lp"])
-    iconf.new_leaf("moduleV")
+    iconf = new_iconf()
+    iconf.new_object("moduleV")
     iconf.check()
     assert len(iconf.config.constraint_violations)==1
     assert "lowerbound" in str(iconf.config.constraint_violations)
 
 def test_racks_constraints_frame():
     """ test frame constraints """
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb.lp")
-    iconf = InteractiveConfigurator(racks_kb,"i1",["./examples/racks/constraints.lp"])
-    iconf.new_leaf("frame")
+    iconf = new_iconf()
+    iconf.new_object("frame")
     iconf.check()
     assert len(iconf.config.constraint_violations)==2
     assert "no_value" in str(iconf.config.constraint_violations)
@@ -45,81 +46,125 @@ def test_racks_constraints_frame():
 
 def test_racks_constraints_rack():
     """ test rack constraints """
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb.lp")
-    iconf = InteractiveConfigurator(racks_kb,"i1",["./examples/racks/constraints.lp"])
-    iconf.new_leaf("rackSingle")
+    iconf = new_iconf()
+    iconf.new_object("rackDouble")
     iconf.check()
-    assert len(iconf.config.constraint_violations)==2
+    assert len(iconf.config.constraint_violations)==1
     assert "lowerbound" in str(iconf.config.constraint_violations)
-    assert "racksinglelowerbound" in str(iconf.config.constraint_violations)
-    iconf.new_leaf("rackDouble")
+    assert "rack_framesD,8,0,frame" in str(iconf.config.constraint_violations)
+    for i in range(7):
+        f_id = iconf.new_object("frame")
+        iconf.select_value(f_id,'frame_position',f_id-1)
+        iconf.select_association("rack_frames",1,f_id)
+
+
     iconf.check()
-    assert len(iconf.config.constraint_violations)==4
-    assert "rackdoublelowerbound" in str(iconf.config.constraint_violations)
+    assert len(iconf.config.constraint_violations)==1
+    assert "lowerbound" in str(iconf.config.constraint_violations)
+    assert "rack_framesD,8,7,frame" in str(iconf.config.constraint_violations)
+
+
+def test_racks_constraints_frame_position():
+    """ test assoc constraints """
+    iconf = new_iconf()
+    iconf.new_object("frame")
+    iconf.new_object("rackSingle")
+    iconf.select_association('rack_frames',2,1)
+    iconf.select_value(1,'frame_position',5)
+    iconf.check()
+    assert "frame_must_be_within_range" in str(iconf.config.constraint_violations)
 
 
 def test_racks_constraints_associations():
     """ test assoc constraints """
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb.lp")
-    iconf = InteractiveConfigurator(racks_kb,"i1",["./examples/racks/constraints.lp"])
-    iconf.new_leaf("moduleV")
-    iconf.new_leaf("elementA")
+    iconf = new_iconf()
+    iconf.new_object("moduleV")
+    iconf.new_object("elementA")
     iconf.select_association("element_modules",2,1)
     iconf.check()
-    assert len(iconf.config.constraint_violations)==2
-    assert "assoc1_constraint1" in str(iconf.config.constraint_violations)
+    config_str = iconf.config.fb.asp_str()
+    assert "associated(element_modules,2,1)" in config_str
 
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb.lp")
-    iconf = InteractiveConfigurator(racks_kb,"i1",["./examples/racks/constraints.lp"])
-    iconf.new_leaf("elementA")
-    iconf.new_leaf("moduleV")
+    assert len(iconf.config.constraint_violations)==2
+    assert "element_modules1,1,0,moduleI" in str(iconf.config.constraint_violations)
+
+    iconf = new_iconf()
+    iconf.new_object("elementA")
+    iconf.new_object("moduleV")
     iconf.select_association("element_modules",1,2)
     iconf.check()
     assert len(iconf.config.constraint_violations)==2
-    assert "assoc1_constraint2" in str(iconf.config.constraint_violations)
+    assert "element_modules1,1,0,moduleI" in str(iconf.config.constraint_violations)
 
 def test_racks_constraints_moduleII_requires_moduleV():
     """ test moduleII requires moduleV constraint """
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb.lp")
-    iconf = InteractiveConfigurator(racks_kb,"i1",["./examples/racks/constraints.lp"])
-    iconf.new_leaf("frame")
-    iconf.new_leaf("moduleII")
-    iconf.new_leaf("moduleV")
+    iconf = new_iconf()
+    iconf.new_object("frame")
+    iconf.new_object("moduleII")
+    iconf.new_object("moduleV")
 
     iconf.select_association("frame_modules",1,2)
     iconf.check()
+
     assert len(iconf.config.constraint_violations)==5
     assert "moduleII_requires_moduleV" in str(iconf.config.constraint_violations)
 
     iconf.select_association("frame_modules",1,3)
     iconf.check()
+
     assert len(iconf.config.constraint_violations)==3
     assert "moduleII_requires_moduleV" not in str(iconf.config.constraint_violations)
 
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb.lp")
-    iconf = InteractiveConfigurator(racks_kb,"i1",["./examples/racks/constraints.lp"])
-    iconf.new_leaf("frame")
-    iconf.new_leaf("moduleV")
-    iconf.new_leaf("moduleII")
-
-    iconf.select_association("frame_modules",1,2)
-    iconf.check()
-    assert len(iconf.config.constraint_violations)==5
-    assert "moduleII_requires_moduleV" in str(iconf.config.constraint_violations)
+    iconf = new_iconf()
+    iconf.new_object("frame")
+    iconf.new_object("moduleV")
+    iconf.new_object("moduleII")
 
     iconf.select_association("frame_modules",1,3)
     iconf.check()
+
+    assert len(iconf.config.constraint_violations)==5
+    assert "moduleII_requires_moduleV" in str(iconf.config.constraint_violations)
+
+    iconf.select_association("frame_modules",1,2)
+    iconf.check()
+
     assert len(iconf.config.constraint_violations)==3
     assert "moduleII_requires_moduleV" not in str(iconf.config.constraint_violations)
+
+def test_racks_unique_constraint():
+    """ test assoc constraints """
+    iconf = new_iconf()
+    iconf.new_object("rack")
+    iconf.new_object("frame")
+    iconf.new_object("frame")
+    iconf.select_association("rack_frames",1,2)
+    iconf.select_association("rack_frames",1,3)
+    iconf.select_value(2,'frame_position',1)
+    iconf.select_value(3,'frame_position',1)
+    iconf.check()
+    assert 'unique_attr,3,"Attribute {} must be unique among all {}s associated by {} to {}",(frame_position,frame,rack_frames,1' in str(iconf.config.constraint_violations)
+    assert 'unique_attr,2,"Attribute {} must be unique among all {}s associated by {} to {}",(frame_position,frame,rack_frames,1' in str(iconf.config.constraint_violations)
+
+    iconf = new_iconf()
+    iconf.new_object("frame")
+    iconf.new_object("frame")
+    iconf.new_object("rack")
+    iconf.select_association("rack_frames",3,1)
+    iconf.select_association("rack_frames",3,2)
+    iconf.select_value(1,'frame_position',1)
+    iconf.select_value(2,'frame_position',1)
+    iconf.check()
+    assert 'ooasp_cv(unique_attr,1,"Attribute {} must be unique among all {}s associated by {} to {}",(frame_position,frame,rack_frames,3' in str(iconf.config.constraint_violations)
+    assert 'ooasp_cv(unique_attr,2,"Attribute {} must be unique among all {}s associated by {} to {}",(frame_position,frame,rack_frames,3' in str(iconf.config.constraint_violations)
 
 
 def test_solve_elements():
     """ solve one instance of each element type"""
-    racks_kb = OOASPKnowledgeBase.from_file("racks_v1","./examples/racks/kb.lp")
     element_configuration_size = { "elementA":7, "elementB":9, "elementC":9,"elementD":10}
     for element_type in element_configuration_size.keys():
-        iconf = InteractiveConfigurator(racks_kb,"i1",["./examples/racks/constraints.lp"])
-        iconf.new_leaf(element_type)
+        iconf = new_iconf()
+        iconf.new_object(element_type)
         config = iconf.extend_incrementally()
         assert len(config.constraint_violations)==0
         assert config.domain_size == element_configuration_size[element_type]
