@@ -30,7 +30,7 @@ ooasp_cv(stand_iff_handrail,W,"Handrail required if standing room is larger than
 
 
 % the number of associated seats must be equal to the attribute nr_seats
-ooasp_cv(seats_eq__nrseats,W,"Number of seats should be {}, since there are {} Seats associated",(S,new_object)):-
+ooasp_cv(seats_eq__nrseats,W,"Number of seats should be {}, since there are {} Seats associated",(S,S,new_object)):-
     active(new_object),
     ooasp_isa(wagon,W),
     #count{ID2:ooasp_assoc_gen(wagon_seats,OPT,W,ID2)}=S,
