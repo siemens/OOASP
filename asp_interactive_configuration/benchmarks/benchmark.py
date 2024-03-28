@@ -4,9 +4,6 @@ from ooasp.interactive import InteractiveConfigurator
 from ooasp.kb import OOASPKnowledgeBase
 import numpy as np
 import pandas as pd
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-import time
 import ooasp.utils as utils
 from ooasp import settings
 import threading
