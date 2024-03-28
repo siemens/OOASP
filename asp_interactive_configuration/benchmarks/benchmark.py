@@ -1,5 +1,6 @@
 import json
 import time
+from typing import Any, Callable, Union
 from ooasp.interactive import InteractiveConfigurator
 from ooasp.kb import OOASPKnowledgeBase
 import numpy as np
@@ -15,30 +16,30 @@ class BM:
     """
     Benchmark container
     """
-    def __init__(self, n_runs, name, fn, **kwargs):
-        self.n_runs=n_runs
-        self.name=name
+
+    def __init__(self, n_runs: int, name: str, fn: Callable, **kwargs) -> None:
+        self.n_runs: int = n_runs
+        self.name: str = name
         self.timeout = False
-        self.runs = {}
-        self.final_results = {
-            "time":0,
-            "time-solving":0,
-            "time-grounding":0
+        self.runs: dict[int, dict[str, Any]] = {}
+        self.final_results: dict[str, Any] = {
+            "time": 0,
+            "time-solving": 0,
+            "time-grounding": 0
         }
 
-        self.fn = fn
+        self.fn: Callable = fn
         self.kwargs = kwargs
-        
+
         self.run()
 
-    def call_and_add_result(self, results, n_run, example="racks", **kwargs):
-        iconf = new_iconf(example=example)
-        results[n_run] =iconf
+    def call_and_add_result(self, results: list[InteractiveConfigurator], n_run: int, example: str = "racks", **kwargs):
+        iconf: InteractiveConfigurator = new_iconf(example=example)
+        results[n_run] = iconf
         self.fn(iconf=iconf, **kwargs)
 
-
-    def run(self):
-        args = [f"{k}:{v}" for k,v in self.kwargs.items()]
+    def run(self) -> None:
+        args = [f"{k}:{v}" for k, v in self.kwargs.items()]
         print("-"*10 +f"Running {self.fn.__name__}  " + " ".join(args) + "-"*10)
         results = [None]*self.n_runs
         self.kwargs["results"] = results
@@ -53,7 +54,7 @@ class BM:
             total_time = t2-t1
             if thread.is_alive() or total_time>TIMEOUT:
                 print("Time out")
-                print(results[n].domain_size)
+                print(getattr(results[n], 'domain_size', None))
                 threading.Event().set()
                 total_time = TIMEOUT
                 self.timeout = 1
@@ -64,7 +65,7 @@ class BM:
         self.set_final_results()
 
     def add_run_results(self, time, iconf, timeout):
-        result = {
+        result: dict[str, Any] = {
            "time": time,
            "timeout": timeout,
            "size": 0 if timeout else iconf.config.size ,
@@ -92,7 +93,7 @@ class BM:
         for tpd in times_per_domain:
             g_times = {v:r[tpd] for  v,r in self.runs.items()}
             df = pd.DataFrame.from_dict(g_times, orient="index")
-            means = df.aggregate(np.mean)
+            means: pd.Series[float] = df.aggregate(np.mean)
             self.final_results[tpd] = means.to_dict()
 
 
@@ -108,20 +109,21 @@ class BM:
 
 
 # --------- Utils
-def save_results(bms, name="bm"):
+def save_results(bms: list[BM], name: str = "bm") -> None:
     """Saves the results as a json file
 
     Parameters:
         bms: Benchmarks
         name (str, optional): Name. Defaults to "bm".
     """
-    data = {bm.name:bm.final_results for bm in bms}
+    data: dict[str, dict[str, Any]] = {bm.name: bm.final_results for bm in bms}
     f_name = f'benchmarks/results/{name}.json'
     with open(f_name, 'w') as outfile:
         json.dump(data, outfile,indent=4)
     print("Results saved in " + f_name)
 
-def new_iconf(example="racks"):
+
+def new_iconf(example="racks") -> InteractiveConfigurator:
     """Creates a new interactive configurator for the racks example
 
     Returns:
@@ -140,7 +142,9 @@ def new_iconf(example="racks"):
         raise Exception("Invalid example for configuration")
 
 # --------- Functions to benchmark
-def extend_solve(iconf, ne):
+
+
+def extend_solve(iconf: InteractiveConfigurator, ne: int) -> InteractiveConfigurator:
     for i in range(ne):
         e = iconf.new_object("elementA")
     iconf.extend_domain(ne + 5)
@@ -148,7 +152,8 @@ def extend_solve(iconf, ne):
     iconf.select_found_configuration()
     return iconf
 
-def incremental(iconf, ne, cls="element", overshoot=False, step_size=1):
+
+def incremental(iconf: InteractiveConfigurator, ne: int, cls: str = "element", overshoot: bool = False, step_size: int = 1) -> InteractiveConfigurator:
     for i in range(ne):
         iconf.new_object(cls)
     found = iconf.extend_incrementally(overshoot=overshoot, step_size=step_size)
@@ -180,7 +185,8 @@ def wagons(iconf, ne, overshoot=False, step_size=1, intopt = 'enumint'):
 
 # --------- Running benchmarks
 
-def run(n_runs,fun,elements,name = "extend_solve",**kwargs):
+
+def run(n_runs: int, fun: Callable, elements: list[int], name: str = "extend_solve", **kwargs) -> None:
     """Main function called to run a benchmark
 
     Parameters:
@@ -189,9 +195,9 @@ def run(n_runs,fun,elements,name = "extend_solve",**kwargs):
         elements: the elements used for each run
         name (str, optional): The benchmark name used for saving
     """
-    results = []
+    results: list[BM] = []
     for e in elements:
-        results.append(BM(n_runs,e,fun,ne=e,**kwargs))
+        results.append(BM(n_runs, name, fun, ne=e, **kwargs))
 
     save_results(results,name)
 
