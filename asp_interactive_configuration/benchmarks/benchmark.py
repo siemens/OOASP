@@ -72,7 +72,7 @@ class BM:
            "timeout": timeout,
            "size": 0 if timeout else iconf.config.size ,
            "domain_size": iconf.domain_size,
-           "found_config": str(iconf.config.fb)
+           "found_config": iconf.config.fb.asp_str()
         }
         result.update(iconf._statistics)
         self.runs[len(self.runs)]=result
