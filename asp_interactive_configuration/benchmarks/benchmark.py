@@ -1,6 +1,6 @@
 import json
 import time
-from typing import Any, Callable, Union
+from typing import Any, Callable, Optional, Union, cast
 from ooasp.interactive import InteractiveConfigurator
 from ooasp.kb import OOASPKnowledgeBase
 import numpy as np
@@ -33,16 +33,17 @@ class BM:
 
         self.run()
 
-    def call_and_add_result(self, results: list[InteractiveConfigurator], n_run: int, example: str = "racks", **kwargs):
+    def call_and_add_result(self, iconfs_for_runs: list[InteractiveConfigurator], n_run: int, example: str = "racks", **kwargs):
         iconf: InteractiveConfigurator = new_iconf(example=example)
-        results[n_run] = iconf
+        iconfs_for_runs[n_run] = iconf
         self.fn(iconf=iconf, **kwargs)
 
     def run(self) -> None:
         args = [f"{k}:{v}" for k, v in self.kwargs.items()]
         print("-"*10 +f"Running {self.fn.__name__}  " + " ".join(args) + "-"*10)
-        results = [None]*self.n_runs
-        self.kwargs["results"] = results
+        iconfs_for_runs: list[Optional[InteractiveConfigurator]] = [
+            None]*self.n_runs
+        self.kwargs["iconfs_for_runs"] = iconfs_for_runs
         for n in range(self.n_runs):
             self.kwargs["n_run"] = n
             thread = threading.Thread(target=self.call_and_add_result, kwargs=self.kwargs)
@@ -54,22 +55,24 @@ class BM:
             total_time = t2-t1
             if thread.is_alive() or total_time>TIMEOUT:
                 print("Time out")
-                print(getattr(results[n], 'domain_size', None))
+                print(getattr(iconfs_for_runs[n], 'domain_size', None))
                 threading.Event().set()
                 total_time = TIMEOUT
                 self.timeout = 1
                 timeout=1
             else:
                 timeout=0
-            self.add_run_results(total_time,results[n],timeout)
+            self.add_run_results(total_time, cast(
+                InteractiveConfigurator, iconfs_for_runs[n]), timeout)
         self.set_final_results()
 
-    def add_run_results(self, time, iconf, timeout):
+    def add_run_results(self, time: float, iconf: InteractiveConfigurator, timeout) -> None:
         result: dict[str, Any] = {
            "time": time,
            "timeout": timeout,
            "size": 0 if timeout else iconf.config.size ,
            "domain_size": iconf.domain_size,
+           "found_config": str(iconf.config.fb)
         }
         result.update(iconf._statistics)
         self.runs[len(self.runs)]=result
@@ -80,14 +83,14 @@ class BM:
             for t in self.final_results.keys():
                 if t in run:
                     self.final_results[t]+=run[t]
-            self.final_results['timeout']=run['timeout']
-            self.final_results['size']=run['size']
-            self.final_results['domain_size']=run['domain_size']
-
+            self.final_results['timeout'] = run['timeout']
+            self.final_results['size'] = run['size']
+            self.final_results['domain_size'] = run['domain_size']
+            self.final_results['found_config'] = run['found_config']
         
         for t in ['time','time-solving','time-grounding']:
             if t in self.final_results:
-                self.final_results[t]=self.final_results[t]/self.n_runs
+                self.final_results[t] = self.final_results[t]/self.n_runs
 
         times_per_domain = ["per-domain-grounding","per-domain-solving"]
         for tpd in times_per_domain:
