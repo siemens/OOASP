@@ -5,6 +5,15 @@ from argparse import ArgumentParser
 
 from clingo import Control, Number, Function
 
+def generate_output_path(args):
+    non_zero = [opt for opt in args.__dict__ if type(args.__dict__[opt]) is int and args.__dict__[opt] != 0]
+    fstr = ""
+    for opt in non_zero:
+        fstr += '-'+opt[0]
+        fstr += ''.join([letter for letter in opt if letter.isupper()])
+        fstr += str(args.__dict__[opt])
+        print(opt)
+    return fstr[1:]
 
 def ground(ctl, size, o):
     print(f"Grouding {size} {o}")
@@ -110,7 +119,6 @@ def get_parser() -> ArgumentParser:
     parser.add_argument("--moduleV", type=int, default=0)
     return parser
 
-
 # ========================== Main
 
 if __name__ == "__main__":
@@ -184,7 +192,7 @@ if __name__ == "__main__":
 
     end = time.time()
 
-    out_name = f"benchmarks/latest/f-{args.frame}r-{args.rack}-rD{args.racksD}-rS{args.racksS}-e{args.element}-eA{args.elementA}-eB{args.elementB}-eC{args.elementC}-eD{args.elementD}-m{args.module}-mI{args.moduleI}-mII{args.moduleII}-mIII{args.moduleIII}-mIV{args.moduleIV}-mV{args.moduleV}" #this will eventually be too long, so this naming conv. might have to be changed
+    out_name = f"benchmarks/latest/{generate_output_path(args)}"
     if args.cautious:
         out_name += "-c"
     if args.cautious_assoc:
