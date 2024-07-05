@@ -89,12 +89,25 @@ def get_parser() -> ArgumentParser:
     parser = ArgumentParser(
         prog="ooasp",
     )
-
-    parser.add_argument("--racksS", type=int, default=0)
-    parser.add_argument("--racksD", type=int, default=0)
-    parser.add_argument("--element", type=int, default=0)
     parser.add_argument("--cautious", action="store_true")
     parser.add_argument("--cautious-assoc", action="store_true")
+    #------------------------General------------------------
+    parser.add_argument("--element", type=int, default=0)
+    parser.add_argument("--rack", type=int, default=0)
+    parser.add_argument("--module", type=int, default=0)
+    parser.add_argument("--frame", type=int, default=0)
+    #------------------------Specific-----------------------
+    parser.add_argument("--racksS", type=int, default=0)
+    parser.add_argument("--racksD", type=int, default=0)
+    parser.add_argument("--elementA", type=int, default=0)
+    parser.add_argument("--elementB", type=int, default=0)
+    parser.add_argument("--elementC", type=int, default=0)
+    parser.add_argument("--elementD", type=int, default=0)
+    parser.add_argument("--moduleI", type=int, default=0)
+    parser.add_argument("--moduleII", type=int, default=0)
+    parser.add_argument("--moduleIII", type=int, default=0)
+    parser.add_argument("--moduleIV", type=int, default=0)
+    parser.add_argument("--moduleV", type=int, default=0)
     return parser
 
 
@@ -122,9 +135,25 @@ if __name__ == "__main__":
 
     size = 1
     initial_objects = []
+
+    initial_objects += ["frame"] * args.frame
+
     initial_objects += ["rackDouble"] * args.racksD
     initial_objects += ["rackSingle"] * args.racksS
-    initial_objects += ["elementA"] * args.element
+    initial_objects += ["rack"] * args.rack
+
+    initial_objects += ["elementA"] * args.elementA
+    initial_objects += ["elementB"] * args.elementB
+    initial_objects += ["elementC"] * args.elementC
+    initial_objects += ["elementD"] * args.elementD
+    initial_objects += ["element"] * args.element
+
+    initial_objects += ["module"] * args.module
+    initial_objects += ["moduleI"] * args.moduleI
+    initial_objects += ["moduleII"] * args.moduleII
+    initial_objects += ["moduleIII"] * args.moduleIII
+    initial_objects += ["moduleIV"] * args.moduleIV
+    initial_objects += ["moduleV"] * args.moduleV
 
     for o in initial_objects:
         add_object(ctl, o, size)
@@ -155,7 +184,7 @@ if __name__ == "__main__":
 
     end = time.time()
 
-    out_name = f"benchmarks/latest/rD{args.racksD}-rS{args.racksS}-e{args.element}"
+    out_name = f"benchmarks/latest/f-{args.frame}r-{args.rack}-rD{args.racksD}-rS{args.racksS}-e{args.element}-eA{args.elementA}-eB{args.elementB}-eC{args.elementC}-eD{args.elementD}-m{args.module}-mI{args.moduleI}-mII{args.moduleII}-mIII{args.moduleIII}-mIV{args.moduleIV}-mV{args.moduleV}" #this will eventually be too long, so this naming conv. might have to be changed
     if args.cautious:
         out_name += "-c"
     if args.cautious_assoc:
