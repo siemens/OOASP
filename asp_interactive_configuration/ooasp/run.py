@@ -12,7 +12,6 @@ def generate_output_path(args):
         fstr += '-'+opt[0]
         fstr += ''.join([letter for letter in opt if letter.isupper()])
         fstr += str(args.__dict__[opt])
-        print(opt)
     return fstr[1:]
 
 def ground(ctl, size, o):
