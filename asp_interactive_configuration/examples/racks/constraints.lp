@@ -18,8 +18,15 @@ ooasp_cv(frame_must_be_within_range, F, "Frame position is outside of range {} "
     ooasp_attr_value(frame_position,F,P),
     P>4.
 
-% moduleII requires moduleV
-ooasp_cv(moduleII_requires_moduleV,F,"ModuleII requires moduleV in frame {}",(F,new_object)):-
+% % moduleII requires moduleV
+% ooasp_cv(moduleII_requires_moduleV,F,"ModuleII requires moduleV in frame {}",(F,new_object)):-
+% 	active(new_object),
+%     ooasp_isa(frame,F),
+%     ooasp_isa(moduleII,M),
+%     ooasp_associated(frame_modules,F,M),
+%     not ooasp_isa(moduleV,M5): ooasp_associated(frame_modules,F,M5).
+
+ooasp_cv(lowerbound,F,"ModuleII requires moduleV in frame {}",(frame_modules,1,0,moduleV,1,new_object)):-
 	active(new_object),
     ooasp_isa(frame,F),
     ooasp_isa(moduleII,M),

@@ -72,3 +72,4 @@ ooasp_attr_maxInclusive(frame,frame_position,8).
 
 ooasp_special_cv(unique, (rack_frames, frame, frame_position)).
 
+% ooasp_special_cv(requires, (frame_modules, moduleII, moduleV)).
