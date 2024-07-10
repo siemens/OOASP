@@ -204,7 +204,7 @@ class InteractiveConfigurator:
 
         return s
 
-    def theory_on_model(self, model):
+    def theory_on_model(self, model) -> None:
         model = model.model_
         defined =  [s.arguments[0] for s in model.symbols(shown=True) if str(s).startswith("__def")]
         for key, val in self.theory.assignment(model.thread_id):
@@ -213,28 +213,28 @@ class InteractiveConfigurator:
                 model.extend([f])
 
     @property
-    def state(self):
+    def state(self) -> State:
         """
         The current state of the interactive process
         """
         return self.states[-1]
 
     @property
-    def config(self):
+    def config(self) -> OOASPConfiguration:
         """
         The current (partial) configuration being constructed
         """
         return self.state.config
 
     @property
-    def domain_size(self):
+    def domain_size(self) -> int:
         """
         The size of the domain (How many objects have been created)
         """
         return self.state.domain_size
 
     @property
-    def browsing(self):
+    def browsing(self) -> bool:
         """
         If there is a current browsing process through the solutuions
         """
