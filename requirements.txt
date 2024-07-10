@@ -146,7 +146,7 @@ QtPy==2.4.1
 questionary==1.10.0
 rapidfuzz==2.15.2
 referencing==0.34.0
-requests==2.31.0
+requests==2.32.2
 requests-toolbelt==1.0.0
 rfc3339-validator==0.1.4
 rfc3986-validator==0.1.1
