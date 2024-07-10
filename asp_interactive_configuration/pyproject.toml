@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "asp_interactive_configuration"
-version = "0.1.1"
+version = "0.1.2"
 description = "project to develop an interactive asp-based configuration approach"
 authors = ["gschennersie"]
 packages = [
@@ -24,7 +24,7 @@ pillow = "^10.3.0"
 fclingo = "0.1.1"
 copier = "^9.0.1"
 jinja2-time = "^0.2.0"
-jupyterlab = "^4.0.10"
+jupyterlab = "^4.2.3"
 jupyterlab-widgets = "^3.0.9"
 jupyterlab-pygments = "^0.2.2"
 jupyter = "^1.0.0"
@@ -33,7 +33,7 @@ jupyter = "^1.0.0"
 pytest = "^7.1.2"
 autopep8 = "^1.6.0"
 pylint = "^2.13.9"
-ipykernel = "^6.13.0"
+ipykernel = "^6.29.5"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
