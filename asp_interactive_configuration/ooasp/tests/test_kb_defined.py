@@ -1,11 +1,8 @@
 # Copyright (c) 2022 Siemens AG Oesterreich
 # SPDX-License-Identifier: MIT
 
-import pytest
 from ooasp.kb import OOASPKnowledgeBase
 import ooasp.settings as settings
-import pytest
-from importlib import reload
 
 
 def test_kb_create():

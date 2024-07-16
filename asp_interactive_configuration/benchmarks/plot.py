@@ -1,13 +1,7 @@
 import json
-import time
-from ooasp.interactive import InteractiveConfigurator
-from ooasp.kb import OOASPKnowledgeBase
-import numpy as np
 import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from ooasp import settings
-import matplotlib.colors as colors
 
 solving_cm = mpl.colormaps['Pastel2'].resampled(8)
 grounding_cm = mpl.colormaps['Set2'].resampled(8)

@@ -1,17 +1,9 @@
 # Copyright (c) 2022 Siemens AG Oesterreich
 # SPDX-License-Identifier: MIT
 
-import pytest
-from clingo import parse_term
-from clorm.clingo import Control
-from ooasp.kb import OOASPKnowledgeBase
-from ooasp.interactive import InteractiveConfigurator
-from ooasp import settings
 from ooasp.tests.utils import new_iconf
-from ooasp.config import OOASPConfiguration
 
 import pytest
-from importlib import reload
 
 
 def test_specialization():

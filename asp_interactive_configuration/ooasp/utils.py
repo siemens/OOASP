@@ -1,7 +1,6 @@
 # Copyright (c) 2022 Siemens AG Oesterreich
 # SPDX-License-Identifier: MIT
 
-from ooasp import settings
 
 import json
 COLORS = {

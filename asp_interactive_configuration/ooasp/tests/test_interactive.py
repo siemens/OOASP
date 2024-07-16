@@ -3,13 +3,7 @@
 
 import pytest
 from clingo import parse_term
-from ooasp.kb import OOASPKnowledgeBase
-from ooasp.interactive import InteractiveConfigurator
-from ooasp import settings
 from ooasp.tests.utils import new_iconf
-
-import pytest
-from importlib import reload
 
 
 def test_s_interactive_extend_browse_basic():

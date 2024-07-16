@@ -2,11 +2,10 @@
 # SPDX-License-Identifier: MIT
 
 import time
-from importlib import resources
 from clorm.clingo import Control
 from clingo import Number, Function
 from clingo.ast import ProgramBuilder, parse_files
-from clorm import Predicate, unify
+from clorm import Predicate
 from ooasp.config import OOASPConfiguration
 from ooasp.kb import OOASPKnowledgeBase
 from typing import List
@@ -16,7 +15,6 @@ from typing import List
 import ooasp.settings as settings
 from clingcon import ClingconTheory
 from fclingo import THEORY, Translator
-from fclingo.__main__ import CSP
 from fclingo.parsing import HeadBodyTransformer
 from fclingo.translator import ConstraintAtom
 

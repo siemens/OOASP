@@ -6,10 +6,6 @@ from ooasp.config import OOASPConfiguration
 from ooasp import settings
 
 
-import pytest
-from importlib import reload
-
-
 def test_config_create():
     racks_kb = OOASPKnowledgeBase.from_file("racks_v1", settings.racks_example_kb)
     config = OOASPConfiguration("i1", racks_kb)
