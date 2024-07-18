@@ -171,6 +171,7 @@ poetry.toml
 # End of https://www.toptal.com/developers/gitignore/api/python
 
 */out/*
+out/*
 benchmarks/out/*
 benchmarks/latest/*.txt
 *.DS_Store
