@@ -15,7 +15,10 @@ ooasp_configuration(kb_name,config_name).
 #include "ooasp_user_input.lp". % User input with externals
 #include "ooasp_aux_config.lp". % Auxiliay predicates fot the config
 #include "ooasp_guess.lp". % Guess section
+#include "ooasp_guess_fclingo.lp". % Guess section
 #include "ooasp_check.lp". % Check section
+#include "ooasp_check_fclingo.lp". % Check section
+#include "ooasp_check_user.lp". % Check section
 #include "ooasp_cautious_opt.lp". % Optimizations used for cautious reasoning
 
 #include "ooasp_symmetry.lp". % Symmetry breaking constraints
