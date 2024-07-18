@@ -172,5 +172,5 @@ poetry.toml
 
 */out/*
 asp_interactive_configuration/benchmarks/out/*
-
+asp_interactive_configuration/benchmarks/latest/*.txt
 *.DS_Store
