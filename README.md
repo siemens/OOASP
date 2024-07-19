@@ -1,52 +1,32 @@
 # OOASP
 
-OOASP Object oriented Answer Set Programming
-
-## Purpose 
-
-OOASP is a schema for describing object-oriented models with Answer Set Programming. 
+OOASP is a schema for describing object-oriented models with Answer Set Programming.
 
 OOASP has been developed for research purposes to demonstrate how to describe and instantiate object-oriented models in Answer Set Programming. 
-The main application area is product configuration i.e. reasoning about product configuration models. 
+The main application area is product configuration i.e. reasoning about product configuration models.
 
-## Getting started
+Older encodings produced along with the original publications on OOASP can be found in [old_encodings](old_encodings).
+Currently, the main focus of this project is a prototype for interactive configuration using OOASP as described below.
 
-To run the examples we recommend to use clingo.
-See [https://potassco.org/clingo/] for installation instructions.
+## Interactive Configuration with ASP
 
-### Racks example
+Prototype for interactive configuration using ASP initially developed by [Susana Hahn](https://github.com/susuhahnml) (Potassco Solutions) as part of a collaboration between [Potassco Solutions](https://potassco.com/) and [Siemens](https://www.siemens.com/innovation).
 
-The racks example is a hardware configuration toy example similar to the running example of [http://cp2016.a4cp.org/program/workshops/ws-modref-papers/Taupe.pdf]
+### Installation
 
-
-[./examples/racks/ooasp_racks_kb.lp](./examples/racks/ooasp_racks_kb.lp) contains the knowledge base of the racks example
-
-[./examples/racks/ooasp_racks_1elementA.lp](./examples/racks/ooasp_racks_1elementA.lp) contains a partial configuration consisting of one elementA
-
-The two main reasoning tasks of OOASP are checking & configuring.
-### Checking the configuration
-
-The following is an example for checking a (partial) configuration:
-```
-clingo ooasp/ooasp.lp ooasp/ooasp_check.lp examples/racks/ooasp_racks_kb.lp examples/racks/ooasp_racks_1elementA.lp
-```
-This checks the configuration consisting of one elementA. The expected output will be something like:
-```
-ooasp_cv(i1,lowerbound1(element_modules,1)) 
-ooasp_cv(i1,card_constraint1(element_modules,1))
-```
-i.e. indicating that an elementA requires modules.
-
-### Configuring
-
-The following is an example for configuring a partial configuration i.e. finding complete configurations for a given partial configuration.  
-
-```
-clingo ooasp/ooasp.lp ooasp/ooasp_check.lp ooasp/ooasp_config.lp examples/racks/ooasp_racks_kb.lp examples/racks/ooasp_racks_1elementA.lp
+```bash
+poetry install
 ```
 
-One possible solution is:
-![solution](examples/racks/solution_1elementA.png "solution")
+### Usage
+
+The files corresponding to the current version are in [ooasp](ooasp).
+
+The package usage and new features are showcased in the jupyter notebooks inside the folder [usage](usage).
+
+### Documentation
+
+For the documentation of the protoype see [DOC.md](DOC.md)
 
 ## Literature
 
@@ -56,6 +36,8 @@ OOASP: Connecting Object-Oriented and Logic Programming (2015): [Conference pape
 
 ### Research Papers on Interactive Configuration with ASP
 
+Interactive Configuration with ASP Multi-Shot Solving (2023): [Workshop Paper](https://ceur-ws.org/Vol-3509/paper13.pdf )
+
 Challenges of Developing an API for Interactive Configuration using ASP (2022): [Extended Abstract](http://www.kr.tuwien.ac.at/events/taasp22/papers/TAASP_2022_paper_5.pdf)
 
 Solver Requirements for Interactive Configuration (2020): [Journal article](https://www.jucs.org/jucs_26_3/solver_requirements_for_interactive.html)
@@ -64,4 +46,4 @@ Solver Requirements for Interactive Configuration (2020): [Journal article](http
 
 OOASP is distributed under the [MIT License](LICENSE).
 
-Copyright (c) 2022 Siemens AG Oesterreich
+Copyright (c) 2022-2024 Siemens AG Oesterreich
