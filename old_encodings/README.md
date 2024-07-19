@@ -7,7 +7,7 @@ OOASP Object oriented Answer Set Programming
 OOASP is a schema for describing object-oriented models with Answer Set Programming.
 
 OOASP has been developed for research purposes to demonstrate how to describe and instantiate object-oriented models in Answer Set Programming.
-The main application area is product configuration i.e. reasoning about product configuration models.
+The main application area is product configuration, i.e., reasoning about product configuration models.
 
 ## Getting started
 
