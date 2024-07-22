@@ -174,4 +174,5 @@ poetry.toml
 out/*
 benchmarks/out/*
 benchmarks/latest/*.txt
+benchmarks/outputs/*
 *.DS_Store
