@@ -1,4 +1,5 @@
 import json
+import os
 
 import time
 from argparse import ArgumentParser
@@ -256,6 +257,7 @@ if __name__ == "__main__":
     stats[next_id - 1] = ctl.statistics["summary"]["times"]
 
     print("Done!")
+    os.makedirs('benchmarks/latest', exist_ok=True)
     out_name = f"benchmarks/latest/{generate_output_path(args)}"
     if args.cautious:
         out_name += "-c"
