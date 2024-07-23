@@ -8,7 +8,7 @@ from clingo.ast import ProgramBuilder, parse_files
 from clorm import Predicate
 from ooasp.config import OOASPConfiguration
 from ooasp.kb import OOASPKnowledgeBase
-from typing import List
+from typing import List, Any
 from copy import deepcopy
 import ooasp.utils as utils
 from typing import List
@@ -144,7 +144,7 @@ class InteractiveConfigurator:
         self.solution_iterator = None
         self.hdn = None
 
-    def _add_grounding_time(self, time: int):
+    def _add_grounding_time(self, time: int) -> None:
         """
         Adds time to grounding for benchmarks
         Parameters:
@@ -153,7 +153,7 @@ class InteractiveConfigurator:
         self._time_grounding += time
         self._individual_ground_times[self.domain_size] = time
 
-    def _add_solving_time(self, time):
+    def _add_solving_time(self, time: int) -> None:
         """
         Adds time to solving for benchamrks
         Parameters:
@@ -213,7 +213,7 @@ class InteractiveConfigurator:
 
         return s
 
-    def theory_on_model(self, model):
+    def theory_on_model(self, model) -> None:
         model = model.model_
         defined = [
             s.arguments[0]
@@ -228,14 +228,14 @@ class InteractiveConfigurator:
                 model.extend([f])
 
     @property
-    def state(self):
+    def state(self) -> List:
         """
         The current state of the interactive process
         """
         return self.states[-1]
 
     @property
-    def config(self):
+    def config(self) -> OOASPConfiguration:
         """
         The current (partial) configuration being constructed
         """
@@ -249,7 +249,7 @@ class InteractiveConfigurator:
         return self.state.domain_size
 
     @property
-    def browsing(self):
+    def browsing(self) -> bool:
         """
         If there is a current browsing process through the solutuions
         """
@@ -264,7 +264,7 @@ class InteractiveConfigurator:
         return h
 
     @property
-    def _statistics(self):
+    def _statistics(self) -> dict:
         self._outdate_models()
         d = {
             "time-grounding": self._time_grounding,
@@ -275,7 +275,7 @@ class InteractiveConfigurator:
 
         return d
 
-    def _ground(self, args):
+    def _ground(self, args) -> None:
         start = time.time()
         self.ctl.ground(args)
         end = time.time()
@@ -306,7 +306,7 @@ class InteractiveConfigurator:
             new_theory_atoms.add(ConstraintAtom.copy(atom))
         self.ftranslator.translate(new_theory_atoms)
 
-    def _new_state(self, action: str, deep=False) -> State:
+    def _new_state(self, action: str, deep: bool=False) -> State:
         """
         Creates a new state
             Parameters:
@@ -400,7 +400,7 @@ class InteractiveConfigurator:
 
         return objects_added
 
-    def _extend_domain(self, cls="object") -> int:
+    def _extend_domain(self, cls: str ="object") -> int:
         """
         Increases the domain size by one and adds a new domain(object,N) fact to
         the configuration.
@@ -411,7 +411,7 @@ class InteractiveConfigurator:
         self.config.add_domain(cls, new_object)
         return new_object
 
-    def _new_object(self, object_class, propagate=False) -> int:
+    def _new_object(self, object_class, propagate: bool = False) -> int:
         """
         Increases the domain size by one and adds an object of the given class
 
@@ -474,7 +474,7 @@ class InteractiveConfigurator:
             self.found_config = False
             return False
 
-    def _set_config(self, config: OOASPConfiguration, set_user_facts=True):
+    def _set_config(self, config: OOASPConfiguration, set_user_facts: bool = True) -> None:
         """
         Sets the current configuration to the given one
             Parameters:
@@ -889,7 +889,7 @@ class InteractiveConfigurator:
         )
         self.config.add_association(assoc_name, object_id1, object_id2)
 
-    def select_value(self, object_id: int, attr_name: str, attr_value) -> None:
+    def select_value(self, object_id: int, attr_name: str, attr_value: Any) -> None:
         """
         Creates a state with a new configuration.
         Removes any current selection for the attribute.
@@ -921,7 +921,7 @@ class InteractiveConfigurator:
             self.states.pop()
             raise e
 
-    def extend_domain(self, num: int = 1, cls="object") -> None:
+    def extend_domain(self, num: int = 1, cls: str="object") -> None:
         """
         Creates a state with a new configuration.
         Increases the domain size and adds a new domain(object,N) fact to
@@ -934,7 +934,7 @@ class InteractiveConfigurator:
         for i in range(self.state.domain_size + 1, next_num_objects + 1):
             self._extend_domain(cls=cls)
 
-    def new_object(self, object_class: str, propagate=False) -> None:
+    def new_object(self, object_class: str, propagate: bool=False) -> None:
         """
         Creates a state with a new configuration.
         Increases the domain size by one and adds a new domain(object,N) fact to
@@ -951,7 +951,7 @@ class InteractiveConfigurator:
             raise e
 
     def extend_incrementally(
-        self, domain_limit: int = 100, overshoot: bool = False, step_size=1
+        self, domain_limit: int = 100, overshoot: bool = False, step_size: int=1
     ) -> OOASPConfiguration:
         """
         Creates a state with a new configuration.
@@ -1009,7 +1009,7 @@ class InteractiveConfigurator:
         self.set_configuration(current_found_config)
         return None
 
-    def set_configuration(self, config: OOASPConfiguration, set_user_facts=True):
+    def set_configuration(self, config: OOASPConfiguration, set_user_facts: bool=True) -> None:
         """
         Sets the current configuration to a new one
             Parameters:
