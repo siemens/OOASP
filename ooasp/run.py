@@ -60,9 +60,9 @@ def _get_cautious(ctl, project=False):
     ctl.assign_external(Function("check_potential_cv"), False)
     ctl.configuration.solve.models = "0"
     ctl.configuration.solve.enum_mode = "cautious"
-    ctl.configuration.solve.opt_mode = "optN"
-    if project:
-        ctl.configuration.solve.project = "project"
+    ctl.configuration.solve.opt_mode = "ignore"
+    # if project:
+        # ctl.configuration.solve.project = "project"
     with ctl.solve(yield_=True) as hdn:
         cautious_model = None
         for model in hdn:
@@ -77,32 +77,46 @@ def _get_cautious(ctl, project=False):
     ctl.configuration.solve.project = "auto"
     return cautious_model
 
+def print_all(ctl):
+    ctl.assign_external(Function("check_potential_cv"), False)
+    ctl.configuration.solve.models = "0"
+    ctl.configuration.solve.enum_mode = "auto"
+    ctl.configuration.solve.opt_mode = "ignore"
+    with ctl.solve(yield_=True) as hdn:
+        for model in hdn:
+            print(model.symbols(shown=True))
+
 
 def create_from_cautious(ctl, size, project=False):
     print("---> Create from cautious")
+    # print_all(ctl)
     cautious = _get_cautious(ctl)
     added = 0
     if cautious is None:
-        print(f"<-- Cautious opt added {added} objects")
+        print(f"<-- Cautious added {added} objects")
         return 0
-    print("\tAll cautious optimal projected:", "\n\t".join([str(s) for s in cautious]))
+    print("\tAll cautious optimal projected:\n\t", "\n\t".join([str(s) for s in cautious]))
+    added_key = None
     for s in cautious:
-        if s.match("ooasp_cv", 4):
-            if str(s.arguments[0]) != "lowerbound":
-                continue
+        if s.match("lb_at_least", 6):
             print("\t** Focusing on: ", s)
-            assoc, cmin, n, c, opt, _ = s.arguments[3].arguments
-            for _ in range(n.number, cmin.number):
+            o_id, assoc, needed, c, opt, _ = s.arguments
+            if added_key is None:
+                added_key = (o_id, assoc)
+                print(f"\tAdding associated objects for {o_id} via {assoc}")
+            if added_key != (o_id, assoc):
+                print("\tNot the same key")
+                continue
+            for _ in range(added, needed.number):
                 if str(opt) == "1":
-                    a = (str(assoc), str(s.arguments[1]), size)
+                    a = (str(assoc), o_id, size)
                 else:
-                    a = (str(assoc), size, str(s.arguments[1]))
+                    a = (str(assoc), size, o_id)
                 add_object(ctl, c.name, size, a)
                 size += 1
                 added += 1
-        if added > 0:
-            break
-    print(f"<--- Cautious opt added {added} objects")
+
+    print(f"<--- Cautious added {added} objects")
     return added
 
 
@@ -188,8 +202,8 @@ if __name__ == "__main__":
     ctl.load("examples/racks/kb.lp")
     # ctl.load("examples/racks/constraints.lp")
     ctl.load("ooasp/encodings/ooasp_simple.lp")
-    if use_cautious_generate:
-        ctl.load("ooasp/encodings/ooasp_cautious_opt.lp")
+    # if use_cautious_generate:
+        # ctl.load("ooasp/encodings/ooasp_cautious_opt.lp")
 
     ctl.ground([("base", [])])
     ctl.configuration.solve.opt_mode = "ignore"
@@ -256,7 +270,7 @@ if __name__ == "__main__":
     stats[next_id - 1] = ctl.statistics["summary"]["times"]
 
     print("Done!")
-    out_name = f"benchmarks/latest/{generate_output_path(args)}"
+    out_name = f"benchmarks/results/second-phase/latest/{generate_output_path(args)}"
     if args.cautious:
         out_name += "-c"
     if args.cautious_assoc:

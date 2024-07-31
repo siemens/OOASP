@@ -19,11 +19,13 @@ check_permanent_cv. % Checks for permanent constraints apply
 #include "ooasp_aux_config.lp". % Auxiliay predicates fot the config
 #include "ooasp_guess.lp". % Guess section
 #include "ooasp_check.lp". % Check section
-#include "ooasp_cautious_opt.lp". % Optimizations used for cautious reasoning
+% #include "ooasp_cautious_opt.lp". % Optimizations used for cautious reasoning
 
 #include "ooasp_symmetry.lp". % Symmetry breaking constraints
 
-#show ooasp_cv/4.
+#show lb_at_least/6.
+% #show lb_violation/4.
+% #show ooasp_cv/4.
 
 % user(ooasp_associated(rack_frames,6,5)).
 
@@ -32,4 +34,5 @@ check_permanent_cv. % Checks for permanent constraints apply
 :- user(ooasp_isa(C,new_object)),
 not ooasp_isa(C,new_object).
 
-#project ooasp_cv(lowerbound,ID1,M,A): ooasp_cv(lowerbound,ID1,M,A).
+% #project lb_at_least/6.
+% #project lb_violation/4.
