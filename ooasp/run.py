@@ -245,26 +245,20 @@ if __name__ == "__main__":
     step_size = 1
     stats = {}
     done = False
+
     while not done:
+        added = create_from_cautious(ctl, next_id, project=args.project)
+        next_id += added
+        if added > 0:
+            continue
         print(f"\nSolving for size {next_id-1}...")
         res = ctl.solve(on_model=on_model)
         if res.satisfiable:
             print("     Found model")
             done = True
-            break
-        print(f"    No configuration found for size {next_id-1}")
-        start_size = next_id
-        stats[next_id - 1] = ctl.statistics["summary"]["times"]
-        try_new = True
-        if use_cautious_generate:
-            added = create_from_cautious(ctl, next_id, project=args.project)
-            next_id += added
-            try_new = added == 0
-        while try_new:
-            ground(ctl, next_id, "object")
-            next_id += 1
-            if next_id >= start_size + step_size:
-                try_new = False
+            continue
+        ground(ctl, next_id, "object")
+        next_id += 1
 
     end = time.time()
     stats[next_id - 1] = ctl.statistics["summary"]["times"]
