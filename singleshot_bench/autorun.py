@@ -1,0 +1,127 @@
+import os
+import datetime
+
+from typing import List
+
+from clingo import Control
+
+ELEMENT_TYPES = 4
+ELEMENT_NAMES = 'ABCD'
+
+domain_sizes = [19, 33]  # known domain sizes
+o_instances = [x+1 for x in range(2)]
+
+
+def generate_ids(n) -> List:
+    """
+    Generates combinations of element definitions
+    with IDs such that they would cause no issue (THIS DOCSTRING NEEDS TO BE CHANGED)
+    """
+
+    # Note: this can easily be done just as ranges for the actual elements, but I think this is much clearer
+
+    ids = [id+1 for id in range(ELEMENT_TYPES*n)]
+    assigned = [ids[i*n:i*n+n] for i in range(ELEMENT_TYPES)]
+    terms = []
+
+    for letter, category in enumerate(assigned):
+        for id in category:
+            terms.append(f"ooasp_isa(element{ELEMENT_NAMES[letter]},{id}).")
+
+    return terms
+
+
+def rewrite_assumptions(content: List[str], save: bool = True) -> None:
+    """
+    Rewrites the assumptions.lp file to the list of content passed.
+    If save is set to true, creates a legacy directory and saves a copy of existing assumptions to it.
+    """
+
+    if os.path.isfile('instances/assumptions.lp'):
+        if save:
+            os.makedirs('instances/outdated', exist_ok=True)
+            new_file = f"instances/outdated/assumptions{len(content)}{str(datetime.datetime.now()).replace(' ', '_').replace('.', '-').replace(':', '-')}.lp"
+            os.rename('instances/assumptions.lp', new_file)
+    with open('instances/assumptions.lp', 'w+') as file:
+        print(" >>Rewriting assumptions.")
+        for t in content:
+            file.write(t+'\n')
+
+
+def add_domain(n) -> None:
+    """
+    Adds domain size constraints to the assumption file
+    """
+    with open('instances/assumptions.lp', 'a') as file:
+        t = f'ooasp_domain(object,1..{n}).'
+        file.write(t)
+
+
+def build_assumptions(n, save: bool = False) -> None:
+    """
+    Builds the new assumptions file in its entirety.
+    """
+    ts = generate_ids(n)
+    rewrite_assumptions(ts, save=save)
+    add_domain(domain_sizes[n-1] if len(domain_sizes) >= n else 100)
+
+
+def reset_solving() -> Control:
+    """
+    Reinitialises the clingo control.
+    Returns the set up instance.
+    """
+    ctl = Control(["--opt-mode=ignore",
+                   "--warn=none"])
+    ctl.load("singleshot.lp")
+    ctl.ground([("base", [])])
+    return ctl
+
+
+def log_model(model, out=False):
+    """
+    Creates a model directory (if it does not exist)
+    And logs resulting models into files
+    """
+    os.makedirs('results/models', exist_ok=True)
+
+    global timestr
+    new_file = f"results/models/M{iteration}{timestr}.txt"
+    with open(new_file, 'w') as mfile:
+        mfile.write(str(model))
+        if out:
+            print('MODEL:')
+            print(model)
+
+
+def log_results(stats,iteration, out=False):
+    """
+    Creates a results directory (if it does not exist)
+    And logs times and results into text files.
+    """
+    os.makedirs('results/times', exist_ok=True)
+    global timestr
+    new_file = f"results/times/R{iteration}{timestr}.txt"
+    with open(new_file, 'w') as mfile:
+        mfile.write(stats)
+        if out:
+            print('RESULTS:')
+            print(stats)
+    
+def on_model(m):
+    """
+    Helper function to control resulting model
+    """
+    log_model(m)
+
+if __name__ == "__main__":
+    global model
+    model = None
+    global timestr
+    timestr = str(datetime.datetime.now()).replace(' ', '_').replace('.', '-').replace(':', '-')
+    for iteration in o_instances:
+        print(f">>Solving for:{iteration}")
+        build_assumptions(iteration)
+        ctl = reset_solving()
+        ctl.solve(on_model=on_model)
+        log_results(str(ctl.statistics['summary']['times']),iteration, out=True)
