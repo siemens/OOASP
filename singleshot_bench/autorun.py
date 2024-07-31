@@ -42,7 +42,8 @@ def rewrite_assumptions(content: List[str], save: bool = True) -> None:
             os.makedirs('instances/outdated', exist_ok=True)
             new_file = f"instances/outdated/assumptions{len(content)}{str(datetime.datetime.now()).replace(' ', '_').replace('.', '-').replace(':', '-')}.lp"
             os.rename('instances/assumptions.lp', new_file)
-    with open('instances/assumptions.lp', 'w+') as file:
+    os.makedirs('instances', exist_ok=True)
+    with open('instances/assumptions.lp', 'w') as file:
         print(" >>Rewriting assumptions.")
         for t in content:
             file.write(t+'\n')
