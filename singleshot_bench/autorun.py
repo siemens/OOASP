@@ -8,8 +8,9 @@ from clingo import Control
 ELEMENT_TYPES = 4
 ELEMENT_NAMES = 'ABCD'
 
-domain_sizes = [19, 33]  # known domain sizes
-o_instances = [x+1 for x in range(2)]
+# for now just minimal 1elem config * number of elements
+domain_sizes = [19*(x+1) for x in range(20)]  # known minimmum domain sizes : [19,33]
+o_instances = [x+1 for x in range(20)]
 
 
 def generate_ids(n: int) -> List:
@@ -95,7 +96,7 @@ def log_model(model, out=False):
             print(model)
 
 
-def log_results(stats, iteration, out=False):
+def log_results(stats: str, iteration: int, out: bool=False):
     """
     Creates a results directory (if it does not exist)
     And logs times and results into text files.
@@ -108,14 +109,12 @@ def log_results(stats, iteration, out=False):
         if out:
             print('RESULTS:')
             print(stats)
-
-
+    
 def on_model(m):
     """
     Helper function to control resulting model
     """
     log_model(m)
-
 
 if __name__ == "__main__":
     global model
@@ -127,4 +126,4 @@ if __name__ == "__main__":
         build_assumptions(iteration)
         ctl = reset_solving()
         ctl.solve(on_model=on_model)
-        log_results(str(ctl.statistics['summary']['times']), iteration, out=True)
+        log_results(str(ctl.statistics['summary']['times']),iteration, out=True)
