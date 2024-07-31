@@ -14,6 +14,7 @@ from clingraph.orm import Factbase
 from clingraph.graphviz import compute_graphs, render
 from clingraph.clingo_utils import ClingraphContext
 
+config = []
 
 def generate_output_path(args):
     non_zero = [
@@ -39,8 +40,11 @@ def ground(ctl, size, o):
 
 def add_object(ctl, o, size, association=None):
     print(f"\tAdding object  {o},{size}")
-    ctl.add("domain", [str(size), "object"], f"user(ooasp_isa({o},{size})).")
-    if association and add_associations:
+    obj_atom = f"ooasp_isa({o},{size})"
+    ctl.add("domain", [str(size), "object"], f"user({obj_atom}).")
+    config.append(obj_atom)
+    config.append(f"user({obj_atom})")
+    if association is not None:
         assoc_atom = (
             f"ooasp_associated({association[0]},{association[1]},{association[2]})"
         )
@@ -52,6 +56,8 @@ def add_object(ctl, o, size, association=None):
             [str(size), "object"],
             f"{assoc_atom}.",
         )
+        config.append(assoc_atom)
+        config.append(f"user({assoc_atom})")
 
     ground(ctl, size, o)
 
@@ -60,7 +66,6 @@ def _get_cautious(ctl, project=False):
     ctl.assign_external(Function("check_potential_cv"), False)
     ctl.configuration.solve.models = "0"
     ctl.configuration.solve.enum_mode = "cautious"
-    ctl.configuration.solve.opt_mode = "ignore"
     # if project:
         # ctl.configuration.solve.project = "project"
     with ctl.solve(yield_=True) as hdn:
@@ -71,7 +76,6 @@ def _get_cautious(ctl, project=False):
             print("\tUNSAT cautious!")
             # print(model)
     ctl.assign_external(Function("check_potential_cv"), True)
-    ctl.configuration.solve.opt_mode = "ignore"
     ctl.configuration.solve.models = "1"
     ctl.configuration.solve.enum_mode = "auto"
     ctl.configuration.solve.project = "auto"
@@ -81,7 +85,6 @@ def print_all(ctl):
     ctl.assign_external(Function("check_potential_cv"), False)
     ctl.configuration.solve.models = "0"
     ctl.configuration.solve.enum_mode = "auto"
-    ctl.configuration.solve.opt_mode = "ignore"
     with ctl.solve(yield_=True) as hdn:
         for model in hdn:
             print(model.symbols(shown=True))
@@ -130,8 +133,8 @@ def save_png(config, directory: str = "./out"):
     ctl.load(str(path))
     path = settings.encodings_path.joinpath("ooasp_aux_kb.lp")
     ctl.load(str(path))
+    ctl.load("examples/racks/kb.lp")
 
-    # ctl.add("base", [], self.fb.asp_str())
     ctl.add("base", [], config)
     ctl.ground([("base", [])], ClingraphContext())
     ctl.solve(
@@ -184,10 +187,6 @@ if __name__ == "__main__":
     parser = get_parser()
     args = parser.parse_args()
 
-    # use_cautious_generate = True
-    use_cautious_generate = args.cautious
-    add_associations = args.cautious_assoc
-
     start = time.time()
     ctl = Control(
         [
@@ -200,13 +199,9 @@ if __name__ == "__main__":
         ]
     )
     ctl.load("examples/racks/kb.lp")
-    # ctl.load("examples/racks/constraints.lp")
     ctl.load("ooasp/encodings/ooasp_simple.lp")
-    # if use_cautious_generate:
-        # ctl.load("ooasp/encodings/ooasp_cautious_opt.lp")
 
     ctl.ground([("base", [])])
-    ctl.configuration.solve.opt_mode = "ignore"
 
     next_id = 1
     initial_objects = []
@@ -251,7 +246,10 @@ if __name__ == "__main__":
         next_id += added
         if added > 0:
             continue
-        print(f"\nSolving for size {next_id-1}...")
+        save_png("\n".join([str(c)+"." for c in config]), directory="out/solve")
+        print(f"\n==============================")
+        print(f"Solving for size {next_id-1}...")
+        ctl.configuration.solve.models = "1"
         res = ctl.solve(on_model=on_model)
         if res.satisfiable:
             print("     Found model")
