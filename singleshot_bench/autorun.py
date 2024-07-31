@@ -12,7 +12,7 @@ domain_sizes = [19, 33]  # known domain sizes
 o_instances = [x+1 for x in range(2)]
 
 
-def generate_ids(n) -> List:
+def generate_ids(n: int) -> List:
     """
     Generates combinations of element definitions
     with IDs such that they would cause no issue (THIS DOCSTRING NEEDS TO BE CHANGED)
@@ -49,7 +49,7 @@ def rewrite_assumptions(content: List[str], save: bool = True) -> None:
             file.write(t+'\n')
 
 
-def add_domain(n) -> None:
+def add_domain(n: int) -> None:
     """
     Adds domain size constraints to the assumption file
     """
@@ -58,7 +58,7 @@ def add_domain(n) -> None:
         file.write(t)
 
 
-def build_assumptions(n, save: bool = False) -> None:
+def build_assumptions(n: int, save: bool = False) -> None:
     """
     Builds the new assumptions file in its entirety.
     """
@@ -95,7 +95,7 @@ def log_model(model, out=False):
             print(model)
 
 
-def log_results(stats,iteration, out=False):
+def log_results(stats, iteration, out=False):
     """
     Creates a results directory (if it does not exist)
     And logs times and results into text files.
@@ -108,12 +108,14 @@ def log_results(stats,iteration, out=False):
         if out:
             print('RESULTS:')
             print(stats)
-    
+
+
 def on_model(m):
     """
     Helper function to control resulting model
     """
     log_model(m)
+
 
 if __name__ == "__main__":
     global model
@@ -125,4 +127,4 @@ if __name__ == "__main__":
         build_assumptions(iteration)
         ctl = reset_solving()
         ctl.solve(on_model=on_model)
-        log_results(str(ctl.statistics['summary']['times']),iteration, out=True)
+        log_results(str(ctl.statistics['summary']['times']), iteration, out=True)
