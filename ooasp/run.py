@@ -16,6 +16,10 @@ from clingraph.clingo_utils import ClingraphContext
 
 config = []
 
+def log(*args):
+    print(*args)
+    pass
+
 def generate_output_path(args):
     non_zero = [
         opt
@@ -31,7 +35,7 @@ def generate_output_path(args):
 
 
 def ground(ctl, size, o):
-    print(f"Grouding {size} {o}")
+    log(f"Grouding {size} {o}")
     ctl.ground([("domain", [Number(size), Function(o, [])])])
     if size > 0:
         ctl.release_external(Function("active", [Number(size - 1)]))
@@ -39,7 +43,7 @@ def ground(ctl, size, o):
 
 
 def add_object(ctl, o, size, association=None):
-    print(f"\tAdding object  {o},{size}")
+    log(f"\tAdding object  {o},{size}")
     obj_atom = f"ooasp_isa({o},{size})"
     ctl.add("domain", [str(size), "object"], f"user({obj_atom}).")
     config.append(obj_atom)
@@ -48,7 +52,7 @@ def add_object(ctl, o, size, association=None):
         assoc_atom = (
             f"ooasp_associated({association[0]},{association[1]},{association[2]})"
         )
-        print("\tAdding association:", assoc_atom)
+        log("\tAdding association:", assoc_atom)
         ctl.add("domain", [str(size), "object"], f"user({assoc_atom}).")
 
         ctl.add(
@@ -73,8 +77,8 @@ def _get_cautious(ctl, project=False):
         for model in hdn:
             cautious_model = model.symbols(shown=True)
         if cautious_model is None:
-            print("\tUNSAT cautious!")
-            # print(model)
+            log("\tUNSAT cautious!")
+            # log(model)
     ctl.assign_external(Function("check_potential_cv"), True)
     ctl.configuration.solve.models = "1"
     ctl.configuration.solve.enum_mode = "auto"
@@ -87,28 +91,28 @@ def print_all(ctl):
     ctl.configuration.solve.enum_mode = "auto"
     with ctl.solve(yield_=True) as hdn:
         for model in hdn:
-            print(model.symbols(shown=True))
+            log(model.symbols(shown=True))
 
 
 def create_from_cautious(ctl, size, project=False):
-    print("---> Create from cautious")
+    log("---> Create from cautious")
     # print_all(ctl)
     cautious = _get_cautious(ctl)
     added = 0
     if cautious is None:
-        print(f"<-- Cautious added {added} objects")
+        log(f"<-- Cautious added {added} objects")
         return 0
-    print("\tAll cautious optimal projected:\n\t", "\n\t".join([str(s) for s in cautious]))
+    log("\tAll cautious optimal projected:\n\t", "\n\t".join([str(s) for s in cautious]))
     added_key = None
     for s in cautious:
         if s.match("lb_at_least", 6):
-            print("\t** Focusing on: ", s)
             o_id, assoc, needed, c, opt, _ = s.arguments
             if added_key is None:
+                log("\t** Focusing on: ", s)
                 added_key = (o_id, assoc)
-                print(f"\tAdding associated objects for {o_id} via {assoc}")
+                log(f"\tAdding associated objects for {o_id} via {assoc}")
             if added_key != (o_id, assoc):
-                print("\tNot the same key")
+                # log("\tNot the same key")
                 continue
             for _ in range(added, needed.number):
                 if str(opt) == "1":
@@ -118,8 +122,25 @@ def create_from_cautious(ctl, size, project=False):
                 add_object(ctl, c.name, size, a)
                 size += 1
                 added += 1
+    if added == 0:
+        log("\tWill check for upper_filled")
+        for s in cautious:
+            if added > 0:
+                break
+            if s.match("upper_filled", 5):
+                log("\tWill apply ", s)
+                _, _, c2, needed, _ = s.arguments
+                for _ in range(added, needed.number):
+                    add_object(ctl, c2.name, size)
+                    size += 1
+                    added += 1
+                break
 
-    print(f"<--- Cautious added {added} objects")
+
+
+
+
+    log(f"<--- Cautious added {added} objects")
     return added
 
 
@@ -246,22 +267,23 @@ if __name__ == "__main__":
         next_id += added
         if added > 0:
             continue
-        save_png("\n".join([str(c)+"." for c in config]), directory="out/solve")
-        print(f"\n==============================")
-        print(f"Solving for size {next_id-1}...")
+        # save_png("\n".join([str(c)+"." for c in config]), directory="out/solve")
+        log(f"\n==============================")
+        log(f"Solving for size {next_id-1}...")
         ctl.configuration.solve.models = "1"
         res = ctl.solve(on_model=on_model)
         if res.satisfiable:
-            print("     Found model")
+            log("     Found model")
             done = True
             continue
+        log(f"No solution found")
         ground(ctl, next_id, "object")
         next_id += 1
 
     end = time.time()
     stats[next_id - 1] = ctl.statistics["summary"]["times"]
 
-    print("Done!")
+    log("Done!")
     out_name = f"benchmarks/results/second-phase/latest/{generate_output_path(args)}"
     if args.cautious:
         out_name += "-c"
@@ -278,3 +300,5 @@ if __name__ == "__main__":
 
     if args.view:
         save_png("\n".join(model))
+
+    print("RUNTIME: ", end - start)

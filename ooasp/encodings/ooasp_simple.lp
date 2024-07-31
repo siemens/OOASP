@@ -22,8 +22,11 @@ check_permanent_cv. % Checks for permanent constraints apply
 % #include "ooasp_cautious_opt.lp". % Optimizations used for cautious reasoning
 
 #include "ooasp_symmetry.lp". % Symmetry breaking constraints
+#include "ooasp_upper_bound.lp". % Calculates global needs
 
 #show lb_at_least/6.
+#show upper_filled/5.
+% #show lower_global/5.
 % #show lb_violation/4.
 % #show ooasp_cv/4.
 
@@ -31,7 +34,7 @@ check_permanent_cv. % Checks for permanent constraints apply
 
 #program domain(new_object, cls).
 
-:- user(ooasp_isa(C,new_object)),
+:- user(ooasp_isa(C,new_object  )),
 not ooasp_isa(C,new_object).
 
 % #project lb_at_least/6.
