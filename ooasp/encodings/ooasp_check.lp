@@ -47,6 +47,9 @@ ooasp_cv(upperbound,ID1,
 	active(new_object).
 
 
+lb_at_least(ID1, ASSOC, 1..CMIN - N, C2, OPT, new_object):-
+	lb_violation(lowerbound,ID1,_,(ASSOC,CMIN,N,C2,OPT,new_object)).
+
 lb_violation(lowerbound,ID1,"Lowerbound for {} is {} but has {} {}",(ASSOC,CMIN,N,C2,OPT,new_object)):-
 	ooasp_assoc_limit(ASSOC,min,OPT,C,CMIN,C2),
 	ooasp_isa(C,ID1),
