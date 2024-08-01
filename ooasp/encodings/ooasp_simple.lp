@@ -26,7 +26,7 @@ check_permanent_cv. % Checks for permanent constraints apply
 
 #show lb_at_least/6.
 #show upper_filled/5.
-% #show lower_global/5.
+#show lower_global/5.
 % #show lb_violation/4.
 % #show ooasp_cv/4.
 

@@ -35,7 +35,7 @@ def generate_output_path(args):
 
 
 def ground(ctl, size, o):
-    log(f"Grouding {size} {o}")
+    log(f"\t\tGrounding {size} {o}")
     ctl.ground([("domain", [Number(size), Function(o, [])])])
     if size > 0:
         ctl.release_external(Function("active", [Number(size - 1)]))
@@ -43,7 +43,7 @@ def ground(ctl, size, o):
 
 
 def add_object(ctl, o, size, association=None):
-    log(f"\tAdding object  {o},{size}")
+    log(f"\t\tAdding object  {o},{size}")
     obj_atom = f"ooasp_isa({o},{size})"
     ctl.add("domain", [str(size), "object"], f"user({obj_atom}).")
     config.append(obj_atom)
@@ -52,7 +52,7 @@ def add_object(ctl, o, size, association=None):
         assoc_atom = (
             f"ooasp_associated({association[0]},{association[1]},{association[2]})"
         )
-        log("\tAdding association:", assoc_atom)
+        log("\t\tAdding association:", assoc_atom)
         ctl.add("domain", [str(size), "object"], f"user({assoc_atom}).")
 
         ctl.add(
@@ -95,22 +95,23 @@ def print_all(ctl):
 
 
 def create_from_cautious(ctl, size, project=False):
-    log("---> Create from cautious")
+    log("\n---> Smart expand")
     # print_all(ctl)
     cautious = _get_cautious(ctl)
     added = 0
     if cautious is None:
         log(f"<-- Cautious added {added} objects")
         return 0
-    log("\tAll cautious optimal projected:\n\t", "\n\t".join([str(s) for s in cautious]))
+    log("\tAll cautious optimal projected:\n\t", "\n\t".join(["____ " +str(s) for s in cautious]))
     added_key = None
+    log("\tWill check for: lb_at_least")
     for s in cautious:
         if s.match("lb_at_least", 6):
             o_id, assoc, needed, c, opt, _ = s.arguments
             if added_key is None:
-                log("\t** Focusing on: ", s)
+                log("\t********** Apply ", s)
                 added_key = (o_id, assoc)
-                log(f"\tAdding associated objects for {o_id} via {assoc}")
+                # log(f"\ttAdding associated objects for {o_id} via {assoc}")
             if added_key != (o_id, assoc):
                 # log("\tNot the same key")
                 continue
@@ -123,12 +124,12 @@ def create_from_cautious(ctl, size, project=False):
                 size += 1
                 added += 1
     if added == 0:
-        log("\tWill check for upper_filled")
+        log("\tWill check for: upper_filled")
         for s in cautious:
             if added > 0:
                 break
             if s.match("upper_filled", 5):
-                log("\tWill apply ", s)
+                log("\t********** Apply ", s)
                 _, _, c2, needed, _ = s.arguments
                 for _ in range(added, needed.number):
                     add_object(ctl, c2.name, size)
@@ -136,11 +137,24 @@ def create_from_cautious(ctl, size, project=False):
                     added += 1
                 break
 
+    if added == 0:
+        log("\tWill check for: lower_global")
+        for s in cautious:
+            if added > 0:
+                break
+            if s.match("lower_global", 5):
+                log("\t********** Apply ", s)
+                c1, _, _, needed, _ = s.arguments
+                for _ in range(added, needed.number):
+                    add_object(ctl, c1.name, size)
+                    size += 1
+                    added += 1
+                break
 
 
 
 
-    log(f"<--- Cautious added {added} objects")
+    log(f"<--- Smart expand added {added} objects")
     return added
 
 
