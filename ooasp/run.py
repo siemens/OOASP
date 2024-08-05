@@ -16,9 +16,11 @@ from clingraph.clingo_utils import ClingraphContext
 
 config = []
 
+
 def log(*args):
     print(*args)
     pass
+
 
 def generate_output_path(args):
     non_zero = [
@@ -71,7 +73,7 @@ def _get_cautious(ctl, project=False):
     ctl.configuration.solve.models = "0"
     ctl.configuration.solve.enum_mode = "cautious"
     # if project:
-        # ctl.configuration.solve.project = "project"
+    # ctl.configuration.solve.project = "project"
     with ctl.solve(yield_=True) as hdn:
         cautious_model = None
         for model in hdn:
@@ -84,6 +86,7 @@ def _get_cautious(ctl, project=False):
     ctl.configuration.solve.enum_mode = "auto"
     ctl.configuration.solve.project = "auto"
     return cautious_model
+
 
 def print_all(ctl):
     ctl.assign_external(Function("check_potential_cv"), False)
@@ -102,7 +105,10 @@ def create_from_cautious(ctl, size, project=False):
     if cautious is None:
         log(f"<-- Cautious added {added} objects")
         return 0
-    log("\tAll cautious optimal projected:\n\t", "\n\t".join(["____ " +str(s) for s in cautious]))
+    log(
+        "\tAll cautious optimal projected:\n\t",
+        "\n\t".join(["____ " + str(s) for s in cautious]),
+    )
     added_key = None
     log("\tWill check for: lb_at_least")
     for s in cautious:
@@ -151,9 +157,6 @@ def create_from_cautious(ctl, size, project=False):
                     added += 1
                 break
 
-
-
-
     log(f"<--- Smart expand added {added} objects")
     return added
 
@@ -201,8 +204,8 @@ def get_parser() -> ArgumentParser:
     parser.add_argument("--module", type=int, default=0)
     parser.add_argument("--frame", type=int, default=0)
     # ------------------------Specific-----------------------
-    parser.add_argument("--racksS", type=int, default=0)
-    parser.add_argument("--racksD", type=int, default=0)
+    parser.add_argument("--rackSingle", type=int, default=0)
+    parser.add_argument("--rackDouble", type=int, default=0)
     parser.add_argument("--elementA", type=int, default=0)
     parser.add_argument("--elementB", type=int, default=0)
     parser.add_argument("--elementC", type=int, default=0)
@@ -243,8 +246,8 @@ if __name__ == "__main__":
 
     initial_objects += ["frame"] * args.frame
 
-    initial_objects += ["rackDouble"] * args.racksD
-    initial_objects += ["rackSingle"] * args.racksS
+    initial_objects += ["rackDouble"] * args.rackDouble
+    initial_objects += ["rackSingle"] * args.rackSingle
     initial_objects += ["rack"] * args.rack
 
     initial_objects += ["elementA"] * args.elementA

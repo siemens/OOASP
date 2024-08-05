@@ -17,7 +17,6 @@ upper_filled(C1,ASSOC,C2,((NUM1 + MAX - 1) / MAX)-NUM2,new_object):-
 	active(new_object).
 
 
-%
 % This works for cases like python ooasp/run.py --frame 2 --rack 2
 lower_global(C1,ASSOC,C2,(NUM2*MIN)-NUM1,new_object):-
     % One side is 1..1
@@ -36,9 +35,3 @@ lower_global(C1,ASSOC,C2,(NUM2*MIN)-NUM1,new_object):-
 is_target_assoc(ASSOC,OPT):-
     ooasp_assoc_limit(ASSOC,max,OPT,C1,1,C2),
     ooasp_assoc_limit(ASSOC,min,OPT,C1,1,C2).
-
-% is_target_assoc(ASSOC,OPT):-
-%     ooasp_assoc_limit(ASSOC,max,OPT,C1,1,C2),
-%     ooasp_assoc_limit(ASSOC,min,OPT,C1,0,C2),
-%     ooasp_assoc_specialization(ASSOC,ASSOC2),
-%     is_target_assoc(ASSOC2,OPT).
