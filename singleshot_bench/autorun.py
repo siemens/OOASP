@@ -8,18 +8,15 @@ from clingo import Control
 ELEMENT_TYPES = 4
 ELEMENT_NAMES = 'ABCD'
 
-# for now just minimal 1elem config * number of elements
-domain_sizes = [19*(x+1) for x in range(20)]  # known minimmum domain sizes : [19,33]
+domain_sizes = [19, 33, 51, 65, 84, 98, 116, 130, 149, 163, 181, 195, 214, 228, 246, 260, 279, 293, 311, 325]
 o_instances = [x+1 for x in range(20)]
 
 
 def generate_ids(n: int) -> List:
     """
     Generates combinations of element definitions
-    with IDs such that they would cause no issue (THIS DOCSTRING NEEDS TO BE CHANGED)
+    with suitable IDs.
     """
-
-    # Note: this can easily be done just as ranges for the actual elements, but I think this is much clearer
 
     ids = [id+1 for id in range(ELEMENT_TYPES*n)]
     assigned = [ids[i*n:i*n+n] for i in range(ELEMENT_TYPES)]
