@@ -1,3 +1,6 @@
+# Copyright (c) 2022-2024 Siemens AG Oesterreich
+# SPDX-License-Identifier: MIT
+
 import os
 import datetime
 
