@@ -5,8 +5,6 @@ from argparse import ArgumentParser
 
 from clingo import Control, Number, Function
 
-from importlib import resources
-
 import ooasp.settings as settings
 
 
@@ -72,15 +70,12 @@ def _get_cautious(ctl, project=False):
     ctl.assign_external(Function("check_potential_cv"), False)
     ctl.configuration.solve.models = "0"
     ctl.configuration.solve.enum_mode = "cautious"
-    # if project:
-    # ctl.configuration.solve.project = "project"
     with ctl.solve(yield_=True) as hdn:
         cautious_model = None
         for model in hdn:
             cautious_model = model.symbols(shown=True)
         if cautious_model is None:
             log("\tUNSAT cautious!")
-            # log(model)
     ctl.assign_external(Function("check_potential_cv"), True)
     ctl.configuration.solve.models = "1"
     ctl.configuration.solve.enum_mode = "auto"
@@ -99,7 +94,6 @@ def print_all(ctl):
 
 def create_from_cautious(ctl, size, project=False):
     log("\n---> Smart expand")
-    # print_all(ctl)
     cautious = _get_cautious(ctl)
     added = 0
     if cautious is None:
@@ -117,9 +111,7 @@ def create_from_cautious(ctl, size, project=False):
             if added_key is None:
                 log("\t********** Apply ", s)
                 added_key = (o_id, assoc)
-                # log(f"\ttAdding associated objects for {o_id} via {assoc}")
             if added_key != (o_id, assoc):
-                # log("\tNot the same key")
                 continue
             for _ in range(added, needed.number):
                 if str(opt) == "1":
@@ -284,6 +276,7 @@ if __name__ == "__main__":
         next_id += added
         if added > 0:
             continue
+        # Uncomment to save the configuration before the solving step as a png
         # save_png("\n".join([str(c)+"." for c in config]), directory="out/solve")
         log(f"\n==============================")
         log(f"Solving for size {next_id-1}...")
