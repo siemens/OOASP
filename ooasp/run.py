@@ -294,7 +294,7 @@ if __name__ == "__main__":
     stats[next_id - 1] = ctl.statistics["summary"]["times"]
 
     log("Done!")
-    out_name = f"benchmarks/results/second-phase/latest/{generate_output_path(args)}"
+    out_name = f"benchmarks/latest/{generate_output_path(args)}"
     if args.cautious:
         out_name += "-c"
     if args.cautious_assoc:
