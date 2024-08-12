@@ -20,9 +20,16 @@ poetry install
 
 ### Usage
 
+Before running any of the programs, make sure the virtual environment has been activated. This can be done using the command:
+```
+poetry shell
+```
+
 The files corresponding to the current version are in [ooasp](ooasp).
 
 The package usage and new features are showcased in the jupyter notebooks inside the folder [usage](usage).
+
+In order to create a configuration using the command line use the file `run.py` found in the [ooasp](ooasp) directory. This program allows for the specification of an initial partial configuration using arguments in the format `--component N` where `N` refers to the number of components present in the initial configuration and `component` to the class name of the component. *Example: `python ooasp/run.py --elementA 5`*
 
 ### Documentation
 
