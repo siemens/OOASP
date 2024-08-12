@@ -27,7 +27,7 @@ def generate_ids(n: int) -> List:
 
     for letter, category in enumerate(assigned):
         for id in category:
-            terms.append(f"ooasp_isa(element{ELEMENT_NAMES[letter]},{id}).")
+            terms.append(f"user(ooasp_isa(element{ELEMENT_NAMES[letter]},{id})).")
 
     return terms
 
