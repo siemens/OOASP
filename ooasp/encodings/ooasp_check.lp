@@ -5,7 +5,6 @@
 
 #program domain(new_object, cls).
 
-
 % Integrity constraints for constraint violations, activated based on the externals
 :- ooasp_cv(CV,_,_,_),
 	not ooasp_potential_cv(CV),
@@ -45,6 +44,27 @@ ooasp_cv(upperbound,ID1,
 	#count{ID2:ooasp_assoc_gen(A,OPT,ID1,ID2)}
 		> CMAX,
 	active(new_object).
+
+
+association_needed_lb(ASSOC, ID1, ID2, new_object):-
+	lb_at_least(ID1, ASSOC, 1, _, _, new_object),
+	lb_at_least(ID2, ASSOC, 1, _, _, new_object),
+	potential_assoc(ASSOC, ID1, ID2,C1,C2),
+	user(ooasp_isa(C1,ID1)),
+	user(ooasp_isa(C2,ID2)),
+	not user(ooasp_associated(ASSOC, ID1, ID2)).
+
+% association_needed_lb(ID1, new_object, ASSOC, OPT):-
+% 	lb_at_least(ID1, ASSOC, 1, _, OPT, new_object),
+% 	lb_at_least(new_object, ASSOC, 1, _, OPT', new_object),
+% 	OPT!=OPT',
+% 	ooasp_associated(ASSOC, ID1, new_object).
+
+% association_needed_lb(new_object, ID2, ASSOC, OPT):-
+% 	lb_at_least(new_object, ASSOC, 1, _, OPT, new_object),
+% 	lb_at_least(ID2, ASSOC, 1, _, OPT', new_object),
+% 	OPT!=OPT',
+% 	ooasp_associated(ASSOC, new_object, ID2).
 
 
 lb_at_least(ID1, ASSOC, 1..CMIN - N, C2, OPT, new_object):-
