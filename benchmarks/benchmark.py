@@ -41,7 +41,7 @@ class BM:
 
     def run(self) -> None:
         args = [f"{k}:{v}" for k, v in self.kwargs.items()]
-        print("-"*10 +f"Running {self.fn.__name__}  " + " ".join(args) + "-"*10)
+        print("-"*10 + f"Running {self.fn.__name__}  " + " ".join(args) + "-"*10)
         iconfs_for_runs: list[Optional[InteractiveConfigurator]] = [
             None]*self.n_runs
         self.kwargs["iconfs_for_runs"] = iconfs_for_runs
@@ -62,18 +62,18 @@ class BM:
                 self.timeout = 1
                 timeout = 1
             else:
-                timeout=0
+                timeout = 0
             self.add_run_results(total_time, cast(
                 InteractiveConfigurator, iconfs_for_runs[n]), timeout)
         self.set_final_results()
 
     def add_run_results(self, time: float, iconf: InteractiveConfigurator, timeout) -> None:
         result: dict[str, Any] = {
-           "time": time,
-           "timeout": timeout,
-           "size": 0 if timeout else iconf.config.size ,
-           "domain_size": iconf.domain_size,
-           "found_config": iconf.config.fb.asp_str()
+            "time": time,
+            "timeout": timeout,
+            "size": 0 if timeout else iconf.config.size,
+            "domain_size": iconf.domain_size,
+            "found_config": iconf.config.fb.asp_str()
         }
         result.update(iconf._statistics)
         self.runs[len(self.runs)] = result
@@ -82,13 +82,13 @@ class BM:
         for run in self.runs.values():
             for t in self.final_results.keys():
                 if t in run:
-                    self.final_results[t]+=run[t]
+                    self.final_results[t] += run[t]
             self.final_results['timeout'] = run['timeout']
             self.final_results['size'] = run['size']
             self.final_results['domain_size'] = run['domain_size']
             self.final_results['found_config'] = run['found_config']
-        
-        for t in ['time','time-solving','time-grounding']:
+
+        for t in ['time', 'time-solving', 'time-grounding']:
             if t in self.final_results:
                 self.final_results[t] = self.final_results[t]/self.n_runs
 
