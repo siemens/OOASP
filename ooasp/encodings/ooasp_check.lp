@@ -47,6 +47,9 @@ ooasp_cv(upperbound,ID1,
 	active(new_object).
 
 
+lb_at_least(ID1, ASSOC, 1..CMIN - N, C2, OPT, new_object):-
+	lb_violation(lowerbound,ID1,_,(ASSOC,CMIN,N,C2,OPT,new_object)).
+
 lb_violation(lowerbound,ID1,"Lowerbound for {} is {} but has {} {}",(ASSOC,CMIN,N,C2,OPT,new_object)):-
 	ooasp_assoc_limit(ASSOC,min,OPT,C,CMIN,C2),
 	ooasp_isa(C,ID1),
@@ -105,12 +108,6 @@ ooasp_cv(no_value,new_object,"Missing value for {}",(A,)) :-
 	 ooasp_isa(C,new_object),
 	 not ooasp_attr_value(A,new_object,_).
 
-%--- Missing attribute value (Integer)
-ooasp_cv(no_value,new_object,"Missing value for {}",(A,)) :-
-	ooasp_attr(C,A,int),
-	ooasp_isa(C,new_object),
-	not &fsum{ooasp_attr_fvalue(A,new_object)}=ooasp_attr_fvalue(A,new_object).
-
 
 %=======================================
 % Special Constraint violations
@@ -119,7 +116,7 @@ ooasp_cv(no_value,new_object,"Missing value for {}",(A,)) :-
 
 %--- Unique attributes (Enumeration)
 
-% The class C of the main object is in position 1 
+% The class C of the main object is in position 1
 
 % The new object is of that class C
 ooasp_cv(unique_attr, (new_object;ID1), "Attribute {} must be unique among all {}s associated by {} to {}",(ATTR,C,ASSOC,ID2,new_object )):-
@@ -141,7 +138,7 @@ ooasp_cv(unique_attr, (ID3;ID1), "Attribute {} must be unique among all {}s asso
 	ooasp_attr_value(ATTR,ID3,V),
 	ooasp_attr_value(ATTR,ID1,V).
 
-% The class C of the main object is in position 2 
+% The class C of the main object is in position 2
 
 ooasp_cv(unique_attr, (new_object;ID1), "Attribute {} must be unique among all {}s associated by {} to {}",(ATTR,C,ASSOC,ID2,new_object )):-
 	ooasp_special_cv(unique,(ASSOC, C, ATTR)),
@@ -160,111 +157,6 @@ ooasp_cv(unique_attr, (ID3;ID1), "Attribute {} must be unique among all {}s asso
 	ID3>ID1,
 	ooasp_attr_value(ATTR,ID3,V),
 	ooasp_attr_value(ATTR,ID1,V).
-
-%--- Unique attributes (Integer values (fclingo))
-
-% The class C of the main object is in position 1 
-
-% The new object is of that class C
-ooasp_cv(unique_attr, (new_object;ID1), "Attribute {} must be unique among all {}s associated by {} to {}",(ATTR,C,ASSOC,ID2,new_object )):-
-	ooasp_attr(C,ATTR,int),
-	ooasp_special_cv(unique,(ASSOC, C, ATTR)),
-	ooasp_assoc(ASSOC,C,_,_,_,_,_),
-	ooasp_associated(ASSOC,new_object,ID2),
-	ooasp_associated(ASSOC,ID1,ID2),
-	new_object>ID1,
-	&fsum{ooasp_attr_fvalue(ATTR,new_object)}=ooasp_attr_fvalue(ATTR,ID1).
-
-% The new object is of the other class
-ooasp_cv(unique_attr, (ID3;ID1), "Attribute {} must be unique among all {}s associated by {} to {}",(ATTR,C,ASSOC,new_object)):-
-	ooasp_attr(C,ATTR,int),
-	ooasp_special_cv(unique,(ASSOC, C, ATTR)),
-	ooasp_assoc(ASSOC,C,_,_,_,_,_),
-	ooasp_associated(ASSOC,ID3,new_object),
-	ooasp_associated(ASSOC,ID1,new_object),
-	ID3>ID1,
-	&fsum{ooasp_attr_fvalue(ATTR,ID3)}=ooasp_attr_fvalue(ATTR,ID1).
-
-% The class C of the main object is in position 2 
-
-ooasp_cv(unique_attr, (new_object;ID1), "Attribute {} must be unique among all {}s associated by {} to {}",(ATTR,C,ASSOC,ID2,new_object )):-
-	ooasp_attr(C,ATTR,int),
-	ooasp_special_cv(unique,(ASSOC, C, ATTR)),
-	ooasp_assoc(ASSOC,_,_,_,C,_,_),
-	ooasp_associated(ASSOC,ID2,new_object),
-	ooasp_associated(ASSOC,ID2,ID1),
-	new_object>ID1,
-	&fsum{ooasp_attr_fvalue(ATTR,new_object)}=ooasp_attr_fvalue(ATTR,ID1).
-
-ooasp_cv(unique_attr, (ID3;ID1), "Attribute {} must be unique among all {}s associated by {} to {}",(ATTR,C,ASSOC,new_object )):-
-	ooasp_attr(C,ATTR,int),
-	ooasp_special_cv(unique,(ASSOC, C, ATTR)),
-	ooasp_assoc(ASSOC,_,_,_,C,_,_),
-	ooasp_associated(ASSOC,new_object,ID3),
-	ooasp_associated(ASSOC,new_object,ID1),
-	ID3>ID1,
-	&fsum{ooasp_attr_fvalue(ATTR,ID3)}=ooasp_attr_fvalue(ATTR,ID1).
-
-
-%==============================================================================
-% User input Values (General), when guessing values this should not be needed
-%==============================================================================
-
-% %--- (USER INPUT) Attribute value must belong to instance class
-% ooasp_cv(no_instance_for_attribute,new_object,"Attribute {} not of selected class",(A,)) :-
-% 	ooasp_attr(C1,A,T),
-% 	user(ooasp_attr_value(A,new_object,V)),
-% 	not ooasp_isa(C1,new_object).
-
-% %--- (USER INPUT) Attribute value must belong to instance
-% ooasp_cv(no_instance_for_attribute,new_object,"Value for {} assigned but instanciated",(A,)) :-
-% 	user(ooasp_attr_value(A,new_object,V)),
-% 	not ooasp_isa(_,new_object).
-
-% %--- (USER INPUT) Atribute value not from domain
-% ooasp_cv(value_not_domain,new_object,"Value {} for {} not from domain",(V,A)) :-
-% 	 ooasp_attr(C,A,enumint),
-% 	 ooasp_attr_enum(C,A,_),
-% 	 ooasp_isa(C,new_object),
-% 	 user(ooasp_attr_value(A,new_object,V)),
-% 	 not ooasp_attr_enum(C,A,V).
-
-% %--- (USER INPUT) Multiple values for a value
-% ooasp_cv(conflicting_values,new_object,"Multiple values for {}: {},{}",(A,V1,V2)) :-
-% 	 ooasp_attr(C,A,T),
-% 	 user(ooasp_attr_value(A,new_object,V1)),
-% 	 user(ooasp_attr_value(A,new_object,V2)),
-% 	 V1<V2.
-
-% %--- (USER INPUT) Value outside range
-% ooasp_cv(value_outside_of_range,new_object,"Value for {} outside range {}<{}",(A,V,MIN)) :-
-% 	 ooasp_attr(C,A,T),
-% 	 ooasp_isa(C,new_object),
-% 	 user(ooasp_attr_value(A,new_object,V)),
-% 	 ooasp_attr_minInclusive(C,A,MIN),
-% 	 V<MIN.
-
-% ooasp_cv(value_outside_of_range,new_object,"Value for {} outside range {}>{}",(A,V,MAX)) :-
-% 	 ooasp_attr(C,A,T),
-% 	 ooasp_isa(C,new_object),
-% 	 user(ooasp_attr_value(A,new_object,V)),
-% 	 ooasp_attr_maxInclusive(C,A,MAX),
-% 	 V>MAX.
-
-%--- (USER INPUT) Value outside range (Integers)
-
-ooasp_cv(value_outside_of_range,new_object,"Value for {} outside min range {}",(A,MIN)) :-
-	 ooasp_attr(C,A,int),
-	 ooasp_isa(C,new_object),
-	 &fsum{ooasp_attr_fvalue(A,new_object)}<MIN,
-	 ooasp_attr_minInclusive(C,A,MIN).
-
-ooasp_cv(value_outside_of_range,new_object,"Value for {} outside max range {}",(A,MAX)) :-
-	 ooasp_attr(C,A,int),
-	 ooasp_isa(C,new_object),
-	 &fsum{ooasp_attr_fvalue(A,new_object)}>MAX,
-	 ooasp_attr_maxInclusive(C,A,MAX).
-
 
 
 
