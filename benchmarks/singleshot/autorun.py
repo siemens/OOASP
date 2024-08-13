@@ -96,7 +96,7 @@ def log_model(model, out=False):
             print(model)
 
 
-def log_results(stats: str, iteration: int, out: bool=False):
+def log_results(stats: str, iteration: int, out: bool = False):
     """
     Creates a results directory (if it does not exist)
     And logs times and results into text files.
@@ -109,12 +109,14 @@ def log_results(stats: str, iteration: int, out: bool=False):
         if out:
             print('RESULTS:')
             print(stats)
-    
+
+
 def on_model(m):
     """
     Helper function to control resulting model
     """
     log_model(m)
+
 
 if __name__ == "__main__":
     global model
@@ -126,4 +128,4 @@ if __name__ == "__main__":
         build_assumptions(iteration)
         ctl = reset_solving()
         ctl.solve(on_model=on_model)
-        log_results(str(ctl.statistics['summary']['times']),iteration, out=True)
+        log_results(str(ctl.statistics['summary']['times']), iteration, out=True)
