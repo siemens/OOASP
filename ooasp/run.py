@@ -5,14 +5,19 @@ from argparse import ArgumentParser
 
 from clingo import Control, Number, Function
 
-from importlib import resources
-
 import ooasp.settings as settings
 
 
 from clingraph.orm import Factbase
 from clingraph.graphviz import compute_graphs, render
 from clingraph.clingo_utils import ClingraphContext
+
+config = []
+
+
+def log(*args):
+    print(*args)
+    pass
 
 
 def generate_output_path(args):
@@ -30,7 +35,7 @@ def generate_output_path(args):
 
 
 def ground(ctl, size, o):
-    print(f"Grouding {size} {o}")
+    log(f"\t\tGrounding {size} {o}")
     ctl.ground([("domain", [Number(size), Function(o, [])])])
     if size > 0:
         ctl.release_external(Function("active", [Number(size - 1)]))
@@ -38,13 +43,16 @@ def ground(ctl, size, o):
 
 
 def add_object(ctl, o, size, association=None):
-    print(f"\tAdding object  {o},{size}")
-    ctl.add("domain", [str(size), "object"], f"user(ooasp_isa({o},{size})).")
-    if association and add_associations:
+    log(f"\t\tAdding object  {o},{size}")
+    obj_atom = f"ooasp_isa({o},{size})"
+    ctl.add("domain", [str(size), "object"], f"user({obj_atom}).")
+    config.append(obj_atom)
+    config.append(f"user({obj_atom})")
+    if association is not None:
         assoc_atom = (
             f"ooasp_associated({association[0]},{association[1]},{association[2]})"
         )
-        print("\tAdding association:", assoc_atom)
+        log("\t\tAdding association:", assoc_atom)
         ctl.add("domain", [str(size), "object"], f"user({assoc_atom}).")
 
         ctl.add(
@@ -52,6 +60,8 @@ def add_object(ctl, o, size, association=None):
             [str(size), "object"],
             f"{assoc_atom}.",
         )
+        config.append(assoc_atom)
+        config.append(f"user({assoc_atom})")
 
     ground(ctl, size, o)
 
@@ -60,49 +70,86 @@ def _get_cautious(ctl, project=False):
     ctl.assign_external(Function("check_potential_cv"), False)
     ctl.configuration.solve.models = "0"
     ctl.configuration.solve.enum_mode = "cautious"
-    ctl.configuration.solve.opt_mode = "optN"
-    if project:
-        ctl.configuration.solve.project = "project"
     with ctl.solve(yield_=True) as hdn:
         cautious_model = None
         for model in hdn:
             cautious_model = model.symbols(shown=True)
         if cautious_model is None:
-            print("\tUNSAT cautious!")
-            # print(model)
+            log("\tUNSAT cautious!")
     ctl.assign_external(Function("check_potential_cv"), True)
-    ctl.configuration.solve.opt_mode = "ignore"
     ctl.configuration.solve.models = "1"
     ctl.configuration.solve.enum_mode = "auto"
     ctl.configuration.solve.project = "auto"
     return cautious_model
 
 
+def print_all(ctl):
+    ctl.assign_external(Function("check_potential_cv"), False)
+    ctl.configuration.solve.models = "0"
+    ctl.configuration.solve.enum_mode = "auto"
+    with ctl.solve(yield_=True) as hdn:
+        for model in hdn:
+            log(model.symbols(shown=True))
+
+
 def create_from_cautious(ctl, size, project=False):
-    print("---> Create from cautious")
+    log("\n---> Smart expand")
     cautious = _get_cautious(ctl)
     added = 0
     if cautious is None:
-        print(f"<-- Cautious opt added {added} objects")
+        log(f"<-- Cautious added {added} objects")
         return 0
-    print("\tAll cautious optimal projected:", "\n\t".join([str(s) for s in cautious]))
+    log(
+        "\tAll cautious optimal projected:\n\t",
+        "\n\t".join(["____ " + str(s) for s in cautious]),
+    )
+    added_key = None
+    log("\tWill check for: lb_at_least")
     for s in cautious:
-        if s.match("ooasp_cv", 4):
-            if str(s.arguments[0]) != "lowerbound":
+        if s.match("lb_at_least", 6):
+            o_id, assoc, needed, c, opt, _ = s.arguments
+            if added_key is None:
+                log("\t********** Apply ", s)
+                added_key = (o_id, assoc)
+            if added_key != (o_id, assoc):
                 continue
-            print("\t** Focusing on: ", s)
-            assoc, cmin, n, c, opt, _ = s.arguments[3].arguments
-            for _ in range(n.number, cmin.number):
+            for _ in range(added, needed.number):
                 if str(opt) == "1":
-                    a = (str(assoc), str(s.arguments[1]), size)
+                    a = (str(assoc), o_id, size)
                 else:
-                    a = (str(assoc), size, str(s.arguments[1]))
+                    a = (str(assoc), size, o_id)
                 add_object(ctl, c.name, size, a)
                 size += 1
                 added += 1
-        if added > 0:
-            break
-    print(f"<--- Cautious opt added {added} objects")
+    if added == 0:
+        log("\tWill check for: upper_filled")
+        for s in cautious:
+            if added > 0:
+                break
+            if s.match("upper_filled", 5):
+                log("\t********** Apply ", s)
+                _, _, c2, needed, _ = s.arguments
+                for _ in range(added, needed.number):
+                    add_object(ctl, c2.name, size)
+                    size += 1
+                    added += 1
+                break
+
+    if added == 0:
+        log("\tWill check for: lower_global")
+        for s in cautious:
+            if added > 0:
+                break
+            if s.match("lower_global", 5):
+                log("\t********** Apply ", s)
+                c1, _, _, needed, _ = s.arguments
+                for _ in range(added, needed.number):
+                    add_object(ctl, c1.name, size)
+                    size += 1
+                    added += 1
+                break
+
+    log(f"<--- Smart expand added {added} objects")
     return added
 
 
@@ -116,8 +163,8 @@ def save_png(config, directory: str = "./out"):
     ctl.load(str(path))
     path = settings.encodings_path.joinpath("ooasp_aux_kb.lp")
     ctl.load(str(path))
+    ctl.load("examples/racks/kb.lp")
 
-    # ctl.add("base", [], self.fb.asp_str())
     ctl.add("base", [], config)
     ctl.ground([("base", [])], ClingraphContext())
     ctl.solve(
@@ -149,8 +196,8 @@ def get_parser() -> ArgumentParser:
     parser.add_argument("--module", type=int, default=0)
     parser.add_argument("--frame", type=int, default=0)
     # ------------------------Specific-----------------------
-    parser.add_argument("--racksS", type=int, default=0)
-    parser.add_argument("--racksD", type=int, default=0)
+    parser.add_argument("--rackSingle", type=int, default=0)
+    parser.add_argument("--rackDouble", type=int, default=0)
     parser.add_argument("--elementA", type=int, default=0)
     parser.add_argument("--elementB", type=int, default=0)
     parser.add_argument("--elementC", type=int, default=0)
@@ -170,10 +217,6 @@ if __name__ == "__main__":
     parser = get_parser()
     args = parser.parse_args()
 
-    # use_cautious_generate = True
-    use_cautious_generate = args.cautious
-    add_associations = args.cautious_assoc
-
     start = time.time()
     ctl = Control(
         [
@@ -186,21 +229,17 @@ if __name__ == "__main__":
         ]
     )
     ctl.load("examples/racks/kb.lp")
-    # ctl.load("examples/racks/constraints.lp")
     ctl.load("ooasp/encodings/ooasp_simple.lp")
-    if use_cautious_generate:
-        ctl.load("ooasp/encodings/ooasp_cautious_opt.lp")
 
     ctl.ground([("base", [])])
-    ctl.configuration.solve.opt_mode = "ignore"
 
     next_id = 1
     initial_objects = []
 
     initial_objects += ["frame"] * args.frame
 
-    initial_objects += ["rackDouble"] * args.racksD
-    initial_objects += ["rackSingle"] * args.racksS
+    initial_objects += ["rackDouble"] * args.rackDouble
+    initial_objects += ["rackSingle"] * args.rackSingle
     initial_objects += ["rack"] * args.rack
 
     initial_objects += ["elementA"] * args.elementA
@@ -231,31 +270,30 @@ if __name__ == "__main__":
     step_size = 1
     stats = {}
     done = False
+
     while not done:
-        print(f"\nSolving for size {next_id-1}...")
+        added = create_from_cautious(ctl, next_id, project=args.project)
+        next_id += added
+        if added > 0:
+            continue
+        # Uncomment to save the configuration before the solving step as a png
+        # save_png("\n".join([str(c)+"." for c in config]), directory="out/solve")
+        log(f"\n==============================")
+        log(f"Solving for size {next_id-1}...")
+        ctl.configuration.solve.models = "1"
         res = ctl.solve(on_model=on_model)
         if res.satisfiable:
-            print("     Found model")
+            log("     Found model")
             done = True
-            break
-        print(f"    No configuration found for size {next_id-1}")
-        start_size = next_id
-        stats[next_id - 1] = ctl.statistics["summary"]["times"]
-        try_new = True
-        if use_cautious_generate:
-            added = create_from_cautious(ctl, next_id, project=args.project)
-            next_id += added
-            try_new = added == 0
-        while try_new:
-            ground(ctl, next_id, "object")
-            next_id += 1
-            if next_id >= start_size + step_size:
-                try_new = False
+            continue
+        log(f"No solution found")
+        ground(ctl, next_id, "object")
+        next_id += 1
 
     end = time.time()
     stats[next_id - 1] = ctl.statistics["summary"]["times"]
 
-    print("Done!")
+    log("Done!")
     out_name = f"benchmarks/latest/{generate_output_path(args)}"
     if args.cautious:
         out_name += "-c"
@@ -272,3 +310,5 @@ if __name__ == "__main__":
 
     if args.view:
         save_png("\n".join(model))
+
+    print("RUNTIME: ", end - start)
