@@ -4,38 +4,45 @@
 import os
 import datetime
 
-from typing import List
+from typing import List, Annotated
 
 from clingo import Control
 
-ELEMENT_TYPES = 4
 ELEMENT_NAMES = 'ABCD'
+ELEMENT_TYPES = len(ELEMENT_NAMES)
 
-domain_sizes = [19, 33, 51, 65, 84, 98, 116, 130, 149, 163, 181, 195, 214, 228, 246, 260, 279, 293, 311, 325]
-o_instances = [x+1 for x in range(20)]
+domain_sizes: Annotated[List[int], "Currently known minimal domain sizes calculated by count.py script"] = [
+    19, 33, 51, 65, 84, 98, 116, 130, 149, 163, 181, 195, 214, 228, 246, 260, 279, 293, 311, 325
+    ]
+
+instances: Annotated[List[int], "Iteration identifications."] = [x+1 for x in range(20)]
 
 
-def generate_ids(n: int) -> List:
+def generate_ids(n: int) -> List[str]:
     """
     Generates combinations of element definitions
     with suitable IDs.
+    :param n: int, number of elements of each type (e.g. for iteration 4, n=4)
+    :return: list of fact representations strings 
     """
 
     ids = [id+1 for id in range(ELEMENT_TYPES*n)]
     assigned = [ids[i*n:i*n+n] for i in range(ELEMENT_TYPES)]
-    terms = []
+    partial_config_facts = []
 
-    for letter, category in enumerate(assigned):
-        for id in category:
-            terms.append(f"user(ooasp_isa(element{ELEMENT_NAMES[letter]},{id})).")
+    for element_index, object_ids in enumerate(assigned):
+        for id in object_ids:
+            partial_config_facts.append(f"user(ooasp_isa(element{ELEMENT_NAMES[element_index]},{id})).")
 
-    return terms
+    return partial_config_facts
 
 
 def rewrite_assumptions(content: List[str], save: bool = True) -> None:
     """
     Rewrites the assumptions.lp file to the list of content passed.
     If save is set to true, creates a legacy directory and saves a copy of existing assumptions to it.
+    :param content: list of configuration facts
+    :param save: if active, saves all the generated files iin the outdated instances directory 
     """
 
     if os.path.isfile('instances/assumptions.lp'):
@@ -50,22 +57,25 @@ def rewrite_assumptions(content: List[str], save: bool = True) -> None:
             file.write(t+'\n')
 
 
-def add_domain(n: int) -> None:
+def add_domain(size: int) -> None:
     """
     Adds domain size constraints to the assumption file
+    :param size: size of the domain
     """
     with open('instances/assumptions.lp', 'a') as file:
-        t = f'ooasp_domain(object,1..{n}).'
+        t = f'ooasp_domain(object,1..{size}).'
         file.write(t)
 
 
 def build_assumptions(n: int, save: bool = False) -> None:
     """
     Builds the new assumptions file in its entirety.
+    :param n: number of iteration
+    :param save: flag to save old assumption files before rewriting them
     """
-    ts = generate_ids(n)
-    rewrite_assumptions(ts, save=save)
-    add_domain(domain_sizes[n-1] if len(domain_sizes) >= n else 100)
+    partial_config_facts = generate_ids(n)
+    rewrite_assumptions(partial_config_facts, save=save)
+    add_domain(domain_sizes[n-1] if len(domain_sizes) >= n else 100) # 100 is a placeholder value to avoid potential errors
 
 
 def reset_solving() -> Control:
@@ -80,10 +90,12 @@ def reset_solving() -> Control:
     return ctl
 
 
-def log_model(model, out=False):
+def log_model(model, out: bool=False) -> None:
     """
     Creates a model directory (if it does not exist)
     And logs resulting models into files
+    :param model: representation of the model
+    :param out: flag to turn on stdout prints of the model
     """
     os.makedirs('results/models', exist_ok=True)
 
@@ -96,10 +108,13 @@ def log_model(model, out=False):
             print(model)
 
 
-def log_results(stats: str, iteration: int, out: bool = False):
+def log_results(stats: str, iteration: int, out: bool = False) -> None:
     """
     Creates a results directory (if it does not exist)
     And logs times and results into text files.
+    :param stats: statistics to write into the file
+    :param iteration: identificator of the iteration
+    :param out: flag to activate stdout prints of the results
     """
     os.makedirs('results/times', exist_ok=True)
     global timestr
@@ -119,11 +134,9 @@ def on_model(m):
 
 
 if __name__ == "__main__":
-    global model
-    model = None
     global timestr
     timestr = str(datetime.datetime.now()).replace(' ', '_').replace('.', '-').replace(':', '-')
-    for iteration in o_instances:
+    for iteration in instances:
         print(f">>Solving for:{iteration}")
         build_assumptions(iteration)
         ctl = reset_solving()
