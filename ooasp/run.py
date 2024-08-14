@@ -6,6 +6,7 @@ from argparse import ArgumentParser
 from clingo import Control, Number, Function
 from clingo import parse_term
 import ooasp.settings as settings
+from ooasp.utils import red, green, title, subtitle, colored, COLORS
 
 
 from clingraph.orm import Factbase
@@ -15,364 +16,314 @@ from clingraph.clingo_utils import ClingraphContext
 config = []
 
 
-def log(*args):
-    # print(*args)
-    pass
+class OOASPRacksSolver:
 
+    def __init__(self, args, smart_generation_functions=None):
+        self.args = args
+        self.ctl = Control(
+            [
+                "1",
+                "--warn=none",
+                f"-c config_name=c1",
+                f"-c kb_name=k1",
+                "-t3",
+                "--project=show",
+            ]
+        )
+        self.ctl.load("examples/racks/kb.lp")
+        self.ctl.load("ooasp/encodings/ooasp_simple.lp")
 
-def generate_output_path(args):
-    non_zero = [
-        opt
-        for opt in args.__dict__
-        if type(args.__dict__[opt]) is int and args.__dict__[opt] != 0
-    ]
-    fstr = ""
-    for opt in non_zero:
-        fstr += "-" + opt[0]
-        fstr += "".join([letter for letter in opt if letter.isupper()])
-        fstr += str(args.__dict__[opt])
-    return fstr[1:]
+        self.ctl.ground([("base", [])])
+        self.ctl.solve()
+        self.next_id = 1
+        self.associations = []
+        self.model = None
+        self.cautious = None
+        self.brave = None
 
+        if smart_generation_functions is None:
+            self.smart_generation_functions = [
+                "lb_at_least",
+                "upper_filled",
+                "lower_global",
+                "association_needed_lb",
+            ]
+        else:
+            self.smart_generation_functions = smart_generation_functions
 
-def ground(ctl, size, o):
-    log(f"\t\tGrounding {size} {o}")
-    ctl.ground([("domain", [Number(size), Function(o, [])])])
-    if size > 0:
-        ctl.release_external(Function("active", [Number(size - 1)]))
-    ctl.assign_external(Function("active", [Number(size)]), True)
+        def log(*args):
+            if self.args.verbose:
+                print(*args)
+            pass
 
+        self.log = log
 
-# def add_assoc_atom(ctl, association, size):
-#     assoc_atom = f"ooasp_associated({association[0]},{association[1]},{association[2]})"
-#     log("\t\tAdding association:", assoc_atom)
-#     ctl.add("domain", [str(size), "object"], f"user({assoc_atom}).")
+    @property
+    def assumptions(self):
+        return [(parse_term(a), True) for a in self.associations]
 
-#     ctl.add(
-#         "domain",
-#         [str(size), "object"],
-#         f"{assoc_atom}.",
-#     )
-#     config.append(assoc_atom)
-#     config.append(f"user({assoc_atom})")
-#     log(f"\t\tAdded association as atom: {assoc_atom}")
-#     return assoc_atom
+    @classmethod
+    def get_parser(cls) -> ArgumentParser:
+        """
+        Return the parser for command line options.
+        """
+        parser = ArgumentParser(
+            prog="ooasp",
+        )
+        parser.add_argument("--verbose", action="store_true")
+        parser.add_argument("--view", action="store_true")
+        # ------------------------Smart generation options ------------------------
+        parser.add_argument("--cautious", action="store_true")
+        # ------------------------General------------------------
+        parser.add_argument("--element", type=int, default=0)
+        parser.add_argument("--rack", type=int, default=0)
+        parser.add_argument("--module", type=int, default=0)
+        parser.add_argument("--frame", type=int, default=0)
+        # ------------------------Specific-----------------------
+        parser.add_argument("--rackSingle", type=int, default=0)
+        parser.add_argument("--rackDouble", type=int, default=0)
+        parser.add_argument("--elementA", type=int, default=0)
+        parser.add_argument("--elementB", type=int, default=0)
+        parser.add_argument("--elementC", type=int, default=0)
+        parser.add_argument("--elementD", type=int, default=0)
+        parser.add_argument("--moduleI", type=int, default=0)
+        parser.add_argument("--moduleII", type=int, default=0)
+        parser.add_argument("--moduleIII", type=int, default=0)
+        parser.add_argument("--moduleIV", type=int, default=0)
+        parser.add_argument("--moduleV", type=int, default=0)
+        return parser
 
+    def create_initial_objects(self):
+        initial_objects = []
 
-def get_assoc_atom(association):
-    assoc_atom = f"ooasp_associated({association[0]},{association[1]},{association[2]})"
-    return assoc_atom
+        initial_objects += ["frame"] * self.args.frame
 
+        initial_objects += ["rackDouble"] * self.args.rackDouble
+        initial_objects += ["rackSingle"] * self.args.rackSingle
+        initial_objects += ["rack"] * self.args.rack
 
-def add_object(ctl, o, size, association=None):
-    log(f"\t\tAdding object  {o},{size}")
-    obj_atom = f"ooasp_isa({o},{size})"
-    ctl.add("domain", [str(size), "object"], f"user({obj_atom}).")
-    config.append(obj_atom)
-    config.append(f"user({obj_atom})")
-    assoc = []
-    if association is not None:
-        assoc = [get_assoc_atom(association)]
+        initial_objects += ["elementA"] * self.args.elementA
+        initial_objects += ["elementB"] * self.args.elementB
+        initial_objects += ["elementC"] * self.args.elementC
+        initial_objects += ["elementD"] * self.args.elementD
+        initial_objects += ["element"] * self.args.element
 
-    ground(ctl, size, o)
-    return assoc
+        initial_objects += ["module"] * self.args.module
+        initial_objects += ["moduleI"] * self.args.moduleI
+        initial_objects += ["moduleII"] * self.args.moduleII
+        initial_objects += ["moduleIII"] * self.args.moduleIII
+        initial_objects += ["moduleIV"] * self.args.moduleIV
+        initial_objects += ["moduleV"] * self.args.moduleV
 
+        for o in initial_objects:
+            self.add_object(o)
 
-def _get_brave(ctl, assumptions):
-    ctl.assign_external(Function("check_potential_cv"), False)
-    ctl.assign_external(Function("computing_brave"), True)
-    ctl.configuration.solve.models = "0"
-    ctl.configuration.solve.enum_mode = "brave"
-    with ctl.solve(yield_=True, assumptions=assumptions) as hdn:
-        brave_model = None
-        for model in hdn:
-            brave_model = model.symbols(shown=True)
-        if brave_model is None:
-            log("\tUNSAT brave!")
-    ctl.assign_external(Function("check_potential_cv"), True)
-    ctl.assign_external(Function("computing_brave"), False)
-    ctl.configuration.solve.models = "1"
-    ctl.configuration.solve.enum_mode = "auto"
-    ctl.configuration.solve.project = "auto"
-    return brave_model
+    def ground(self, o):
+        self.log(f"\t\tGrounding {self.next_id} {o}")
+        self.ctl.ground([("domain", [Number(self.next_id), Function(o, [])])])
+        if self.next_id > 0:
+            self.ctl.release_external(Function("active", [Number(self.next_id - 1)]))
+        self.ctl.assign_external(Function("active", [Number(self.next_id)]), True)
 
+    def add_object(self, o):
+        obj_atom = f"ooasp_isa({o},{self.next_id})"
+        self.log(green(f"\t\tAdding object  {obj_atom}"))
+        self.ctl.add("domain", [str(self.next_id), "object"], f"user({obj_atom}).")
+        config.append(obj_atom)
+        config.append(f"user({obj_atom})")
+        self.ground(o)
+        self.next_id += 1
+        self.cautious = None
+        self.brave = None
 
-def _get_cautious(ctl, assumptions):
-    ctl.assign_external(Function("check_potential_cv"), False)
-    ctl.assign_external(Function("computing_cautious"), True)
-    ctl.configuration.solve.models = "0"
-    ctl.configuration.solve.enum_mode = "cautious"
-    with ctl.solve(yield_=True, assumptions=assumptions) as hdn:
-        cautious_model = None
-        for model in hdn:
-            cautious_model = model.symbols(shown=True)
-        if cautious_model is None:
-            log("\tUNSAT cautious!")
-    ctl.assign_external(Function("check_potential_cv"), True)
-    ctl.assign_external(Function("computing_cautious"), False)
-    ctl.configuration.solve.models = "1"
-    ctl.configuration.solve.enum_mode = "auto"
-    ctl.configuration.solve.project = "auto"
-    return cautious_model
+    def add_association(self, association):
+        assoc_atom = (
+            f"ooasp_associated({association[0]},{association[1]},{association[2]})"
+        )
+        self.log(green(f"\t\tAdding association  {assoc_atom}"))
+        self.associations.append(assoc_atom)
+        self.cautious = None
+        self.brave = None
 
+    def get_cautious(self):
+        if self.cautious:
+            return self.cautious
+        self.ctl.assign_external(Function("check_potential_cv"), False)
+        self.ctl.assign_external(Function("computing_cautious"), True)
+        self.ctl.configuration.solve.models = "0"
+        self.ctl.configuration.solve.enum_mode = "cautious"
+        with self.ctl.solve(yield_=True, assumptions=self.assumptions) as hdn:
+            for model in hdn:
+                self.cautious = model.symbols(shown=True)
+            if self.cautious is None:
+                self.log("\tUNSAT cautious!")
+        self.ctl.assign_external(Function("check_potential_cv"), True)
+        self.ctl.assign_external(Function("computing_cautious"), False)
+        self.ctl.configuration.solve.models = "1"
+        self.ctl.configuration.solve.enum_mode = "auto"
+        self.ctl.configuration.solve.project = "auto"
+        return self.cautious
 
-def print_all(ctl):
-    ctl.assign_external(Function("check_potential_cv"), False)
-    ctl.configuration.solve.models = "0"
-    ctl.configuration.solve.enum_mode = "auto"
-    with ctl.solve(yield_=True) as hdn:
-        for model in hdn:
-            log(model.symbols(shown=True))
+    def get_brave(self):
+        if self.brave:
+            return self.brave
+        self.ctl.assign_external(Function("check_potential_cv"), False)
+        self.ctl.assign_external(Function("computing_brave"), True)
+        self.ctl.configuration.solve.models = "0"
+        self.ctl.configuration.solve.enum_mode = "brave"
+        with self.ctl.solve(yield_=True, assumptions=self.assumptions) as hdn:
+            for model in hdn:
+                self.brave = model.symbols(shown=True)
+            if self.brave is None:
+                self.log("\tUNSAT brave!")
+        self.ctl.assign_external(Function("check_potential_cv"), True)
+        self.ctl.assign_external(Function("computing_brave"), False)
+        self.ctl.configuration.solve.models = "1"
+        self.ctl.configuration.solve.enum_mode = "auto"
+        self.ctl.configuration.solve.project = "auto"
+        return self.brave
 
+    def save_png(self, directory: str = "./out"):
+        """
+        Saves the configuration as a png using clingraph
+        """
+        config = "\n".join([str(c) + "." for c in self.model])
+        ctl = Control(["--warn=none"])
+        fbs = []
+        path = settings.encodings_path.joinpath("viz_config.lp")
+        ctl.load(str(path))
+        path = settings.encodings_path.joinpath("ooasp_aux_kb.lp")
+        ctl.load(str(path))
+        ctl.load("examples/racks/kb.lp")
 
-def create_assoc_from_brave(ctl, size, assumptions):
-    log("\n---> Smart brave expand")
-    brave = _get_brave(ctl, assumptions)
-    added = 0
-    # log(
-    #     "\tAll brave:\n\t",
-    #     "\n\t".join(["____ " + str(s) for s in brave]),
-    # )
-    if brave is None:
-        log(f"<-- brave added {added} assoc")
-        return []
-    log("\tWill check for: association_needed_lb")
-    for s in brave:
-        if s.match("association_needed_lb", 4):
-            log("\t********** Apply ", s)
-            assoc, id1, id2, _ = s.arguments
-            a = (str(assoc), id1, id2)
-            assoc_atom = get_assoc_atom(a)
-            log(f"<--- Smart brave expand added {assoc_atom}")
-            return [assoc_atom]
-    return []
+        ctl.add("base", [], config)
+        ctl.ground([("base", [])], ClingraphContext())
+        ctl.solve(
+            on_model=lambda m: fbs.append(
+                Factbase.from_model(m, default_graph="config")
+            )
+        )
+        graphs = compute_graphs(fbs[0])
+        render(
+            graphs, format="png", name_format="config", directory=directory, view=True
+        )
 
-
-def create_from_cautious(ctl, size, assumptions):
-    log("\n---> Smart expand")
-    cautious = _get_cautious(ctl, assumptions)
-    added = 0
-    if cautious is None:
-        log(f"<-- Cautious added {added} objects")
-        return 0, []
-    log(
-        "\tAll cautious optimal projected:\n\t",
-        "\n\t".join(["____ " + str(s) for s in cautious]),
-    )
-    added_key = None
-    added_assoc = []
-    log("\tWill check for: lb_at_least")
-    for s in cautious:
-        if s.match("lb_at_least", 6):
-            o_id, assoc, needed, c, opt, _ = s.arguments
-            if added_key is None:
-                log("\t********** Apply ", s)
-                added_key = (o_id, assoc)
-            if added_key != (o_id, assoc):
-                continue
-            for _ in range(added, needed.number):
-                if str(opt) == "1":
-                    a = (str(assoc), o_id, size)
-                else:
-                    a = (str(assoc), size, o_id)
-                added_assoc += add_object(ctl, c.name, size, a)
-                size += 1
-                added += 1
-    if added == 0:
-        log("\tWill check for: upper_filled")
+    def lb_at_least(self):
+        self.log("\t+++++ lb_at_least")
+        added_key = None
+        added = 0
+        cautious = self.get_cautious()
         for s in cautious:
-            if added > 0:
-                break
+            if s.match("lb_at_least", 6):
+                o_id, assoc, needed, c, opt, _ = s.arguments
+                if added_key is None:
+                    self.log("\t  ---> Apply ", s)
+                    added_key = (o_id, assoc)
+                if added_key != (o_id, assoc):
+                    continue
+                for _ in range(added, needed.number):
+                    if str(opt) == "1":
+                        a = (str(assoc), o_id, self.next_id)
+                    else:
+                        a = (str(assoc), self.next_id, o_id)
+                    self.add_object(c.name)
+                    self.add_association(a)
+                    added += 1
+        return added > 0
+
+    def upper_filled(self):
+        self.log("\t+++++ upper_filled")
+        cautious = self.get_cautious()
+        for s in cautious:
             if s.match("upper_filled", 5):
-                log("\t********** Apply ", s)
+                self.log("\t  ---> Apply ", s)
                 _, _, c2, needed, _ = s.arguments
-                for _ in range(added, needed.number):
-                    added_assoc += add_object(ctl, c2.name, size)
-                    size += 1
-                    added += 1
-                break
+                for _ in range(0, needed.number):
+                    self.add_object(c2.name)
+                return True
+        return False
 
-    if added == 0:
-        log("\tWill check for: lower_global")
+    def lower_global(self):
+        self.log("\t+++++ lower_global")
+        cautious = self.get_cautious()
         for s in cautious:
-            if added > 0:
-                break
             if s.match("lower_global", 5):
-                log("\t********** Apply ", s)
+                self.log("\t  ---> Apply ", s)
                 c1, _, _, needed, _ = s.arguments
-                for _ in range(added, needed.number):
-                    added_assoc += add_object(ctl, c1.name, size)
-                    size += 1
-                    added += 1
-                break
+                for _ in range(0, needed.number):
+                    self.add_object(c1.name)
+                return True
+        return False
 
-    log(f"<--- Smart expand added {added} objects")
-    return added, added_assoc
+    def association_needed_lb(self):
+        self.log("\t+++++ association_needed_lb")
+        brave = self.get_brave()
+        for s in brave:
+            if s.match("association_needed_lb", 4):
+                self.log("\t  ---> Apply ", s)
+                assoc, id1, id2, _ = s.arguments
+                a = (str(assoc), id1, id2)
+                self.add_association(a)
+                return True
+        return False
 
+    def smart_generation(self):
+        self.log(subtitle("Smart generation"))
+        initial_size = self.next_id
+        initial_associations = len(self.associations)
+        for f in self.smart_generation_functions:
+            done = getattr(self, f)()
+            if done:
+                self.log(
+                    f"Smart generation: added {self.next_id-initial_size} objects and {len(self.associations)-initial_associations} associations"
+                )
+                return True
+        return False
 
-def save_png(config, directory: str = "./out"):
-    """
-    Saves the configuration as a png using clingraph
-    """
-    ctl = Control(["--warn=none"])
-    fbs = []
-    path = settings.encodings_path.joinpath("viz_config.lp")
-    ctl.load(str(path))
-    path = settings.encodings_path.joinpath("ooasp_aux_kb.lp")
-    ctl.load(str(path))
-    ctl.load("examples/racks/kb.lp")
+    def run(self):
+        start = time.time()
+        self.create_initial_objects()
+        done = False
 
-    ctl.add("base", [], config)
-    ctl.ground([("base", [])], ClingraphContext())
-    ctl.solve(
-        on_model=lambda m: fbs.append(Factbase.from_model(m, default_graph="config"))
-    )
-    graphs = compute_graphs(fbs[0])
-    render(graphs, format="png", name_format="config", directory=directory, view=True)
+        def on_model(m):
+            self.model = [str(s) + "." for s in m.symbols(atoms=True)]
 
+        while not done:
+            self.log("\n" + title(f"Next round: {self.next_id-1} objects"))
+            things_done = self.smart_generation()
+            if things_done:
+                continue
+            self.log(subtitle(f"Solving for size {self.next_id-1}...", "RED"))
+            self.ctl.configuration.solve.models = "1"
+            res = self.ctl.solve(on_model=on_model, assumptions=self.assumptions)
+            if res.satisfiable:
+                done = True
+                continue
+            self.log(red("No solution found"))
+            self.add_object("object")
 
-"""
-The command line parser for the project.
-"""
+        end = time.time()
 
+        print("Actual TIME: ", end - start)
 
-def get_parser() -> ArgumentParser:
-    """
-    Return the parser for command line options.
-    """
-    parser = ArgumentParser(
-        prog="ooasp",
-    )
-    parser.add_argument("--cautious", action="store_true")
-    parser.add_argument("--cautious-assoc", action="store_true")
-    parser.add_argument("--project", action="store_true")
-    parser.add_argument("--view", action="store_true")
-    # ------------------------General------------------------
-    parser.add_argument("--element", type=int, default=0)
-    parser.add_argument("--rack", type=int, default=0)
-    parser.add_argument("--module", type=int, default=0)
-    parser.add_argument("--frame", type=int, default=0)
-    # ------------------------Specific-----------------------
-    parser.add_argument("--rackSingle", type=int, default=0)
-    parser.add_argument("--rackDouble", type=int, default=0)
-    parser.add_argument("--elementA", type=int, default=0)
-    parser.add_argument("--elementB", type=int, default=0)
-    parser.add_argument("--elementC", type=int, default=0)
-    parser.add_argument("--elementD", type=int, default=0)
-    parser.add_argument("--moduleI", type=int, default=0)
-    parser.add_argument("--moduleII", type=int, default=0)
-    parser.add_argument("--moduleIII", type=int, default=0)
-    parser.add_argument("--moduleIV", type=int, default=0)
-    parser.add_argument("--moduleV", type=int, default=0)
-    return parser
+        if self.args.view:
+            self.save_png()
+
+        print("RUNTIME: ", end - start)
 
 
 # ========================== Main
 
 if __name__ == "__main__":
-
-    parser = get_parser()
+    parser = OOASPRacksSolver.get_parser()
     args = parser.parse_args()
-
-    start = time.time()
-    ctl = Control(
-        [
-            "1",
-            "--warn=none",
-            f"-c config_name=c1",
-            f"-c kb_name=k1",
-            "-t3",
-            "--project=show",
-        ]
+    smart_generation_functions = [
+        "lower_global",
+        "association_needed_lb",
+        "upper_filled",
+        "lb_at_least",
+    ]
+    solver = OOASPRacksSolver(
+        args, smart_generation_functions=smart_generation_functions
     )
-    ctl.load("examples/racks/kb.lp")
-    ctl.load("ooasp/encodings/ooasp_simple.lp")
-
-    ctl.ground([("base", [])])
-
-    next_id = 1
-    initial_objects = []
-
-    initial_objects += ["frame"] * args.frame
-
-    initial_objects += ["rackDouble"] * args.rackDouble
-    initial_objects += ["rackSingle"] * args.rackSingle
-    initial_objects += ["rack"] * args.rack
-
-    initial_objects += ["elementA"] * args.elementA
-    initial_objects += ["elementB"] * args.elementB
-    initial_objects += ["elementC"] * args.elementC
-    initial_objects += ["elementD"] * args.elementD
-    initial_objects += ["element"] * args.element
-
-    initial_objects += ["module"] * args.module
-    initial_objects += ["moduleI"] * args.moduleI
-    initial_objects += ["moduleII"] * args.moduleII
-    initial_objects += ["moduleIII"] * args.moduleIII
-    initial_objects += ["moduleIV"] * args.moduleIV
-    initial_objects += ["moduleV"] * args.moduleV
-
-    for o in initial_objects:
-        add_object(ctl, o, next_id)
-        next_id += 1
-
-    # ---- Find incrementally
-
-    model = []
-
-    def on_model(m):
-        global model
-        model = [str(s) + "." for s in m.symbols(atoms=True)]
-
-    step_size = 1
-    stats = {}
-    done = False
-    assoc = []
-
-    while not done:
-        assumptions = [(parse_term(a), True) for a in assoc]
-        added, assoc_added = create_from_cautious(ctl, next_id, assumptions)
-        next_id += added
-        assoc += assoc_added
-        if added > 0:
-            continue
-        brave_assoc_added = create_assoc_from_brave(ctl, next_id, assumptions)
-        assoc += brave_assoc_added
-        if len(brave_assoc_added) > 0:
-            continue
-        # Uncomment to save the configuration before the solving step as a png
-        # save_png("\n".join([str(c)+"." for c in config]), directory="out/solve")
-        log(f"\n==============================")
-        log(f"Solving for size {next_id-1}...")
-        # log(assumptions)
-        ctl.configuration.solve.models = "1"
-        res = ctl.solve(on_model=on_model, assumptions=assumptions)
-        if res.satisfiable:
-            log("     Found model")
-            done = True
-            continue
-        log(f"No solution found")
-        ground(ctl, next_id, "object")
-        next_id += 1
-
-    end = time.time()
-    stats[next_id - 1] = ctl.statistics["summary"]["times"]
-
-    log("Done!")
-    out_name = f"benchmarks/latest/{generate_output_path(args)}"
-    if args.cautious:
-        out_name += "-c"
-    if args.cautious_assoc:
-        out_name += "-ca"
-    if args.project:
-        out_name += "-p"
-
-    with open(f"{out_name}.txt", "w") as f:
-        print(json.dumps(stats, indent=4), file=f)
-        print("TOTAL TIME: ", sum([r["total"] for r in stats.values()]), file=f)
-        print("TOTAL SOLVE TIME: ", sum([r["solve"] for r in stats.values()]), file=f)
-        print("Actual TIME: ", end - start, file=f)
-
-    if args.view:
-        save_png("\n".join(model))
-
-    print("RUNTIME: ", end - start)
+    solver.run()
