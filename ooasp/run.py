@@ -6,7 +6,7 @@ from argparse import ArgumentParser
 from clingo import Control, Number, Function
 from clingo import parse_term
 import ooasp.settings as settings
-from ooasp.utils import red, green, title, subtitle, colored, COLORS
+from ooasp.utils import red, green, title, subtitle, colored, COLORS, pretty_dic
 
 
 from clingraph.orm import Factbase
@@ -14,6 +14,32 @@ from clingraph.graphviz import compute_graphs, render
 from clingraph.clingo_utils import ClingraphContext
 
 config = []
+
+CLASSES = [
+    "object",
+    "element",
+    "rack",
+    "module",
+    "frame",
+    "rackSingle",
+    "rackDouble",
+    "elementA",
+    "elementB",
+    "elementC",
+    "elementD",
+    "moduleI",
+    "moduleII",
+    "moduleIII",
+    "moduleIV",
+    "moduleV",
+]
+
+smart_generation_functions_type = {
+    "lb_at_least": "cautious",
+    "upper_filled": "cautious",
+    "lower_global": "cautious",
+    "association_needed_lb": "brave",
+}
 
 
 class OOASPRacksSolver:
@@ -40,6 +66,19 @@ class OOASPRacksSolver:
         self.model = None
         self.cautious = None
         self.brave = None
+        self.times = {
+            "runtime": 0,
+            "initialization": 0,
+            "smart_generation": {
+                "time": 0,
+                "cautious": 0,
+                "brave": 0,
+                "functions": {n: 0 for n in smart_generation_functions},
+            },
+            "solve": 0,
+            "ground": 0,
+        }
+        self.objects = {c: 0 for c in CLASSES}
 
         if smart_generation_functions is None:
             self.smart_generation_functions = [
@@ -59,6 +98,43 @@ class OOASPRacksSolver:
         self.log = log
 
     @property
+    def stats(self):
+        times = {
+            "runtime": round(self.times["runtime"], 3),
+            "initialization": round(self.times["initialization"], 3),
+            "smart_generation": {
+                "time": round(self.times["smart_generation"]["time"], 3),
+                "cautious": round(self.times["smart_generation"]["cautious"], 3),
+                "brave": round(self.times["smart_generation"]["brave"], 3),
+                "functions": {
+                    k: round(v, 3)
+                    for k, v in self.times["smart_generation"]["functions"].items()
+                },
+            },
+            "solve": round(self.times["solve"], 3),
+            "ground": round(self.times["ground"], 3),
+        }
+        considered_coseq = {"cautious": False, "brave": False}
+        for f in self.smart_generation_functions:
+            conseq_type = smart_generation_functions_type[f]
+            if not considered_coseq[conseq_type]:
+                considered_coseq[conseq_type] = True
+                times["smart_generation"]["functions"][f] = round(
+                    (
+                        times["smart_generation"]["functions"][f]
+                        - times["smart_generation"][conseq_type]
+                    ),
+                    3,
+                )
+        results = {
+            "#objects": self.next_id - 1,
+            "#objects_per_type": {k: v for k, v in self.objects.items() if v > 0},
+            "#associations": len(self.associations),
+            "times": times,
+        }
+        return results
+
+    @property
     def assumptions(self):
         return [(parse_term(a), True) for a in self.associations]
 
@@ -75,52 +151,23 @@ class OOASPRacksSolver:
         # ------------------------Smart generation options ------------------------
         parser.add_argument("--cautious", action="store_true")
         # ------------------------General------------------------
-        parser.add_argument("--element", type=int, default=0)
-        parser.add_argument("--rack", type=int, default=0)
-        parser.add_argument("--module", type=int, default=0)
-        parser.add_argument("--frame", type=int, default=0)
-        # ------------------------Specific-----------------------
-        parser.add_argument("--rackSingle", type=int, default=0)
-        parser.add_argument("--rackDouble", type=int, default=0)
-        parser.add_argument("--elementA", type=int, default=0)
-        parser.add_argument("--elementB", type=int, default=0)
-        parser.add_argument("--elementC", type=int, default=0)
-        parser.add_argument("--elementD", type=int, default=0)
-        parser.add_argument("--moduleI", type=int, default=0)
-        parser.add_argument("--moduleII", type=int, default=0)
-        parser.add_argument("--moduleIII", type=int, default=0)
-        parser.add_argument("--moduleIV", type=int, default=0)
-        parser.add_argument("--moduleV", type=int, default=0)
+        for c in CLASSES:
+            parser.add_argument(f"--{c}", type=int, default=0)
         return parser
 
     def create_initial_objects(self):
         initial_objects = []
-
-        initial_objects += ["frame"] * self.args.frame
-
-        initial_objects += ["rackDouble"] * self.args.rackDouble
-        initial_objects += ["rackSingle"] * self.args.rackSingle
-        initial_objects += ["rack"] * self.args.rack
-
-        initial_objects += ["elementA"] * self.args.elementA
-        initial_objects += ["elementB"] * self.args.elementB
-        initial_objects += ["elementC"] * self.args.elementC
-        initial_objects += ["elementD"] * self.args.elementD
-        initial_objects += ["element"] * self.args.element
-
-        initial_objects += ["module"] * self.args.module
-        initial_objects += ["moduleI"] * self.args.moduleI
-        initial_objects += ["moduleII"] * self.args.moduleII
-        initial_objects += ["moduleIII"] * self.args.moduleIII
-        initial_objects += ["moduleIV"] * self.args.moduleIV
-        initial_objects += ["moduleV"] * self.args.moduleV
+        for c in CLASSES:
+            initial_objects += [c] * getattr(self.args, c)
 
         for o in initial_objects:
             self.add_object(o)
 
     def ground(self, o):
         self.log(f"\t\tGrounding {self.next_id} {o}")
+        start = time.time()
         self.ctl.ground([("domain", [Number(self.next_id), Function(o, [])])])
+        self.times["ground"] += time.time() - start
         if self.next_id > 0:
             self.ctl.release_external(Function("active", [Number(self.next_id - 1)]))
         self.ctl.assign_external(Function("active", [Number(self.next_id)]), True)
@@ -129,8 +176,7 @@ class OOASPRacksSolver:
         obj_atom = f"ooasp_isa({o},{self.next_id})"
         self.log(green(f"\t\tAdding object  {obj_atom}"))
         self.ctl.add("domain", [str(self.next_id), "object"], f"user({obj_atom}).")
-        config.append(obj_atom)
-        config.append(f"user({obj_atom})")
+        self.objects[o] += 1
         self.ground(o)
         self.next_id += 1
         self.cautious = None
@@ -148,6 +194,7 @@ class OOASPRacksSolver:
     def get_cautious(self):
         if self.cautious:
             return self.cautious
+        start = time.time()
         self.ctl.assign_external(Function("check_potential_cv"), False)
         self.ctl.assign_external(Function("computing_cautious"), True)
         self.ctl.configuration.solve.models = "0"
@@ -162,11 +209,13 @@ class OOASPRacksSolver:
         self.ctl.configuration.solve.models = "1"
         self.ctl.configuration.solve.enum_mode = "auto"
         self.ctl.configuration.solve.project = "auto"
+        self.times["smart_generation"]["cautious"] += time.time() - start
         return self.cautious
 
     def get_brave(self):
         if self.brave:
             return self.brave
+        start = time.time()
         self.ctl.assign_external(Function("check_potential_cv"), False)
         self.ctl.assign_external(Function("computing_brave"), True)
         self.ctl.configuration.solve.models = "0"
@@ -181,6 +230,7 @@ class OOASPRacksSolver:
         self.ctl.configuration.solve.models = "1"
         self.ctl.configuration.solve.enum_mode = "auto"
         self.ctl.configuration.solve.project = "auto"
+        self.times["smart_generation"]["brave"] += time.time() - start
         return self.brave
 
     def save_png(self, directory: str = "./out"):
@@ -272,7 +322,9 @@ class OOASPRacksSolver:
         initial_size = self.next_id
         initial_associations = len(self.associations)
         for f in self.smart_generation_functions:
+            start = time.time()
             done = getattr(self, f)()
+            self.times["smart_generation"]["functions"][f] += time.time() - start
             if done:
                 self.log(
                     f"Smart generation: added {self.next_id-initial_size} objects and {len(self.associations)-initial_associations} associations"
@@ -281,8 +333,9 @@ class OOASPRacksSolver:
         return False
 
     def run(self):
-        start = time.time()
+        run_start = time.time()
         self.create_initial_objects()
+        self.times["initialization"] = time.time() - run_start
         done = False
 
         def on_model(m):
@@ -290,26 +343,27 @@ class OOASPRacksSolver:
 
         while not done:
             self.log("\n" + title(f"Next round: {self.next_id-1} objects"))
+            start = time.time()
             things_done = self.smart_generation()
+            self.times["smart_generation"]["time"] += time.time() - start
             if things_done:
                 continue
             self.log(subtitle(f"Solving for size {self.next_id-1}...", "RED"))
             self.ctl.configuration.solve.models = "1"
+            start = time.time()
             res = self.ctl.solve(on_model=on_model, assumptions=self.assumptions)
+            self.times["solve"] += time.time() - start
             if res.satisfiable:
                 done = True
                 continue
             self.log(red("No solution found"))
             self.add_object("object")
 
-        end = time.time()
+        self.times["runtime"] = time.time() - run_start
 
-        print("Actual TIME: ", end - start)
-
+        self.log(pretty_dic(self.stats))
         if self.args.view:
             self.save_png()
-
-        print("RUNTIME: ", end - start)
 
 
 # ========================== Main
@@ -317,11 +371,12 @@ class OOASPRacksSolver:
 if __name__ == "__main__":
     parser = OOASPRacksSolver.get_parser()
     args = parser.parse_args()
+    # Order can be changed to impact performance
     smart_generation_functions = [
-        "lower_global",
-        "association_needed_lb",
-        "upper_filled",
         "lb_at_least",
+        "lower_global",
+        "upper_filled",
+        "association_needed_lb",
     ]
     solver = OOASPRacksSolver(
         args, smart_generation_functions=smart_generation_functions
