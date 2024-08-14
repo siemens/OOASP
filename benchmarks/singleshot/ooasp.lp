@@ -10,9 +10,6 @@ check_permanent_cv.
 #const kb_name = default_kb_name.
 ooasp_configuration(kb_name,config_name).
 #include "ooasp_aux_kb.lp". % Auxiliary predicates for the KB
-%#external guess. % The guessing part is active
-%#external check_potential_cv. % Checks for potential constraints apply
-%#external check_permanent_cv. % Checks for permanent constraints apply
 
 
 % ------------ Incremental programs

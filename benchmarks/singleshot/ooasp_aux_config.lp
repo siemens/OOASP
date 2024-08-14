@@ -1,10 +1,5 @@
-% Copyright (c) 2022 Siemens AG Oesterreich
+% Copyright (c) 2022-2024 Siemens AG Oesterreich
 % SPDX-License-Identifier: MIT
-
-%#program domain(new_object, cls).
-
-%#external active(OBJECT). % Active id for arity constraints
-%ooasp_domain(cls,OBJECT).
 
 % Transitive closure when a leaf class is selected via choice
 ooasp_isa(LEAFCLASS,OBJECT) :-
@@ -23,11 +18,6 @@ ooasp_isa_leaf(C,OBJECT) :-
 ooasp_isa_smallest(SUPER,OBJECT) :-
     ooasp_isa(SUPER,OBJECT),
     not ooasp_isa(SUB,OBJECT) :ooasp_subclass(SUB,SUPER).
-
-% Auxiliary predicate to avoid duplicated rules
-% ooasp_assoc_gen(ASSOC,POS,ID1,ID2)
-%    Object ID1 apearing in position POS of association ASSOC is associated to object ID2
-%    Example: ooasp_assoc_gen(c1,ass,2,23,10): : object 23 of the second class of association ass is associated with object 10
 
 ooasp_assoc_gen(ASSOC,1,ID1,OBJECT) :-
 	ooasp_associated(ASSOC,ID1,OBJECT).

@@ -1,7 +1,5 @@
-% Copyright (c) 2022 Siemens AG Oesterreich
+% Copyright (c) 2022-2024 Siemens AG Oesterreich
 % SPDX-License-Identifier: MIT
-
-#program domain(new_object, cls).
 
 ooasp_potential_cv(moduleII_requires_moduleV).
 

@@ -1,4 +1,4 @@
-% Copyright (c) 2022 Siemens AG Oesterreich
+% Copyright (c) 2022-2024 Siemens AG Oesterreich
 % SPDX-License-Identifier: MIT
 
 #program base.
@@ -38,10 +38,6 @@ ooasp_attr_fdom(C,N,MIN..MAX) :-
 ooasp_leafclass(C) :-
      ooasp_class(C),
      not ooasp_subclass(_,C).
-
-
-% ooasp_assoc_limit(ASSOC,min,1,C1,C2MIN,C2)
-% The association ASSOC must be from a C1 object to at least C2MIN objects of class C2
 
 ooasp_assoc_limit(ASSOC,min,1,C1,C2MIN,C2):-
 	ooasp_assoc(ASSOC,C1,C1MIN,C1MAX,C2,C2MIN,C2MAX).

@@ -1,8 +1,5 @@
-% Copyright (c) 2022 Siemens AG Oesterreich
+% Copyright (c) 2022-2024 Siemens AG Oesterreich
 % SPDX-License-Identifier: MIT
-
-
-%#program domain(OBJECT, cls).
 
 % If an object has a domain, then it could be instanciated
 { ooasp_isa_leaf(LEAFCLASS,OBJECT):

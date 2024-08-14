@@ -1,10 +1,5 @@
-% Copyright (c) 2022 Siemens AG Oesterreich
+% Copyright (c) 2022-2024 Siemens AG Oesterreich
 % SPDX-License-Identifier: MIT
-
-% ooasp_cv(NAME,OBJECT,STR,ARGS)
-
-%#program domain(OBJECT, cls).
-
 
 % Integrity constraints for constraint violations, activated based on the externals
 :- ooasp_cv(CV,_,_,_),
