@@ -4,7 +4,7 @@ import time
 from clingo import Control, Number, Function
 from clingo import parse_term
 import ooasp.settings as settings
-from ooasp.utils import red, green, title, subtitle  # , pretty_dict
+from ooasp.utils import red, green, title, subtitle, pretty_dict
 
 
 from clingraph.orm import Factbase
@@ -33,8 +33,8 @@ CLASSES = [
 
 smart_generation_functions_type = {
     "object_needed": "cautious",
-    "upper_filled": "cautious",
-    "lower_global": "cautious",
+    "global_ub": "cautious",
+    "global_lb": "cautious",
     "association_needed": "brave",
 }
 
@@ -263,8 +263,8 @@ class OOASPRacksSolver:
         added = 0
         cautious = self.get_cautious()
         for s in cautious:
-            if s.match("object_needed", 5):
-                o_id, assoc, needed, c, opt, _ = s.arguments
+            if s.match("object_needed", 6):
+                o_id, assoc, needed, cls, opt, _ = s.arguments
                 if added_key is None:
                     self.log("\t  ---> Apply ", s)
                     added_key = (o_id, assoc)
@@ -275,30 +275,30 @@ class OOASPRacksSolver:
                         a = (str(assoc), o_id, self.next_id)
                     else:
                         a = (str(assoc), self.next_id, o_id)
-                    self.add_object(c.name)
+                    self.add_object(cls.name)
                     self.add_association(a)
                     added += 1
         return added > 0
 
-    def upper_filled(self):
-        self.log("\t+++++ upper_filled")
+    def global_ub(self):
+        self.log("\t+++++ global_ub")
         cautious = self.get_cautious()
         for s in cautious:
-            if s.match("upper_filled", 5):
+            if s.match("global_ub", 3):
                 self.log("\t  ---> Apply ", s)
-                _, _, c2, needed, _ = s.arguments
+                c2, needed, _ = s.arguments
                 for _ in range(0, needed.number):
                     self.add_object(c2.name)
                 return True
         return False
 
-    def lower_global(self):
-        self.log("\t+++++ lower_global")
+    def global_lb(self):
+        self.log("\t+++++ global_lb")
         cautious = self.get_cautious()
         for s in cautious:
-            if s.match("lower_global", 5):
+            if s.match("global_lb", 3):
                 self.log("\t  ---> Apply ", s)
-                c1, _, _, needed, _ = s.arguments
+                c1, needed, _ = s.arguments
                 for _ in range(0, needed.number):
                     self.add_object(c1.name)
                 return True
@@ -360,7 +360,7 @@ class OOASPRacksSolver:
 
         self.times["runtime"] = time.time() - run_start
 
-        # self.log(pretty_dict(self.stats))
+        self.log(pretty_dict(self.stats))
         # print(json.dumps(self.stats, indent=4))
         if self.options.view:
             self.save_png()
