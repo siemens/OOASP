@@ -3,6 +3,7 @@ import time
 
 from clingo import Control, Number, Function
 from clingo import parse_term
+from clingo.symbol import Symbol
 import ooasp.settings as settings
 from ooasp.utils import red, green, title, subtitle, pretty_dict
 
@@ -31,11 +32,11 @@ CLASSES = [
     "moduleV",
 ]
 
-smart_generation_functions_type = {
-    "object_needed": "cautious",
-    "global_ub": "cautious",
-    "global_lb": "cautious",
-    "association_needed": "brave",
+SMART_FUNCTIONS = {
+    "object_needed": {"type": "cautious", "arity": 6},
+    "global_ub": {"type": "cautious", "arity": 3},
+    "global_lb": {"type": "cautious", "arity": 3},
+    "association_needed": {"type": "brave", "arity": 4},
 }
 
 
@@ -58,7 +59,7 @@ def get_parser() -> ArgumentParser:
         "--smart_generation",
         type=str,
         help=f"""Specifies what functions for smart generation to use.
-                    Possible options: {list(smart_generation_functions_type.keys())}.
+                    Possible options: {list(SMART_FUNCTIONS.keys())}.
                     Input has to be comma-separated list.
                     Functions are executed in the order specified.""",
     )
@@ -136,7 +137,7 @@ class OOASPRacksSolver:
         }
         considered_coseq = {"cautious": False, "brave": False}
         for f in self.smart_generation_functions:
-            conseq_type = smart_generation_functions_type[f]
+            conseq_type = SMART_FUNCTIONS[f]["type"]
             if not considered_coseq[conseq_type]:
                 considered_coseq[conseq_type] = True
                 times["smart_generation"]["functions"][f] = round(
@@ -257,63 +258,64 @@ class OOASPRacksSolver:
             graphs, format="png", name_format="config", directory=directory, view=True
         )
 
-    def object_needed(self):
-        self.log("\t+++++ object_needed")
-        added_key = None
-        added = 0
-        cautious = self.get_cautious()
-        for s in cautious:
-            if s.match("object_needed", 6):
-                o_id, assoc, needed, cls, opt, _ = s.arguments
-                if added_key is None:
-                    self.log("\t  ---> Apply ", s)
-                    added_key = (o_id, assoc)
-                if added_key != (o_id, assoc):
-                    continue
-                for _ in range(added, needed.number):
-                    if str(opt) == "1":
-                        a = (str(assoc), o_id, self.next_id)
-                    else:
-                        a = (str(assoc), self.next_id, o_id)
-                    self.add_object(cls.name)
-                    self.add_association(a)
-                    added += 1
-        return added > 0
+    def object_needed(self, s: Symbol, added_key, added: int):
+        o_id, assoc, needed, c, opt, _ = s.arguments
 
-    def global_ub(self):
-        self.log("\t+++++ global_ub")
-        cautious = self.get_cautious()
-        for s in cautious:
-            if s.match("global_ub", 3):
-                self.log("\t  ---> Apply ", s)
-                c2, needed, _ = s.arguments
-                for _ in range(0, needed.number):
-                    self.add_object(c2.name)
-                return True
-        return False
+        # Set object/association key
+        if added_key is None:
+            self.log("\t  ---> Apply ", s)
+            added_key = (o_id, assoc)
 
-    def global_lb(self):
-        self.log("\t+++++ global_lb")
-        cautious = self.get_cautious()
-        for s in cautious:
-            if s.match("global_lb", 3):
-                self.log("\t  ---> Apply ", s)
-                c1, needed, _ = s.arguments
-                for _ in range(0, needed.number):
-                    self.add_object(c1.name)
-                return True
-        return False
+        # Continue if different object/association key
+        if added_key != (o_id, assoc):
+            return added_key, added
 
-    def association_needed(self):
-        self.log("\t+++++ association_needed")
-        brave = self.get_brave()
-        for s in brave:
-            if s.match("association_needed", 4):
-                self.log("\t  ---> Apply ", s)
-                assoc, id1, id2, _ = s.arguments
-                a = (str(assoc), id1, id2)
-                self.add_association(a)
-                return True
+        # Add still needed objects
+        for _ in range(added, needed.number):
+            if str(opt) == "1":
+                a = (str(assoc), o_id, self.next_id)
+            else:
+                a = (str(assoc), self.next_id, o_id)
+            self.add_object(c.name)
+            self.add_association(a)
+            added += 1
+        return added_key, added
+
+    def global_ub(self, s: Symbol):
+        self.log("\t  ---> Apply ", s)
+        c, needed, _ = s.arguments
+        for _ in range(0, needed.number):
+            self.add_object(c.name)
+
+    def global_lb(self, s: Symbol):
+        self.log("\t  ---> Apply ", s)
+        c, needed, _ = s.arguments
+        for _ in range(0, needed.number):
+            self.add_object(c.name)
+
+    def association_needed(self, s: Symbol):
+        self.log("\t  ---> Apply ", s)
+        assoc, id1, id2, _ = s.arguments
+        a = (str(assoc), id1, id2)
+        self.add_association(a)
+
+    def run_function(self, f):
+        self.log(f"\t+++++ {f}")
+
+        if f == "object_needed":
+            added_key = None
+            added = 0
+
+        consequences = getattr(self, f"get_{SMART_FUNCTIONS[f]["type"]}")()
+        for s in consequences:
+            if s.match(f, SMART_FUNCTIONS[f]["arity"]):
+                if f == "object_needed":
+                    added_key, added = getattr(self, f)(s, added_key, added)
+                else:
+                    getattr(self, f)(s)
+                    return True
+        if f == "object_needed":
+            return added > 0
         return False
 
     def smart_generation(self):
@@ -322,7 +324,7 @@ class OOASPRacksSolver:
         initial_associations = len(self.associations)
         for f in self.smart_generation_functions:
             start = time.time()
-            done = getattr(self, f)()
+            done = self.run_function(f)
             self.times["smart_generation"]["functions"][f] += time.time() - start
             if done:
                 self.log(
@@ -372,8 +374,8 @@ if __name__ == "__main__":
     cmd_args = get_parser().parse_args()
 
     initial = []
-    for c in CLASSES:
-        initial += [c] * getattr(cmd_args, c)
+    for cls in CLASSES:
+        initial += [cls] * getattr(cmd_args, cls)
 
     if cmd_args.smart_generation is not None:
         smart_functions = [f.strip() for f in cmd_args.smart_generation.split(",")]
