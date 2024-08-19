@@ -18,12 +18,8 @@ check_permanent_cv. % Checks for permanent constraints apply
 #include "ooasp_check.lp". % Check section
 
 #include "ooasp_symmetry.lp". % Symmetry breaking constraints
-#include "ooasp_upper_bound.lp". % Calculates global needs
+#include "ooasp_smart_generation.lp". % Functions for smart generation
 
-#show lb_at_least/6.
-#show upper_filled/5.
-#show lower_global/5.
-#show association_needed_lb/4.
 #show .
 
 #program domain(new_object, cls).

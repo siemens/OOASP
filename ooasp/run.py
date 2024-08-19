@@ -1,12 +1,10 @@
-import json
-
-import time
 from argparse import ArgumentParser
+import time
 
 from clingo import Control, Number, Function
 from clingo import parse_term
 import ooasp.settings as settings
-from ooasp.utils import red, green, title, subtitle, pretty_dic
+from ooasp.utils import red, green, title, subtitle  # , pretty_dict
 
 
 from clingraph.orm import Factbase
@@ -34,10 +32,10 @@ CLASSES = [
 ]
 
 smart_generation_functions_type = {
-    "lb_at_least": "cautious",
+    "object_needed": "cautious",
     "upper_filled": "cautious",
     "lower_global": "cautious",
-    "association_needed_lb": "brave",
+    "association_needed": "brave",
 }
 
 
@@ -74,8 +72,10 @@ class OOASPRacksSolver:
 
     def __init__(self, options, initial_objects=None, smart_generation_functions=None):
         self.options = options
-        self.initial_objects = initial_objects
-        self.smart_generation_functions = smart_generation_functions
+        self.initial_objects = initial_objects if initial_objects is not None else []
+        self.smart_generation_functions = (
+            smart_generation_functions if smart_generation_functions is not None else []
+        )
 
         self.ctl = Control(
             [
@@ -110,16 +110,6 @@ class OOASPRacksSolver:
             "ground": 0,
         }
         self.objects = {c: 0 for c in CLASSES}
-
-        # if smart_generation_functions is None:
-        #     self.smart_generation_functions = [
-        #         "lb_at_least",
-        #         "upper_filled",
-        #         "lower_global",
-        #         "association_needed_lb",
-        #     ]
-        # else:
-        #     self.smart_generation_functions = smart_generation_functions
 
         def log(*args):
             if self.options.verbose:
@@ -267,13 +257,13 @@ class OOASPRacksSolver:
             graphs, format="png", name_format="config", directory=directory, view=True
         )
 
-    def lb_at_least(self):
-        self.log("\t+++++ lb_at_least")
+    def object_needed(self):
+        self.log("\t+++++ object_needed")
         added_key = None
         added = 0
         cautious = self.get_cautious()
         for s in cautious:
-            if s.match("lb_at_least", 6):
+            if s.match("object_needed", 5):
                 o_id, assoc, needed, c, opt, _ = s.arguments
                 if added_key is None:
                     self.log("\t  ---> Apply ", s)
@@ -314,11 +304,11 @@ class OOASPRacksSolver:
                 return True
         return False
 
-    def association_needed_lb(self):
-        self.log("\t+++++ association_needed_lb")
+    def association_needed(self):
+        self.log("\t+++++ association_needed")
         brave = self.get_brave()
         for s in brave:
-            if s.match("association_needed_lb", 4):
+            if s.match("association_needed", 4):
                 self.log("\t  ---> Apply ", s)
                 assoc, id1, id2, _ = s.arguments
                 a = (str(assoc), id1, id2)
@@ -370,7 +360,8 @@ class OOASPRacksSolver:
 
         self.times["runtime"] = time.time() - run_start
 
-        self.log(pretty_dic(self.stats))
+        # self.log(pretty_dict(self.stats))
+        # print(json.dumps(self.stats, indent=4))
         if self.options.view:
             self.save_png()
 
@@ -378,15 +369,19 @@ class OOASPRacksSolver:
 # ========================== Main
 
 if __name__ == "__main__":
-    args = get_parser().parse_args()
+    cmd_args = get_parser().parse_args()
 
     initial = []
     for c in CLASSES:
-        initial += [c] * getattr(args, c)
-    smart_functions = [f.strip() for f in args.smart_generation.split(",")]
+        initial += [c] * getattr(cmd_args, c)
+
+    if cmd_args.smart_generation is not None:
+        smart_functions = [f.strip() for f in cmd_args.smart_generation.split(",")]
+    else:
+        smart_functions = []
 
     solver = OOASPRacksSolver(
-        args,
+        cmd_args,
         initial_objects=initial,
         smart_generation_functions=smart_functions,
     )
