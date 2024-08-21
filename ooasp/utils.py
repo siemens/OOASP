@@ -36,7 +36,7 @@ def subtitle(s, color="CYAN"):
 
 def pretty_dict(d):
     s = json.dumps(d, indent=4)
-    return COLORS["GREY"] + s + COLORS["NORMAL"] + "\n"
+    return s + "\n"
 
 
 def red(s):
