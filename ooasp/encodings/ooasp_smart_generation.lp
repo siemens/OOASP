@@ -29,7 +29,7 @@ is_target_assoc(ASSOC,OPT):-
 %       no need for optimization.
 %
 %   The appearance of this predicate in the cautious consequences indicates the need to add
-%   at least X objects of type C2 which can be immidiatly associated to object ID1.
+%   at least X objects of type C2 which can be immediately associated to object ID1.
 
 object_needed(ID1, ASSOC, 1..CMIN - N, C2, OPT, new_object):-
 	lb_violation(lowerbound,ID1,_,(ASSOC,CMIN,N,C2,OPT,new_object)).

@@ -23,6 +23,3 @@ check_permanent_cv. % Checks for permanent constraints apply
 #show .
 
 #program domain(new_object, cls).
-
-:- user(ooasp_isa(C,new_object  )),
-not ooasp_isa(C,new_object).
