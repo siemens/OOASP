@@ -319,16 +319,26 @@ class OOASPRacksSolver:
             return self.brave
         start = time.time()
         self.ctl.assign_external(Function("check_potential_cv"), False)
-        self.ctl.assign_external(Function("computing_brave"), True)
+        # self.ctl.assign_external(Function("computing_brave"), True)
+        self.ctl.assign_external(Function("association_heuristic"), True)
+
+        self.ctl.configuration.solver.heuristic = "Domain"
         self.ctl.configuration.solve.models = "0"
         self.ctl.configuration.solve.enum_mode = "brave"
+
         with self.ctl.solve(yield_=True, assumptions=self.assumptions) as hdn:
             for model in hdn:
                 self.brave = model.symbols(shown=True)
+                # print(self.brave)
+                # input("Press Enter to continue...")
+
             if self.brave is None:
                 self.log("\tUNSAT brave!")
         self.ctl.assign_external(Function("check_potential_cv"), True)
-        self.ctl.assign_external(Function("computing_brave"), False)
+        # self.ctl.assign_external(Function("computing_brave"), False)
+        self.ctl.assign_external(Function("association_heuristic"), False)
+
+        self.ctl.configuration.solver.heuristic = "None"
         self.ctl.configuration.solve.models = "1"
         self.ctl.configuration.solve.enum_mode = "auto"
         self.ctl.configuration.solve.project = "auto"
