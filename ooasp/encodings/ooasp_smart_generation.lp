@@ -47,7 +47,7 @@ object_needed(ID1, ASSOC, 1..CMIN - N, C2, OPT, new_object):-
 
 %  EXAMPLE:
 %   We can see the use of this predicate in an example with 9 frames and 1 rack.
-%   Where the need for one more rack since the upperbounf of rack is 8 and the number of frames is 9.
+%   Where the need for one more rack since the upperbound of rack is 8 and the number of frames is 9.
 global_ub(C2,((NUM1 + MAX - 1) / MAX)-NUM2,new_object):-
     % It is a target association: One side is 1..1 The other side is _..MAX
     is_target_assoc(ASSOC, OPT),
@@ -65,7 +65,7 @@ global_ub(C2,((NUM1 + MAX - 1) / MAX)-NUM2,new_object):-
 % global_lb(C1,N,new_object).
 %   Given a target association ASSOC where each C2 can be associated to at least MIN objects of C1
 %   and each C1 has to be associated to exactly one C2.
-%   We count the global number of objects of class C1 and this is not enough to cover all C2 lowe bounds.
+%   We count the global number of objects of class C1 and this is not enough to cover all C2 lower bounds.
 %   Therefore the lower bound of classes C2 cant be filled and we need to add N objects of class C1.
 %   to fill the gap.
 %     - Argument new_object is added to the predicate to avoid the redefiniton in following states
@@ -94,7 +94,7 @@ global_lb(C1,(N2*MIN)-N1,new_object):-
 %   The association ASSOC bewtwen objects ID1 and ID2 is needed
 %   We know that ID1 needs at least one object of class C1 and ID2 needs at least one object of class C2
 %   We know that the objects ID1 and ID2 can potentially be associated by ASSOC
-%   We also know that the classes of these objects was set byt the user or the smart association.
+%   We also know that the classes of these objects was set by the user or the smart association.
 %   This makes sure that the association added does not determine the classes of the objects if not previously given
 %
 %     - Argument new_object is added to the predicate to avoid the redefiniton in following states
