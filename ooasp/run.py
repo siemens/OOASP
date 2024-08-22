@@ -414,7 +414,7 @@ class OOASPRacksSolver:
 
     def global_ub(self) -> bool:
         """
-        The appearance of predicate global_ub(C2, X, new_object)
+        The appearance of predicate global_ub(C2, N, new_object)
         in the cautious consequences indicates the need to add N objects of type C2
 
         Given a target association ASSOC where each C2 can be associated to at most MAX objects of C1
