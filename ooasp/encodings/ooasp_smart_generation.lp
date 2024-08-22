@@ -8,6 +8,8 @@
 #show global_lb/3.
 #show association_needed/4.
 
+#external association_heuristic. [false]
+
 % Target associations are those with cardinality 1..1-MIN..MAX
 % We only consider this type of associations for the bound calculations
 is_target_assoc(ASSOC,OPT):-
@@ -113,3 +115,6 @@ association_needed(ASSOC, ID1, ID2, new_object):-
     % We would not impose a class by adding an association
 	user(ooasp_isa(C1,ID1)),
 	user(ooasp_isa(C2,ID2)).
+
+#heuristic ooasp_associated(ASSOC,new_object,ID2) : ooasp_assoc(ASSOC,C1,_,_,C2,_,_), ooasp_isa(C1,new_object), ooasp_isa(C2,ID2), association_heuristic. [999999999999999999,false]
+#heuristic ooasp_associated(ASSOC,ID1,new_object) : ooasp_assoc(ASSOC,C1,_,_,C2,_,_), ooasp_isa(C1,ID1), ooasp_isa(C2,new_object), association_heuristic. [999999999999999999,false]
