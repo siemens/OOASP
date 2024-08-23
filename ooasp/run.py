@@ -1,15 +1,15 @@
-from argparse import ArgumentParser
-import time
 import threading
-from clingo import Control, Number, Function
-from clingo import parse_term
-from clingo.symbol import Symbol
-import ooasp.settings as settings
-from ooasp.utils import red, green, title, subtitle, pretty_dict
+import time
+from argparse import ArgumentParser
 
-from clingraph.orm import Factbase
-from clingraph.graphviz import compute_graphs, render
+from clingo import Control, Function, Number, parse_term
+from clingo.symbol import Symbol
 from clingraph.clingo_utils import ClingraphContext
+from clingraph.graphviz import compute_graphs, render
+from clingraph.orm import Factbase
+
+import ooasp.settings as settings
+from ooasp.utils import green, pretty_dict, red, subtitle, title
 
 CLASSES = [
     "object",
@@ -31,22 +31,10 @@ CLASSES = [
 ]
 
 SMART_FUNCTIONS = {
-    "object_needed": {
-        "type": "cautious",
-        "arity": 6
-    },
-    "global_ub": {
-        "type": "cautious",
-        "arity": 3
-    },
-    "global_lb": {
-        "type": "cautious",
-        "arity": 3
-    },
-    "association_needed": {
-        "type": "brave",
-        "arity": 4
-    },
+    "object_needed": {"type": "cautious", "arity": 6},
+    "global_ub": {"type": "cautious", "arity": 3},
+    "global_lb": {"type": "cautious", "arity": 3},
+    "association_needed": {"type": "brave", "arity": 4},
 }
 
 
@@ -54,11 +42,11 @@ def get_parser() -> ArgumentParser:
     """
     Return the parser for command line options.
     """
-    parser = ArgumentParser(prog="ooasp", )
+    parser = ArgumentParser(
+        prog="ooasp",
+    )
     # ------------------------General------------------------
-    parser.add_argument("--verbose",
-                        action="store_true",
-                        help="Verbose output")
+    parser.add_argument("--verbose", action="store_true", help="Verbose output")
     parser.add_argument(
         "--view",
         action="store_true",
@@ -76,10 +64,7 @@ def get_parser() -> ArgumentParser:
     )
     # ------------------------Initial objects------------------------
     for c in CLASSES:
-        parser.add_argument(f"--{c}",
-                            type=int,
-                            default=0,
-                            help=f"Number of {c}s")
+        parser.add_argument(f"--{c}", type=int, default=0, help=f"Number of {c}s")
     return parser
 
 
@@ -108,20 +93,22 @@ class OOASPRacksSolver:
             timeout (int): Timeout in seconds
         """
         self.initial_objects = initial_objects if initial_objects is not None else []
-        self.smart_generation_functions = (smart_generation_functions
-                                           if smart_generation_functions
-                                           is not None else [])
+        self.smart_generation_functions = (
+            smart_generation_functions if smart_generation_functions is not None else []
+        )
         self.view = view
         self.timeout = timeout if timeout is not None else 1200
 
-        self.ctl = Control([
-            "1",
-            "--warn=none",
-            "-c config_name=c1",
-            "-c kb_name=k1",
-            "-t3",
-            "--project=show",
-        ])
+        self.ctl = Control(
+            [
+                "1",
+                "--warn=none",
+                "-c config_name=c1",
+                "-c kb_name=k1",
+                "-t3",
+                "--project=show",
+            ]
+        )
         self.ctl.load("examples/racks/kb.lp")
         self.ctl.load("ooasp/encodings/ooasp_simple.lp")
 
@@ -141,10 +128,7 @@ class OOASPRacksSolver:
                 "time": 0,
                 "cautious": 0,
                 "brave": 0,
-                "functions": {
-                    n: 0
-                    for n in smart_generation_functions
-                },
+                "functions": {n: 0 for n in smart_generation_functions},
             },
             "solve": 0,
             "ground": 0,
@@ -168,13 +152,11 @@ class OOASPRacksSolver:
             "initialization": round(self.times["initialization"], 3),
             "smart_generation": {
                 "time": round(self.times["smart_generation"]["time"], 3),
-                "cautious": round(self.times["smart_generation"]["cautious"],
-                                  3),
+                "cautious": round(self.times["smart_generation"]["cautious"], 3),
                 "brave": round(self.times["smart_generation"]["brave"], 3),
                 "functions": {
                     k: round(v, 3)
-                    for k, v in self.times["smart_generation"]
-                    ["functions"].items()
+                    for k, v in self.times["smart_generation"]["functions"].items()
                 },
             },
             "solve": round(self.times["solve"], 3),
@@ -186,27 +168,28 @@ class OOASPRacksSolver:
             if not considered_coseq[conseq_type]:
                 considered_coseq[conseq_type] = True
                 times["smart_generation"]["functions"][f] = round(
-                    (times["smart_generation"]["functions"][f] -
-                     times["smart_generation"][conseq_type]),
+                    (
+                        times["smart_generation"]["functions"][f]
+                        - times["smart_generation"][conseq_type]
+                    ),
                     3,
                 )
         results = {
-            "timeout":
-            self.timeout_reached,
-            "#objects":
-            self.next_id - 1,
-            "#objects_added_per_type": {
-                k: v
-                for k, v in self.objects.items() if v > 0
-            },
-            "#associations":
-            len(self.associations),
-            "times":
-            times,
-            "model": (None if not self.model else [
-                s for s in self.model if s.startswith("ooasp_isa_leaf")
-                or s.startswith("ooasp_associated")
-            ]),
+            "timeout": self.timeout_reached,
+            "#objects": self.next_id - 1,
+            "#objects_added_per_type": {k: v for k, v in self.objects.items() if v > 0},
+            "#associations": len(self.associations),
+            "times": times,
+            "model": (
+                None
+                if not self.model
+                else [
+                    s
+                    for s in self.model
+                    if s.startswith("ooasp_isa_leaf")
+                    or s.startswith("ooasp_associated")
+                ]
+            ),
         }
         return results
 
@@ -238,10 +221,8 @@ class OOASPRacksSolver:
         self.ctl.ground([("domain", [Number(self.next_id), Function(o, [])])])
         self.times["ground"] += time.time() - start
         if self.next_id > 0:
-            self.ctl.release_external(
-                Function("active", [Number(self.next_id - 1)]))
-        self.ctl.assign_external(Function("active", [Number(self.next_id)]),
-                                 True)
+            self.ctl.release_external(Function("active", [Number(self.next_id - 1)]))
+        self.ctl.assign_external(Function("active", [Number(self.next_id)]), True)
 
     def add_object(self, o: str):
         """
@@ -254,8 +235,7 @@ class OOASPRacksSolver:
         obj_atom = f"ooasp_isa({o},{self.next_id})"
         dom_atom = f"ooasp_domain({o},{self.next_id})"
         self.log(green(f"\t\tAdding object  {obj_atom}"))
-        self.ctl.add("domain", [str(self.next_id), "object"],
-                     f"user({obj_atom}).")
+        self.ctl.add("domain", [str(self.next_id), "object"], f"user({obj_atom}).")
         self.ctl.add("domain", [str(self.next_id), "object"], f"{obj_atom}.")
         self.ctl.add("domain", [str(self.next_id), "object"], f"{dom_atom}.")
         self.object_atoms.append(obj_atom)
@@ -356,7 +336,8 @@ class OOASPRacksSolver:
             config = "\n".join([str(c) for c in self.model])
         else:
             config = "\n".join(
-                [str(c) + "." for c in self.object_atoms + self.associations])
+                [str(c) + "." for c in self.object_atoms + self.associations]
+            )
         ctl = Control(["--warn=none"])
         fbs = []
         path = settings.encodings_path.joinpath("viz_config.lp")
@@ -367,8 +348,11 @@ class OOASPRacksSolver:
 
         ctl.add("base", [], config)
         ctl.ground([("base", [])], ClingraphContext())
-        ctl.solve(on_model=lambda m: fbs.append(
-            Factbase.from_model(m, default_graph="config")))
+        ctl.solve(
+            on_model=lambda m: fbs.append(
+                Factbase.from_model(m, default_graph="config")
+            )
+        )
         graphs = compute_graphs(fbs[0])
         render(
             graphs,
@@ -394,8 +378,7 @@ class OOASPRacksSolver:
         for f in self.smart_generation_functions:
             start = time.time()
             done = getattr(self, f)()
-            self.times["smart_generation"]["functions"][f] += time.time(
-            ) - start
+            self.times["smart_generation"]["functions"][f] += time.time() - start
             if done:
                 self.log(
                     f"Smart generation: added {self.next_id - initial_size} objects and {len(self.associations) - initial_associations} associations"
@@ -537,8 +520,7 @@ class OOASPRacksSolver:
             self.times["smart_generation"]["time"] += time.time() - start
             if things_done:
                 continue
-            self.log(subtitle(f"Solving for size {self.next_id - 1}...",
-                              "RED"))
+            self.log(subtitle(f"Solving for size {self.next_id - 1}...", "RED"))
             self.ctl.configuration.solve.models = "1"
             start = time.time()
 
@@ -548,9 +530,9 @@ class OOASPRacksSolver:
                 self.timeout_reached = True
                 continue
 
-            with self.ctl.solve(assumptions=self.assumptions,
-                                async_=True,
-                                on_model=on_model) as hdl:
+            with self.ctl.solve(
+                assumptions=self.assumptions, async_=True, on_model=on_model
+            ) as hdl:
                 time_left = self.timeout - (time.time() - run_start)
                 if hdl.wait(time_left):
                     self.times["solve"] += time.time() - start
@@ -585,9 +567,7 @@ if __name__ == "__main__":
         initial += [cls] * getattr(cmd_args, cls)
 
     if cmd_args.smart_generation is not None:
-        smart_functions = [
-            f.strip() for f in cmd_args.smart_generation.split(",")
-        ]
+        smart_functions = [f.strip() for f in cmd_args.smart_generation.split(",")]
     else:
         smart_functions = []
 
