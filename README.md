@@ -2,7 +2,7 @@
 
 OOASP is a schema for describing object-oriented models with Answer Set Programming.
 
-OOASP has been developed for research purposes to demonstrate how to describe and instantiate object-oriented models in Answer Set Programming. 
+OOASP has been developed for research purposes to demonstrate how to describe and instantiate object-oriented models in Answer Set Programming.
 The main application area is product configuration i.e. reasoning about product configuration models.
 
 Older encodings produced along with the original publications on OOASP can be found in [old_encodings](old_encodings).
@@ -29,7 +29,10 @@ The files corresponding to the current version are in [ooasp](ooasp).
 
 The package usage and new features are showcased in the jupyter notebooks inside the folder [usage](usage).
 
-In order to create a configuration using the command line use the file `run.py` found in the [ooasp](ooasp) directory. This program allows for the specification of an initial partial configuration using arguments in the format `--component N` where `N` refers to the number of components present in the initial configuration and `component` to the class name of the component. *Example: `python ooasp/run.py --elementA 5`*
+In order to create a configuration using the command line use the file `app.py` found in the [ooasp](ooasp) directory. This program allows for the specification of an initial partial configuration using arguments in the format `--component N` where `N` refers to the number of components present in the initial configuration and `component` to the class name of the component.*Example: `python ooasp/app.py --elementA 5`*
+
+- For benchmarking add the options: `--stats=2 --outf=2 -q` to obtain a JSON. Then inspect the "OOASP" section.
+- For visualizing the configuration use: `--view`
 
 ### Documentation
 
