@@ -12,7 +12,6 @@ attr(graph, config, splines, ortho).
 attr(graph, config, nodesep, "1").
 attr(graph, config, rankdir, "TB").
 attr(graph, config, size, "40,100").
-attr(graph, config, (label,0),T):-title(T).
 attr(graph, config, (label,0), "Configuration "):-ooasp_configuration(KB,Config).
 attr(graph, config, (label,1), Config):-ooasp_configuration(KB,Config).
 
