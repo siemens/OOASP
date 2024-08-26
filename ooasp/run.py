@@ -119,7 +119,7 @@ class OOASPRacksSolver:
             "--warn=none",
             "-c config_name=c1",
             "-c kb_name=k1",
-            "-t3",
+            "--parallel-mode=3", # Run parallel search with 3 threads
             "--project=show",
         ])
         self.ctl.load("examples/racks/kb.lp")
