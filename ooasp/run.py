@@ -127,7 +127,7 @@ class OOASPRacksSolver(clingo.Application):
         self.log = log
 
     @property
-    def stats(self):
+    def stats(self) -> None:
         """
         Returns the statistics of the run.
         """
@@ -178,7 +178,7 @@ class OOASPRacksSolver(clingo.Application):
         return results
 
     @property
-    def assumptions(self):
+    def assumptions(self) -> None:
         """
         List of assumptions for the solver. All associations are used as assumptions.
         """
@@ -468,7 +468,7 @@ class OOASPRacksSolver(clingo.Application):
                 return True
         return False
 
-    def main(self, control: Control, files: Sequence[str]):
+    def main(self, control: Control, files: Sequence[str]) -> None:
         """
         Runs the solver.
         It starts by creating the initial objects and then iterates over the smart generation and solving steps.
