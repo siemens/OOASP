@@ -57,7 +57,6 @@ class SmartOOASPSolver:
         self.cautious = None
         self.brave = None
         self.times = {
-            "runtime": 0,
             "initialization": 0,
             "smart_generation": {
                 "time": 0,
@@ -88,7 +87,6 @@ class SmartOOASPSolver:
         """
 
         times = {
-            "runtime": round(self.times["runtime"], 3),
             "initialization": round(self.times["initialization"], 3),
             "smart_generation": {
                 "time": round(self.times["smart_generation"]["time"], 3),
@@ -313,7 +311,7 @@ class SmartOOASPSolver:
 
     def object_needed(self) -> bool:
         """
-        The appearance of predicate object_needed(ID1, ASSOC, X, C2, OPT, new_object)
+        The appearance of predicate object_needed(ID1, ASSOC, X, C2, SIDE, new_object)
         in the cautious consequences indicates the need to add
         at least X objects of type C2 which can be immediately associated to object ID1.
 
@@ -445,7 +443,6 @@ class SmartOOASPSolver:
         Iterates over the smart generation and solving steps to complete the configuration.
         It stops when a solution is found.
         """
-        run_start = time.time()
         done = False
 
         iteration = 0
@@ -475,5 +472,3 @@ class SmartOOASPSolver:
                     self.log(red("UNSAT"))
                     self.add_object("object")
                 continue
-
-        self.times["runtime"] = time.time() - run_start

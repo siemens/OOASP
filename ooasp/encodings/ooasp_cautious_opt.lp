@@ -5,7 +5,7 @@
 #program domain(new_object, cls).
 
 % Used when getting inferences to minimize on lowerbound errors
-:~ ooasp_cv(lowerbound,ID,_,(ASSOC,CMIN,N,C,OPT,new_object)). [CMIN-N@3,(ASSOC,ID)]
+:~ ooasp_cv(lowerbound,ID,_,(ASSOC,CMIN,N,C,SIDE,new_object)). [CMIN-N@3,(ASSOC,ID)]
 
 % % Penalize the bigger associations
 

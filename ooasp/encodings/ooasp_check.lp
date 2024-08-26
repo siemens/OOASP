@@ -39,21 +39,21 @@ ooasp_cv(notinstanceofsubclass,new_object,"Has two leaf classes {} and {}",(C1,C
 ooasp_cv(upperbound,ID1,
   "Upperbound for {} exceeded: {}",
   (A,CMAX,new_object)):-
-	ooasp_assoc_limit(A,max,OPT,C,CMAX,_),
+	ooasp_assoc_limit(A,max,SIDE,C,CMAX,_),
 	ooasp_isa(C,ID1),
-	#count{ID2:ooasp_assoc_gen(A,OPT,ID1,ID2)}
+	#count{ID2:ooasp_assoc_gen(A,SIDE,ID1,ID2)}
 		> CMAX,
 	active(new_object).
 
-lb_violation(lowerbound,ID1,"Lowerbound for {} is {} but has {} {}",(ASSOC,CMIN,N,C2,OPT,new_object)):-
-	ooasp_assoc_limit(ASSOC,min,OPT,C,CMIN,C2),
+lb_violation(lowerbound,ID1,"Lowerbound for {} is {} but has {} {}",(ASSOC,CMIN,N,C2,SIDE,new_object)):-
+	ooasp_assoc_limit(ASSOC,min,SIDE,C,CMIN,C2),
 	ooasp_isa(C,ID1),
-	#count { ID2:ooasp_assoc_gen(ASSOC,OPT,ID1,ID2) } = N,
+	#count { ID2:ooasp_assoc_gen(ASSOC,SIDE,ID1,ID2) } = N,
 	N < CMIN,
 	active(new_object).
 
-ooasp_cv(lowerbound,ID1,M,(ASSOC,CMIN,N,C,OPT,new_object)):-
-	lb_violation(lowerbound,ID1,M,(ASSOC,CMIN,N,C,OPT,new_object)),
+ooasp_cv(lowerbound,ID1,M,(ASSOC,CMIN,N,C,SIDE,new_object)):-
+	lb_violation(lowerbound,ID1,M,(ASSOC,CMIN,N,C,SIDE,new_object)),
 	not lb_violation(lowerbound,ID1,_,(SUBASSOC,_,_,_,_,new_object)):ooasp_assoc_specialization(SUBASSOC,ASSOC).
 
 
