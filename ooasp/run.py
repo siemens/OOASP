@@ -1,6 +1,8 @@
 import time
 from argparse import ArgumentParser
+from typing import Sequence
 
+import clingo
 from clingo import Control, Function, Number, parse_term
 from clingo.symbol import Symbol
 from clingraph.clingo_utils import ClingraphContext
@@ -66,11 +68,14 @@ def get_parser() -> ArgumentParser:
     return parser
 
 
-class OOASPRacksSolver:
+class OOASPRacksSolver(clingo.Application):
     """
-    Solver for the OOASP using the racks problem as example.
+    Application class for solving the racks problem using OOASP.
     The approach is generalizable to other problems.
     """
+
+    program_name = "OOASPRacksSolver"
+    version = "0.1"
 
     def __init__(
         self,
@@ -94,16 +99,6 @@ class OOASPRacksSolver:
         )
         self.view = view
 
-        self.ctl = Control(
-            [
-                "-c config_name=c1",
-                "-c kb_name=k1",
-            ]
-        )
-        self.ctl.load("examples/racks/kb.lp")
-        self.ctl.load("ooasp/encodings/ooasp_simple.lp")
-
-        self.ctl.ground([("base", [])])
         self.next_id = 1
         self.associations = []
         self.object_atoms = []
@@ -189,14 +184,14 @@ class OOASPRacksSolver:
         """
         return [(parse_term(a), True) for a in self.associations]
 
-    def create_initial_objects(self):
+    def create_initial_objects(self, ctl: Control) -> None:
         """
         Creates the initial objects based on the input parameter by adding and grounding the objects.
         """
         for o in self.initial_objects:
-            self.add_object(o)
+            self.add_object(ctl, o)
 
-    def ground(self, o: str):
+    def ground(self, ctl: Control, o: str) -> None:
         """
         Grounds the program corresponding to the new object.
         It also releases the external for the previous object and assigns the new object as active
@@ -207,13 +202,13 @@ class OOASPRacksSolver:
         """
         self.log(f"\t\tGrounding {self.next_id} {o}")
         start = time.time()
-        self.ctl.ground([("domain", [Number(self.next_id), Function(o, [])])])
+        ctl.ground([("domain", [Number(self.next_id), Function(o, [])])])
         self.times["ground"] += time.time() - start
         if self.next_id > 0:
-            self.ctl.release_external(Function("active", [Number(self.next_id - 1)]))
-        self.ctl.assign_external(Function("active", [Number(self.next_id)]), True)
+            ctl.release_external(Function("active", [Number(self.next_id - 1)]))
+        ctl.assign_external(Function("active", [Number(self.next_id)]), True)
 
-    def add_object(self, o: str):
+    def add_object(self, ctl: Control, o: str) -> None:
         """
         Adds a new object to the configuration. This addition includes the user predicate
         to know the class for the object that was added and distinguish it in the encodings.
@@ -224,18 +219,18 @@ class OOASPRacksSolver:
         obj_atom = f"ooasp_isa({o},{self.next_id})"
         dom_atom = f"ooasp_domain({o},{self.next_id})"
         self.log(green(f"\t\tAdding object  {obj_atom}"))
-        self.ctl.add("domain", [str(self.next_id), "object"], f"user({obj_atom}).")
-        self.ctl.add("domain", [str(self.next_id), "object"], f"{obj_atom}.")
-        self.ctl.add("domain", [str(self.next_id), "object"], f"{dom_atom}.")
+        ctl.add("domain", [str(self.next_id), "object"], f"user({obj_atom}).")
+        ctl.add("domain", [str(self.next_id), "object"], f"{obj_atom}.")
+        ctl.add("domain", [str(self.next_id), "object"], f"{dom_atom}.")
         self.object_atoms.append(obj_atom)
         self.object_atoms.append(dom_atom)
         self.objects[o] += 1
-        self.ground(o)
+        self.ground(ctl, o)
         self.next_id += 1
         self.cautious = None
         self.brave = None
 
-    def add_association(self, association: tuple[str, int, int]):
+    def add_association(self, association: tuple[str, int, int]) -> None:
         """_summary_
         Associates two objects with a given association.
         Args:
@@ -249,7 +244,7 @@ class OOASPRacksSolver:
         self.cautious = None
         self.brave = None
 
-    def get_cautious(self) -> list[Symbol]:
+    def get_cautious(self, ctl: Control) -> list[Symbol]:
         """
         Obtains and stores the cautious consequences of the current configuration.
 
@@ -259,24 +254,24 @@ class OOASPRacksSolver:
         if self.cautious:
             return self.cautious
         start = time.time()
-        self.ctl.assign_external(Function("check_potential_cv"), False)
-        self.ctl.assign_external(Function("computing_cautious"), True)
-        self.ctl.configuration.solve.models = "0"
-        self.ctl.configuration.solve.enum_mode = "cautious"
-        with self.ctl.solve(yield_=True, assumptions=self.assumptions) as hdn:
+        ctl.assign_external(Function("check_potential_cv"), False)
+        # ctl.assign_external(Function("computing_cautious"), True)
+        ctl.configuration.solve.models = "0"
+        ctl.configuration.solve.enum_mode = "cautious"
+        with ctl.solve(yield_=True, assumptions=self.assumptions) as hdn:
             for model in hdn:
                 self.cautious = model.symbols(shown=True)
             if self.cautious is None:
                 self.log("\tUNSAT cautious!")
-        self.ctl.assign_external(Function("check_potential_cv"), True)
-        self.ctl.assign_external(Function("computing_cautious"), False)
-        self.ctl.configuration.solve.models = "1"
-        self.ctl.configuration.solve.enum_mode = "auto"
-        self.ctl.configuration.solve.project = "auto"
+        ctl.assign_external(Function("check_potential_cv"), True)
+        # ctl.assign_external(Function("computing_cautious"), False)
+        ctl.configuration.solve.models = "1"
+        ctl.configuration.solve.enum_mode = "auto"
+        ctl.configuration.solve.project = "auto"
         self.times["smart_generation"]["cautious"] += time.time() - start
         return self.cautious
 
-    def get_brave(self) -> list[Symbol]:
+    def get_brave(self, ctl: Control) -> list[Symbol]:
         """
         Obtains and stores the brave consequences of the current configuration.
 
@@ -287,24 +282,24 @@ class OOASPRacksSolver:
         if self.brave:
             return self.brave
         start = time.time()
-        self.ctl.assign_external(Function("check_potential_cv"), False)
-        self.ctl.assign_external(Function("computing_brave"), True)
-        self.ctl.configuration.solve.models = "0"
-        self.ctl.configuration.solve.enum_mode = "brave"
-        with self.ctl.solve(yield_=True, assumptions=self.assumptions) as hdn:
+        ctl.assign_external(Function("check_potential_cv"), False)
+        # ctl.assign_external(Function("computing_brave"), True)
+        ctl.configuration.solve.models = "0"
+        ctl.configuration.solve.enum_mode = "brave"
+        with ctl.solve(yield_=True, assumptions=self.assumptions) as hdn:
             for model in hdn:
                 self.brave = model.symbols(shown=True)
             if self.brave is None:
                 self.log("\tUNSAT brave!")
-        self.ctl.assign_external(Function("check_potential_cv"), True)
-        self.ctl.assign_external(Function("computing_brave"), False)
-        self.ctl.configuration.solve.models = "1"
-        self.ctl.configuration.solve.enum_mode = "auto"
-        self.ctl.configuration.solve.project = "auto"
+        ctl.assign_external(Function("check_potential_cv"), True)
+        # ctl.assign_external(Function("computing_brave"), False)
+        ctl.configuration.solve.models = "1"
+        ctl.configuration.solve.enum_mode = "auto"
+        ctl.configuration.solve.project = "auto"
         self.times["smart_generation"]["brave"] += time.time() - start
         return self.brave
 
-    def save_png(self, directory: str = "./out", suffix: str = ""):
+    def save_png(self, directory: str = "./out", suffix: str = "") -> None:
         """
         Saves the configuration as a png using clingraph
         Args:
@@ -317,17 +312,17 @@ class OOASPRacksSolver:
             config = "\n".join(
                 [str(c) + "." for c in self.object_atoms + self.associations]
             )
-        ctl = Control(["--warn=none"])
+        viz_ctl = Control(["--warn=none"])
         fbs = []
         path = settings.encodings_path.joinpath("viz_config.lp")
-        ctl.load(str(path))
+        viz_ctl.load(str(path))
         path = settings.encodings_path.joinpath("ooasp_aux_kb.lp")
-        ctl.load(str(path))
-        ctl.load("examples/racks/kb.lp")
+        viz_ctl.load(str(path))
+        viz_ctl.load("examples/racks/kb.lp")
 
-        ctl.add("base", [], config)
-        ctl.ground([("base", [])], ClingraphContext())
-        ctl.solve(
+        viz_ctl.add("base", [], config)
+        viz_ctl.ground([("base", [])], ClingraphContext())
+        viz_ctl.solve(
             on_model=lambda m: fbs.append(
                 Factbase.from_model(m, default_graph="config")
             )
@@ -343,7 +338,7 @@ class OOASPRacksSolver:
 
     # ------------------------Smart Generation------------------------
 
-    def smart_generation(self) -> bool:
+    def smart_generation(self, ctl: Control) -> bool:
         """
         Calls the smart generation functions in the order specified by the user.
         It will stop once a function adds objects or associations.
@@ -356,7 +351,7 @@ class OOASPRacksSolver:
         initial_associations = len(self.associations)
         for f in self.smart_generation_functions:
             start = time.time()
-            done = getattr(self, f)()
+            done = getattr(self, f)(ctl)
             self.times["smart_generation"]["functions"][f] += time.time() - start
             if done:
                 self.log(
@@ -365,7 +360,7 @@ class OOASPRacksSolver:
                 return True
         return False
 
-    def object_needed(self) -> bool:
+    def object_needed(self, ctl: Control) -> bool:
         """
         The appearance of predicate object_needed(ID1, ASSOC, X, C2, OPT, new_object)
         in the cautious consequences indicates the need to add
@@ -380,7 +375,7 @@ class OOASPRacksSolver:
         self.log("\t+++++ object_needed")
         added_key = None
         added = 0
-        cautious = self.get_cautious()
+        cautious = self.get_cautious(ctl)
         for s in cautious:
             if s.match("object_needed", 6):
                 o_id, assoc, needed, c, opt, _ = s.arguments
@@ -394,12 +389,12 @@ class OOASPRacksSolver:
                         a = (str(assoc), o_id, self.next_id)
                     else:
                         a = (str(assoc), self.next_id, o_id)
-                    self.add_object(c.name)
+                    self.add_object(ctl, c.name)
                     self.add_association(a)
                     added += 1
         return added > 0
 
-    def global_ub(self) -> bool:
+    def global_ub(self, ctl: Control) -> bool:
         """
         The appearance of predicate global_ub(C2, N, new_object)
         in the cautious consequences indicates the need to add N objects of type C2
@@ -414,17 +409,17 @@ class OOASPRacksSolver:
             bool: True if objects were added, False otherwise
         """
         self.log("\t+++++ global_ub")
-        cautious = self.get_cautious()
+        cautious = self.get_cautious(ctl)
         for s in cautious:
             if s.match("global_ub", 3):
                 self.log("\t  ---> Apply ", s)
                 c2, needed, _ = s.arguments
                 for _ in range(0, needed.number):
-                    self.add_object(c2.name)
+                    self.add_object(ctl, c2.name)
                 return True
         return False
 
-    def global_lb(self) -> bool:
+    def global_lb(self, ctl: Control) -> bool:
         """
         The appearance of predicate global_lb(C1, N, new_object)
         in the cautious consequences indicates the need to add N objects of type C1
@@ -439,17 +434,17 @@ class OOASPRacksSolver:
             bool: True if objects were added, False otherwise
         """
         self.log("\t+++++ global_lb")
-        cautious = self.get_cautious()
+        cautious = self.get_cautious(ctl)
         for s in cautious:
             if s.match("global_lb", 3):
                 self.log("\t  ---> Apply ", s)
                 c1, needed, _ = s.arguments
                 for _ in range(0, needed.number):
-                    self.add_object(c1.name)
+                    self.add_object(ctl, c1.name)
                 return True
         return False
 
-    def association_needed(self) -> bool:
+    def association_needed(self, ctl: Control) -> bool:
         """
         The appearance of predicate association_needed(ASSOC, ID1, ID2, new_object)
         in the brave consequences indicates the need to add an association between two objects.
@@ -463,7 +458,7 @@ class OOASPRacksSolver:
             bool: True if associations were added, False otherwise
         """
         self.log("\t+++++ association_needed")
-        brave = self.get_brave()
+        brave = self.get_brave(ctl)
         for s in brave:
             if s.match("association_needed", 4):
                 self.log("\t  ---> Apply ", s)
@@ -473,7 +468,7 @@ class OOASPRacksSolver:
                 return True
         return False
 
-    def run(self):
+    def main(self, control: Control, files: Sequence[str]):
         """
         Runs the solver.
         It starts by creating the initial objects and then iterates over the smart generation and solving steps.
@@ -481,7 +476,12 @@ class OOASPRacksSolver:
         If the view is enabled, it saves the solution as a PNG.
         """
         run_start = time.time()
-        self.create_initial_objects()
+        control.load("examples/racks/kb.lp")
+        control.load("ooasp/encodings/ooasp_simple.lp")
+
+        control.ground([("base", [])])
+
+        self.create_initial_objects(control)
         self.times["initialization"] = time.time() - run_start
         done = False
 
@@ -495,15 +495,15 @@ class OOASPRacksSolver:
             if self.view:
                 self.save_png("out/solve", f"-O{self.next_id - 1}-iteration{iteration}")
             start = time.time()
-            things_done = self.smart_generation()
+            things_done = self.smart_generation(control)
             self.times["smart_generation"]["time"] += time.time() - start
             if things_done:
                 continue
             self.log(subtitle(f"Solving for size {self.next_id - 1}...", "RED"))
-            self.ctl.configuration.solve.models = "1"
+            control.configuration.solve.models = "1"
             start = time.time()
 
-            with self.ctl.solve(
+            with control.solve(
                 assumptions=self.assumptions, on_model=on_model, yield_=True
             ) as hdl:
                 self.times["solve"] += time.time() - start
@@ -512,7 +512,7 @@ class OOASPRacksSolver:
                     done = True
                 else:
                     self.log(red("UNSAT"))
-                    self.add_object("object")
+                    self.add_object(control, "object")
                 continue
 
         self.times["runtime"] = time.time() - run_start
@@ -526,7 +526,7 @@ class OOASPRacksSolver:
 # ========================== Main
 
 if __name__ == "__main__":
-    cmd_args = get_parser().parse_args()
+    cmd_args, unknown_args = get_parser().parse_known_args()
 
     initial = []
     for cls in CLASSES:
@@ -537,10 +537,18 @@ if __name__ == "__main__":
     else:
         smart_functions = []
 
-    solver = OOASPRacksSolver(
-        initial_objects=initial,
-        smart_generation_functions=smart_functions,
-        verbose=cmd_args.verbose,
-        view=cmd_args.view,
+    options = [
+        "-c config_name=c1",
+        "-c kb_name=k1",
+        "--outf=3",
+    ]
+
+    clingo.clingo_main(
+        OOASPRacksSolver(
+            initial_objects=initial,
+            smart_generation_functions=smart_functions,
+            verbose=cmd_args.verbose,
+            view=cmd_args.view,
+        ),
+        options + unknown_args,
     )
-    solver.run()
