@@ -3,11 +3,6 @@
 % =====================
 
 
-#show object_needed/6.
-#show global_ub/3.
-#show global_lb/3.
-#show association_needed/4.
-
 % Target associations are those with cardinality 1..1-MIN..MAX
 % We only consider this type of associations for the bound calculations
 is_target_assoc(ASSOC,SIDE):-
@@ -19,7 +14,7 @@ is_target_assoc(ASSOC,SIDE):-
 % =====================
 #program domain(new_object, cls).
 
-
+% #heuristic object_needed(ID1, ASSOC, A, C2, SIDE, new_object):object_needed(ID1, ASSOC, A, C2, SIDE, new_object),ooasp_assoc_specialization(ASSOC,_). [1,sign]
 % -----------------------------------
 % object_needed(ID1, ASSOC, X, C2, SIDE, new_object)
 %   Object ID1 needs at least X objects of class C2 associated by ASSOC
