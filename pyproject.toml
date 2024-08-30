@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "asp_interactive_configuration"
-version = "0.1.1"
+version = "0.1.2"
 description = "project to develop an interactive asp-based configuration approach"
 authors = ["gschennersie"]
 packages = [
