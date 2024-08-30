@@ -43,7 +43,7 @@ object_needed(ID1, ASSOC, 1..CMIN - N, C2, SIDE, new_object):-
 %  EXAMPLE:
 %   We can see the use of this predicate in an example with 9 frames and 1 rack.
 %   Where the need for one more rack since the upperbound of rack is 8 and the number of frames is 9.
-global_ub(C2,((NUM1 + MAX - 1) / MAX)-NUM2,new_object):-
+global_ub(C2, ((NUM1 + MAX - 1) / MAX)-NUM2, new_object):-
     % It is a target association: One side is 1..1 The other side is _..MAX
     is_target_assoc(ASSOC, SIDE),
     ooasp_assoc_limit(ASSOC,max,SIDE2,C2,MAX,C1),

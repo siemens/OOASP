@@ -28,7 +28,7 @@ CLASSES = [
     "moduleV",
 ]
 
-# TODO if this improves the performance, we can obtain this associations from the encoding
+# TODO if this improves the performance, we can obtain these associations from the encoding
 ASSOCIATION_SPECIALIZATIONS = [
     "rack_framesS",
     "rack_framesD",
