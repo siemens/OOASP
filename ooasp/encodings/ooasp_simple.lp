@@ -7,6 +7,7 @@
 #const kb_name = default_kb_name.
 ooasp_configuration(kb_name,config_name).
 #include "ooasp_aux_kb.lp". % Auxiliary predicates for the KB
+#include "ooasp_defined.lp". % Auxiliary predicates for the KB
 guess. % The guessing part is active
 #external check_potential_cv.[true] % Checks for potential constraints apply
 check_permanent_cv. % Checks for permanent constraints apply
@@ -18,13 +19,12 @@ check_permanent_cv. % Checks for permanent constraints apply
 #include "ooasp_check.lp". % Check section
 
 #include "ooasp_symmetry.lp". % Symmetry breaking constraints
-#include "ooasp_upper_bound.lp". % Calculates global needs
+#include "ooasp_smart_generation.lp". % Functions for smart generation
 
-#show lb_at_least/6.
-#show upper_filled/5.
-#show lower_global/5.
-
-#program domain(new_object, cls).
-
-:- user(ooasp_isa(C,new_object  )),
-not ooasp_isa(C,new_object).
+% Show statements. Notice that anything that is used in the smart generation functions
+% as well as clinguin UI encoding should be shown to avoid incorrect results.
+#show object_needed/6.
+#show global_ub/3.
+#show global_lb/3.
+#show association_needed/4.
+#show .

@@ -20,18 +20,24 @@
 
 % % Associations from new_object
 { ooasp_associated(ASSOC,new_object,ID2) } :-
+	potential_assoc(ASSOC,new_object,ID2,_,_),
+	guess.
+
+potential_assoc(ASSOC,new_object,ID2,C1,C2):-
 	ooasp_assoc(ASSOC,C1,C1MIN,C1MAX,C2,C2MIN,C2MAX),
 	ooasp_isa(C1,new_object),
 	ID2<new_object,
-	ooasp_isa(C2,ID2),
-	guess.
+	ooasp_isa(C2,ID2).
 
 { ooasp_associated(ASSOC,ID1,new_object)} :-
+	potential_assoc(ASSOC, ID1, new_object,_,_),
+	guess.
+
+potential_assoc(ASSOC, ID1, new_object,C1,C2):-
 	ooasp_assoc(ASSOC,C1,C1MIN,C1MAX,C2,C2MIN,C2MAX),
 	ooasp_isa(C2,new_object),
 	ID1<new_object,
-	ooasp_isa(C1,ID1),
-	guess.
+	ooasp_isa(C1,ID1).
 
 % Attributes
 1 { ooasp_attr_value(A,new_object,V):

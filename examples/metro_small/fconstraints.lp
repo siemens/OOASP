@@ -25,7 +25,7 @@ ooasp_cv(only_one_wagon,new_object,"Only one wagon allowed, found also wagon {}"
 ooasp_cv(stand_iff_handrail,W,"Handrail required if standing room is larger than 0",(new_object,)):-
     active(new_object),
     ooasp_isa(wagon,W),
-    #count{ID2:ooasp_assoc_gen(wagon_handrail,OPT,W,ID2)}=0,
+    #count{ID2:ooasp_assoc_gen(wagon_handrail,SIDE,W,ID2)}=0,
     &fsum{ooasp_attr_fvalue(standing_room,W)}>0.
 
 
@@ -33,7 +33,7 @@ ooasp_cv(stand_iff_handrail,W,"Handrail required if standing room is larger than
 ooasp_cv(seats_eq__nrseats,W,"Number of seats should be {}, since there are {} Seats associated",(S,S,new_object)):-
     active(new_object),
     ooasp_isa(wagon,W),
-    #count{ID2:ooasp_assoc_gen(wagon_seats,OPT,W,ID2)}=S,
+    #count{ID2:ooasp_assoc_gen(wagon_seats,SIDE,W,ID2)}=S,
     &fsum{ooasp_attr_fvalue(nr_seats,W)}!=S.
 
 % all equal type except special

@@ -25,7 +25,7 @@ ooasp_cv(only_one_wagon,new_object,"Only one wagon allowed, found also wagon {}"
 % Handrail required if standing_room>0
 ooasp_cv(standingroom_iff_handrail,W,"Handrail required if standing room is {}",(STANDINGROOM,new_object)):-
     active(new_object),
-    #count{ID2:ooasp_assoc_gen(wagon_handrail,OPT,W,ID2)}=0,
+    #count{ID2:ooasp_assoc_gen(wagon_handrail,SIDE,W,ID2)}=0,
     ooasp_attr_value(standing_room,W,STANDINGROOM),
     STANDINGROOM>0.
 
@@ -33,7 +33,7 @@ ooasp_cv(standingroom_iff_handrail,W,"Handrail required if standing room is {}",
 % the number of associated seats must be equal to the attribute nr_seats
 ooasp_cv(nrofseats_eq_attribute_nrseats,W,"Number of seats should be {} ",(S,new_object)):-
     active(new_object),
-    #count{ID2:ooasp_assoc_gen(wagon_seats,OPT,W,ID2)}=S,
+    #count{ID2:ooasp_assoc_gen(wagon_seats,SIDE,W,ID2)}=S,
     ooasp_attr_value(nr_seats,W,NRSEATS),
     S!=NRSEATS.
 
