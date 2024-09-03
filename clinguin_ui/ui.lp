@@ -5,6 +5,7 @@ elem(w,window,root).
 
 elem(menu_bar, menu_bar, w).
 attr(menu_bar, title, "OOASP UI").
+attr(menu_bar,order,1).
 
     elem(menu_bar_clear, button, menu_bar).
     attr(menu_bar_clear, label, "Clear Configuration").
@@ -13,18 +14,21 @@ attr(menu_bar, title, "OOASP UI").
 
 % Canvas Container
 elem(config_viz, canvas,w).
-attr(config_viz,class,("bg-dark")).
+attr(config_viz,class,("vw-75";"vh-75")).
+attr(config_viz,image,"examples/racks/racks_v1.png").
+attr(config_viz,order,2).
 
 % Config container
 
 elem(config_container, container,w).
 attr(config_container,flex_direction,row).
+attr(config_container,order,3).
 
     % Extend container
 
     elem(extend_container,container,config_container).
     attr(extend_container,flex_direction,column).
-    attr(extend_container,class,("col-sm";"flex-column";"bg-primary")).
+    attr(extend_container,class,("col-sm";"flex-column")).
 
         elem(extend_con_label,label,extend_container).
         attr(extend_con_label,label,"Extend").
@@ -37,6 +41,7 @@ attr(config_container,flex_direction,row).
 
         elem(extend_domain_button,button,extend_container).
         attr(extend_domain_button,label,"Extend Domain").
+        attr(extend_domain_button,icon,"fa-plus").
         attr(extend_domain_button,order,3).
 
         elem(config_size_txt,label,extend_container).
@@ -54,7 +59,7 @@ attr(config_container,flex_direction,row).
 
             elem(addobject_dd,dropdown_menu,addobject_dd_container).
             attr(addobject_dd,selected,"element").
-            attr(addobject_dd,class,("p-2")).
+            attr(addobject_dd,class,("p-2";"border";"border-1")).
             attr(addobject_dd,order,2).
                 elem(dd_element,dropdown_menu_item,addobject_dd).
                 attr(dd_element,label,"element").
@@ -78,7 +83,7 @@ attr(config_container,flex_direction,row).
 
             elem(addobject_p_dd,dropdown_menu,addobject_p_dd_container).
             attr(addobject_p_dd,selected,"element").
-            attr(addobject_p_dd,class,("p-2")).
+            attr(addobject_p_dd,class,("p-2";"border";"border-1")).
             attr(addobject_p_dd,order,2).
                 elem(dd_element,dropdown_menu_item,addobject_p_dd).
                 attr(dd_element,label,"element").
@@ -89,16 +94,11 @@ attr(config_container,flex_direction,row).
                 elem(dd_frame,dropdown_menu_item,addobject_p_dd).
                 attr(dd_frame,label,"frame").
 
-    % Check container
-
-    elem(check_container,container, config_container).
-    attr(check_container,child_layout,grid).
-
     % Edit container
 
     elem(edit_container,container,config_container).
     attr(edit_container,flex_direction,column).
-    attr(edit_container,class,("col-sm";"flex-column";"bg-secondary")).
+    attr(edit_container,class,("col-sm";"flex-column")).
 
         elem(edit_con_label,label,edit_container).
         attr(edit_con_label,label,"Edit").
@@ -117,7 +117,7 @@ attr(config_container,flex_direction,row).
 
             elem(edit_dd,dropdown_menu,edit_dd_container).
             attr(edit_dd,selected,"Placeholder Element").
-            attr(edit_dd,class,("p-2")).
+            attr(edit_dd,class,("p-2";"border";"border-1")).
             attr(edit_dd,order,2).
                 elem(dd_ph1,dropdown_menu_item,edit_dd).
                 attr(dd_ph1,label,"PH 1").
@@ -130,7 +130,7 @@ attr(config_container,flex_direction,row).
 
     elem(browse_container,container, config_container).
     attr(browse_container,flex_direction,column).
-    attr(browse_container_container,class,("col-sm";"flex-column";"bg-info")).
+    attr(browse_container_container,class,("col-sm";"flex-column")).
         elem(browse_con_label,label, browse_container).
         attr(browse_con_label,label,"Browse").
         attr(browse_con_label,class,("fw-bold")).
@@ -153,6 +153,7 @@ attr(config_container,flex_direction,row).
 
         elem(find_inc_btn,button,browse_container).
         attr(find_inc_btn,label,"Find Incrementally").
+        attr(find_inc_btn,icon,"fa-gears").
         attr(find_inc_btn,order,3).
 
         elem(find_ovs_btn,button,browse_container).
@@ -166,7 +167,7 @@ attr(config_container,flex_direction,row).
     % Check
     elem(check_container,container, config_container).
     attr(check_container,flex_direction,column).
-    attr(check_container_container,class,("col-sm";"flex-column";"bg-warning")).
+    attr(check_container_container,class,("d-grid";"gap-2")).
         elem(check_con_label,label, check_container).
         attr(check_con_label,label,"Check").
         attr(check_con_label,class,("fw-bold")).
@@ -174,12 +175,20 @@ attr(config_container,flex_direction,row).
 
         elem(check_btn,button,check_container).
         attr(check_btn,label,"Check").
+        attr(check_btn,order,2).
 
         elem(clear_checks_btn,button,check_container).
         attr(clear_checks_btn,label,"Clear Checks").
+        attr(clear_checks_btn,order,3).
 
         elem(add_inferences_btn,button,check_container).
         attr(add_inferences_btn,label,"Add Inferences").
+        attr(add_inferences_btn,order,4).
 
         elem(create_required_btn,button,check_container).
         attr(create_required_btn,label,"Create Required").
+        attr(create_required_btn,order,5).
+        
+
+% dev borers
+%attr(E,class,("border-1";"border";"border-dark")):- elem(E, container, _).
