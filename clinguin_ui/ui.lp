@@ -53,6 +53,7 @@ attr(config_container,order,3).
         elem(extend_domain_button,button,extend_container).
         attr(extend_domain_button,label,"Extend Domain").
         attr(extend_domain_button,icon,"fa-plus").
+        attr(extend_domain_button,class,("btn-secondary")).
         attr(extend_domain_button,order,3).
 
         elem(config_size_txt,label,extend_container).
@@ -154,25 +155,31 @@ attr(config_container,order,3).
             elem(prev_btn,button,selection_container).
             attr(prev_btn,icon,"fa-forward").
             attr(prev_btn,label,"Previous").
+            attr(prev_btn,class,("btn-light")).
             
             elem(select_btn,button,selection_container).
             attr(select_btn,label,"Select").
+            attr(select_btn,class,("btn-secondary")).
 
             elem(next_btn,button,selection_container).
             attr(next_btn,icon,"fa-backward").
             attr(next_btn,label,"Next").
+            attr(next_btn,class,("btn-light")).
 
         elem(find_inc_btn,button,browse_container).
         attr(find_inc_btn,label,"Find Incrementally").
         attr(find_inc_btn,icon,"fa-gears").
+        attr(find_inc_btn,class,("btn-success")).
         attr(find_inc_btn,order,3).
 
         elem(find_ovs_btn,button,browse_container).
         attr(find_ovs_btn,label,"Find Incrementally (overshoot)").
+        attr(find_ovs_btn,class,("btn-outline-success")).
         attr(find_ovs_btn,order,4).
 
         elem(end_browsing_btn,button,browse_container).
         attr(end_browsing_btn,label,"End Browsing").
+        attr(end_browsing_btn,class,("btn-warning")).
         attr(end_browsing_btn,order,5).
 
     % Check
@@ -186,10 +193,12 @@ attr(config_container,order,3).
 
         elem(check_btn,button,check_container).
         attr(check_btn,label,"Check").
+        attr(check_btn,class,("btn-secondary")).
         attr(check_btn,order,2).
 
         elem(clear_checks_btn,button,check_container).
         attr(clear_checks_btn,label,"Clear Checks").
+        attr(clear_checks_btn,class,("btn-outline-secondary")).
         attr(clear_checks_btn,order,3).
 
         elem(add_inferences_btn,button,check_container).
