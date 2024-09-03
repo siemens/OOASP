@@ -12,6 +12,16 @@ attr(menu_bar,order,1).
     attr(menu_bar_clear, icon, "fa-trash").
     attr(menu_bar_clear, class, ("btn-outline-danger";"border-0")).
 
+    elem(menu_bar_load, button, menu_bar).
+    attr(menu_bar_load,label, "Load Partial Configuration").
+    attr(menu_bar_load, icon, "fa-upload").
+    attr(menu_bar_load, class, ("btn-outline-primary";"border-0")).
+
+    elem(menu_bar_save, button, menu_bar).
+    attr(menu_bar_save,label, "Save Configuration").
+    attr(menu_bar_save, icon, "fa-download").
+    attr(menu_bar_save, class, ("btn-outline-primary";"border-0")).
+
 % Canvas Container
 elem(config_viz, canvas,w).
 attr(config_viz,class,("vw-75";"vh-75")).
@@ -22,6 +32,7 @@ attr(config_viz,order,2).
 
 elem(config_container, container,w).
 attr(config_container,flex_direction,row).
+attr(config_container,class,("justify-content-evenly")).
 attr(config_container,order,3).
 
     % Extend container
@@ -191,4 +202,4 @@ attr(config_container,order,3).
         
 
 % dev borers
-%attr(E,class,("border-1";"border";"border-dark")):- elem(E, container, _).
+% attr(E,class,("border-1";"border";"border-dark")):- elem(E, container, _).
