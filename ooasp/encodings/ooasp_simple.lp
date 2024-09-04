@@ -7,7 +7,7 @@
 #const kb_name = default_kb_name.
 ooasp_configuration(kb_name,config_name).
 #include "ooasp_aux_kb.lp". % Auxiliary predicates for the KB
-#include "ooasp_defined.lp". % Auxiliary predicates for the KB
+#include "ooasp_defined.lp". % Defined predicates
 guess. % The guessing part is active
 #external check_potential_cv.[true] % Checks for potential constraints apply
 check_permanent_cv. % Checks for permanent constraints apply

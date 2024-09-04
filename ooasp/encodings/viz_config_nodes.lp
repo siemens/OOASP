@@ -11,4 +11,4 @@ ooasp_isa_leaf(C,Object_id) :-
 any_node(Object_id):- domain_node(Class,Object_id).
 any_node(Object_id):- leaf_node(Class,Object_id).
 any_node(Object_id):- isa_node(Class,Object_id).
-node(Object_id) :- any_node(Object_id).
+node(Object_id,config) :- any_node(Object_id).
