@@ -41,7 +41,12 @@ attr(menu_bar,icon,"fa-puzzle-piece").
 % Canvas
 elem(config_viz, canvas,w).
 attr(config_viz,class,("vw-75";"vh-75")).
-attr(config_viz,image,"examples/racks/racks_v1.png").
+attr(config_viz, image_type, clingraph__config).    #include "ooasp/encodings/viz_config_nodes.lp".
+
+        elem(n(X), svg_node, config_viz) :- node(X).
+        attr(n(X), clingraph_id, X) :- node(X).
+        when(n(X), click, call, restart):- node(X).
+
 attr(config_viz,order,2).
 
 % Config Container
@@ -83,22 +88,20 @@ attr(config_container,order,3).
             attr(addobject_dd_label,order,1).
 
             elem(addobject_dd,dropdown_menu,addobject_dd_container).
-            attr(addobject_dd,selected,"element").
+            attr(addobject_dd,selected,"select class").
             attr(addobject_dd,class,("p-2";"border";"border-1")).
             attr(addobject_dd,order,2).
-                elem(dd_element,dropdown_menu_item,addobject_dd).
-                attr(dd_element,label,"element").
-
-                elem(dd_rack,dropdown_menu_item,addobject_dd).
-                attr(dd_rack,label,"rack").
-
-                elem(dd_frame,dropdown_menu_item,addobject_dd).
-                attr(dd_frame,label,"frame").
+                
+                elem(dd_element(C),dropdown_menu_item,addobject_dd):-ooasp_leafclass(C).
+                attr(dd_element(C),label,C):-ooasp_leafclass(C).
+                when(dd_element(C),click,context,(class_name,C)):-ooasp_leafclass(C).
+                when(dd_element(C),click,update,(addobject_dd,selected,C)):-ooasp_leafclass(C).
             
             elem(addobject_btn,button,addobject_dd_container).
             attr(addobject_btn,icon,"fa-plus").
             attr(addobject_btn,class,("btn-outline-dark")).
             attr(addobject_btn,order,3).
+            when(addobject_btn,click,call,add_object(_context_value(class_name))).
 
                 % I Assume backen will have a way to automate this
 
