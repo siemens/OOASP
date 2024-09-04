@@ -4,19 +4,28 @@ elem(menu_bar,menu_bar,w).
 attr(menu_bar,title,"OOASP").
 
     elem(end_btn,button,menu_bar).
-    attr(end_btn,label, "End browsing").
+    attr(end_btn,label,"End browsing").
+    attr(end_btn,icon,"fa-xmark").
+    attr(end_btn,class,("btn-warning")).
 
     elem(find_btn,button,menu_bar).
     attr(find_btn,label,"Find Incrementally").
+    attr(find_btn,icon,"fa-gears").
+    attr(find_btn,class,("btn-success")).
 
     elem(next_btn,button,menu_bar).
     attr(next_btn,label,"Next solution").
+    attr(next_btn,icon,"fa-forward").
+    attr(next_btn,class,("btn-outline-secondary")).
 
     elem(select_btn,button,menu_bar).
     attr(select_btn,label,"Select configuration"). 
+    attr(select_btn,class,("btn-secondary")).
 
     elem(check_btn,button,menu_bar).
     attr(check_btn,label,"Check").
+    attr(check_btn,icon,"fa-magnifying-glass").
+    attr(check_btn,class,("btn-outline-success")).
 
 % Canvas
 elem(config_viz, canvas,w).
@@ -77,6 +86,7 @@ attr(config_container,order,3).
             
             elem(addobject_btn,button,addobject_dd_container).
             attr(addobject_btn,icon,"fa-plus").
+            attr(addobject_btn,class,("btn-outline-dark")).
             attr(addobject_btn,order,3).
 
                 % I Assume backen will have a way to automate this
@@ -105,6 +115,7 @@ attr(config_container,order,3).
             
             elem(addobject_p_btn,button,addobject_p_dd_container).
             attr(addobject_p_btn,icon,"fa-plus").
+            attr(addobject_p_btn,class,("btn-outline-dark")).
             attr(addobject_p_btn,order,3).
 
 % Info container
@@ -114,10 +125,12 @@ attr(config_container,order,3).
         
         elem(domain_size_txt,label,info_container).
         attr(domain_size_txt,label,"Domain Size:"). %I assume the concat will have to be used here, something like attr(domain_size_txt,label,@concat("Domain Size: ",DS)):-domain_size(DS).
+        attr(domain_size_txt,class,("text-start";"fw-semibold";"fs-5")).
         attr(domain_size_txt,order,1).
 
         elem(config_size_txt,label,info_container).
         attr(config_size_txt,label,"Configuration Size:").
+        attr(config_size_txt,class,("text-start";"fw-semibold";"fs-5")).
         attr(config_size_txt,order,2).
 
         elem(extra_opts,container,info_container).
@@ -127,14 +140,20 @@ attr(config_container,order,3).
 
             elem(inferences_btn,button,extra_opts).
             attr(inferences_btn,label,"Add inferences").
+            attr(inferences_btn,icon,"fa-plus").
+            attr(inferences_btn,class,("btn-outline-secondary")).
             attr(inferences_btn,order,1).
 
             elem(clear_checks_btn,button,extra_opts).
             attr(clear_checks_btn,label,"Clear checks").
+            attr(clear_checks_btn,icon,"fa-eraser").
+            attr(clear_checks_btn,class,("btn-outline-danger")).
             attr(clear_checks_btn,order,2).
 
             elem(clear_config_btn,button,extra_opts).
             attr(clear_config_btn,label,"Clear configuration").
+            attr(clear_config_btn,icon,"fa-trash").
+            attr(clear_config_btn,class,("btn-danger")).
             attr(clear_config_btn,order,3).
 
             elem(btn1,button,extra_opts).
