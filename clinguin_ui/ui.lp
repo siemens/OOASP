@@ -3,6 +3,16 @@ elem(w,window,root).
 elem(menu_bar,menu_bar,w).
 attr(menu_bar,title,"OOASP").
 
+    elem(menu_bar_load, button, menu_bar).
+    attr(menu_bar_load,label, "Load Partial Configuration").
+    attr(menu_bar_load, icon, "fa-upload").
+    attr(menu_bar_load, class, ("btn-outline-primary";"border-0")).
+
+    elem(menu_bar_save, button, menu_bar).
+    attr(menu_bar_save,label, "Save Configuration").
+    attr(menu_bar_save, icon, "fa-download").
+    attr(menu_bar_save, class, ("btn-outline-primary";"border-0")).
+
     elem(end_btn,button,menu_bar).
     attr(end_btn,label,"End browsing").
     attr(end_btn,icon,"fa-xmark").
