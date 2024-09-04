@@ -23,8 +23,8 @@ check_permanent_cv. % Checks for permanent constraints apply
 
 % Show statements. Notice that anything that is used in the smart generation functions
 % as well as clinguin UI encoding should be shown to avoid incorrect results.
-#show object_needed/6.
-#show global_ub/3.
-#show global_lb/3.
-#show association_needed/4.
-#show .
+%#show object_needed/6.
+%#show global_ub/3.
+%#show global_lb/3.
+%#show association_needed/4.
+%#show .
