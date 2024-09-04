@@ -2,6 +2,7 @@ elem(w,window,root).
 
 elem(menu_bar,menu_bar,w).
 attr(menu_bar,title,"OOASP").
+attr(menu_bar,icon,"fa-puzzle-piece").
 
     elem(menu_bar_load, button, menu_bar).
     attr(menu_bar_load,label, "Load Partial Configuration").
@@ -140,12 +141,13 @@ attr(config_container,order,3).
 
         elem(config_size_txt,label,info_container).
         attr(config_size_txt,label,"Configuration Size:").
-        attr(config_size_txt,class,("text-start";"fw-semibold";"fs-5")).
+        attr(config_size_txt,class,("text-start";"fw-semibold";"fs-5";"p-1")).
         attr(config_size_txt,order,2).
 
         elem(extra_opts,container,info_container).
         attr(extra_opts,flex_direction,column).
-        attr(extra_opts,class,("d-flex";"flex-row";"justify-content-evenly")).
+        attr(extra_opts,class,("d-flex";"flex-row";"justify-content-evenly";"p-2")).
+        attr(extra_opts,background_color,"#ededed").
         attr(extra_opts,order,3).
 
             elem(inferences_btn,button,extra_opts).
