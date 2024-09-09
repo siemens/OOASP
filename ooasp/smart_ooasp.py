@@ -127,7 +127,9 @@ class SmartOOASPSolver:
         """
         List of assumptions for the solver. All associations are used as assumptions.
         """
-        return [(parse_term(a), True) for a in self.associations]
+        return [(parse_term(a), True) for a in self.associations] + [
+            (parse_term(a), True) for a in self.object_atoms
+        ]
 
     def create_initial_objects(self) -> None:
         """
@@ -166,11 +168,13 @@ class SmartOOASPSolver:
         obj_atom = f"ooasp_isa({o},{self.next_id})"
         dom_atom = f"ooasp_domain({o},{self.next_id})"
         self.log(green(f"\t\tAdding object  {obj_atom}"))
-        self.ctl.add("domain", [str(self.next_id), "object"], f"user({obj_atom}).")
-        self.ctl.add("domain", [str(self.next_id), "object"], f"{obj_atom}.")
-        self.ctl.add("domain", [str(self.next_id), "object"], f"{dom_atom}.")
+        self.ctl.add(
+            "domain", [str(self.next_id), o], f"user({obj_atom})."
+        )  # Needed for symmetry breaking
+        # self.ctl.add("domain", [str(self.next_id), o], f"{obj_atom}.")
+        # self.ctl.add("domain", [str(self.next_id), o], f"{dom_atom}.")
         self.object_atoms.append(obj_atom)
-        self.object_atoms.append(dom_atom)
+        # self.object_atoms.append(dom_atom)
         self.objects[o] += 1
         self.ground(o)
         self.next_id += 1

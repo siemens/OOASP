@@ -20,7 +20,7 @@ ooasp_attr_enum(C,N,"true") :-
 ooasp_attr_enum(C,N,"false") :-
     ooasp_attr(C,N,"boolean").
 
-% true, if attribute has domain
+% true, if attribute has dospecimain
 ooasp_attr_hasdomain(C,N) :-
     ooasp_attr_enum(C,N,D).
 
@@ -54,3 +54,8 @@ ooasp_assoc_limit(ASSOC,min,2,C2,C1MIN,C1):-
 
 ooasp_assoc_limit(ASSOC,max,2,C2,C1MAX,C1):-
 	ooasp_assoc(ASSOC,C1,C1MIN,C1MAX,C2,C2MIN,C2MAX).
+
+
+ooasp_smallest_assoc(ASSOC):-
+	ooasp_assoc(ASSOC,C1,C1MIN,C1MAX,C2,C2MIN,C2MAX),
+    not ooasp_assoc_specialization(_,ASSOC).

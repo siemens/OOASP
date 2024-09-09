@@ -1,6 +1,26 @@
 % Copyright (c) 2022 Siemens AG Oesterreich
 % SPDX-License-Identifier: MIT
 
+isa_smallest(SUPER,ID) :-
+    _all(ooasp_isa(SUPER,ID)),
+	not _all(ooasp_isa(SUB, ID)): ooasp_subclass(SUB,SUPER).
+
+isa_smallest(SUPER,ID) :-
+    _clinguin_browsing,
+    ooasp_isa(SUPER,ID),
+	not ooasp_isa(SUB, ID): ooasp_subclass(SUB,SUPER).
+
+unused_node(Class,ID) :- ooasp_domain(Class,ID), not _all(ooasp_isa(_,ID)).
+unused_node(Class,ID) :- ooasp_domain(Class,ID), _clinguin_browsing, not ooasp_isa(_,ID).
+
+assumed_isa(C,ID) :- ooasp_domain(Class,ID), _all(ooasp_isa_leaf(C,ID)), _clinguin_assume(ooasp_isa(C,ID), true).
+suggested_isa(C,ID) :- ooasp_domain(Class,ID), _all(ooasp_isa_leaf(C,ID)), not _clinguin_assume(ooasp_isa(C,ID), true), not _clinguin_browsing.
+browse_isa(C,ID) :- ooasp_domain(Class,ID), ooasp_isa_leaf(C,ID), not _clinguin_assume(ooasp_isa(C,ID), true), _clinguin_browsing.
+
+label_isa(C,ID):- assumed_isa(C,ID).
+label_isa(C,ID):- suggested_isa(C,ID).
+label_isa(C,ID):- browse_isa(C,ID).
+
 #defined ooasp_isa/3.
 graph(config).
 #const color_green = "#0DB144".
@@ -19,74 +39,75 @@ attr(graph, config, dpi, 65).
 #include "viz_config_nodes.lp".
 #include "ooasp_defined.lp".
 
-% All nodes
-attr(node, Object_id, label, @concat("<<TABLE BGCOLOR='{{bgcolor}}' BORDER='0' CELLBORDER='1' CELLSPACING='0' CELLPADDING='5'>",
+% ------- All nodes
+attr(node, ID, label, @concat("<<TABLE BGCOLOR='{{bgcolor}}' BORDER='0' CELLBORDER='1' CELLSPACING='0' CELLPADDING='5'>",
                                         "<TR><TD BORDER='1'><FONT COLOR='{{color}}' FACE='Helvetica Neue'><B>{{isa}} ({{id}})</B><BR/>{{class}}</FONT></TD></TR><TR><TD ALIGN='right'> ",
                                         "{% set attr = attr|default({}) %}{% for k, v in attr.items() %}{{v}} {% endfor %}",
                                         "{% set cv = cv|default({}) %}{% for k, v in cv.items() %}{{v}} {% endfor %}",
-                                        "</TD></TR></TABLE>>")):- any_node(Object_id).
-attr(node, Object_id,  (label,class), @stringify(Class,true)):- any_node(Object_id),ooasp_domain(Class,Object_id).
-attr(node, Object_id,  (label,isa), @stringify(Class,true)):- any_node(Object_id),isa_smallest(Class,Object_id).
-attr(node, Object_id,  (label,color), black):- node(Object_id,_), not domain_node(_,Object_id), user(ooasp_isa(_,Object_id)).
-% Case for objects not instantiated
-attr(node, Object_id,  (label,color), grey):- node(Object_id,_), domain_node(_,Object_id).
-attr(node, Object_id,  (label,color), @color(green)):- node(Object_id,_), not user(ooasp_isa(_,Object_id)), ooasp_isa(_,Object_id).
-attr(node, Object_id,  (label,id), Object_id):- any_node(Object_id).
-attr(node, Object_id, penwidth, 0):- any_node(Object_id).
+                                        "</TD></TR></TABLE>>")):- any_node(ID).
 
-% Domain nodes
-attr(node, Object_id, (label,bgcolor), "#C4C4C420"):- domain_node(_,Object_id).
-attr(node, Object_id, color, "#C4C4C4"):- domain_node(_,Object_id).
+% ------- Style All nodes
+attr(node, ID, color, "black"):- node(ID,_), not unused_node(_,ID).
+attr(node, ID, margin, 0):- node(ID,_).
+attr(node, ID, width, 0):- node(ID,_).
+attr(node, ID, hight, 0):- node(ID,_).
+attr(node, ID,  (label,id), ID):- any_node(ID).
+attr(node, ID, penwidth, 0):- any_node(ID).
 
-% Is a nodes
-attr(node, Object_id, (label,bgcolor), @color(blue,20)):- isa_node(_,Object_id).
+% ------- Class name
+attr(node, ID,  (label,class), @stringify(Class,true)):- ooasp_domain(Class,ID).
+attr(node, ID,  (label,isa), @stringify(Class,true)):- label_isa(Class,ID).
+attr(node, ID,  (label,color), black):- assumed_isa(Class,ID).
+attr(node, ID,  (label,color), grey):- suggested_isa(Class,ID).
+attr(node, ID,  (label,color), @color(green)):- browse_isa(Class,ID).
 
-% TODO diferentiate assumed class node
-% attr(node, Object_id, color, "black"):- isa_node(_,Object_id).
-
-% Leaf nodes
+% ------- Background color
+attr(node, ID, (label,bgcolor), "#C4C4C420"):- unused_node(_,ID).
+attr(node, ID, color, "#C4C4C4"):- unused_node(_,ID).
+attr(node, ID, (label,bgcolor), @color(blue,20)):- node(ID,_), not unused_node(_,ID).
 attr(node, T, (label,bgcolor), @color(blue,40)):- leaf_node(_,T).
 
-% Node border
-attr(node, T, color, "black"):- node(T,_), not domain_node(_,T).
-attr(node, T, margin, 0):- node(T,_).
-attr(node, T, width, 0):- node(T,_).
-attr(node, T, hight, 0):- node(T,_).
-
-% User selections in green
-
-% Add arguments to nodes
-
+% ------- Attributes
 % browsing
-attr(node, Object_id, (label,attr,Attr_name), @argument_str(Attr_name,Value,"black")):-
-    ooasp_attr_value(Attr_name,Object_id,Value),
-    _clinguin_browsing.
+attr(node, ID, (label,attr,Attr_name), @argument_str(Attr_name,Value,@color(green))):-
+    ooasp_attr_value(Attr_name,ID,Value),
+    _clinguin_browsing,
+    not _clinguin_assume(ooasp_attr_value(Attr_name,ID,Value),true).
+
 % inferred input
-attr(node, Object_id, (label,attr,Attr_name), @argument_str(Attr_name,Value,"grey")):-
+attr(node, ID, (label,attr,Attr_name), @argument_str(Attr_name,Value,"grey")):-
     not _clinguin_browsing,
-    not _clinguin_assume(ooasp_attr_value(Attr_name,Object_id,Value),true),
-    _all(ooasp_attr_value(Attr_name,Object_id,Value)).
+    not _clinguin_assume(ooasp_attr_value(Attr_name,ID,Value),true),
+    _all(ooasp_attr_value(Attr_name,ID,Value)).
 % user input
-attr(node, Object_id, (label,attr,Attr_name), @argument_str(Attr_name,Value,@color(green))):-
-    ooasp_attr_value(Attr_name,Object_id,Value),
-    _clinguin_assume(ooasp_attr_value(Attr_name,Object_id,Value),true).
+attr(node, ID, (label,attr,Attr_name), @argument_str(Attr_name,Value,"black")):-
+    ooasp_attr_value(Attr_name,ID,Value),
+    _clinguin_assume(ooasp_attr_value(Attr_name,ID,Value),true).
 
 % Add cvs to nodes
-attr(node, Object_id, (label,cv,(Name,Object_id,Args)), @cv_str(Name,Mes,Args)):-
-    ooasp_cv(Name,Object_id,Mes,Args).
+% attr(node, ID, (label,cv,(Name,ID,Args)), @cv_str(Name,Mes,Args)):-
+    % ooasp_cv(Name,ID,Mes,Args).
 
 
 % Associations
-edge((Object_id1,Object_id2),config) :-ooasp_associated(Name,Object_id1,Object_id2).
+shown_association(browse,Name,ID1,ID2):-ooasp_smallest_assoc(Name),not _clinguin_assume(ooasp_associated(Name,ID1,ID2),true), ooasp_associated(Name,ID1,ID2), _clinguin_browsing.
+shown_association(infer,Name,ID1,ID2):-ooasp_smallest_assoc(Name),_all(ooasp_associated(Name,ID1,ID2)), not _clinguin_assume(ooasp_associated(Name,ID1,ID2),true), not _clinguin_browsing.
+shown_association(assumed,Name,ID1,ID2):-ooasp_smallest_assoc(Name),_all(ooasp_associated(Name,ID1,ID2)), _clinguin_assume(ooasp_associated(Name,ID1,ID2),true), not _clinguin_browsing.
 
-attr(edge,(Object_id1,Object_id2), xlabel, "<{{name}} <br/><FONT POINT-SIZE='10' FACE='Helvetica Neue'> {{super}}</FONT>>"):-ooasp_associated(Name,Object_id1,Object_id2).
-attr(edge,(Object_id1,Object_id2), (xlabel,name), Name):-ooasp_associated(Name,Object_id1,Object_id2), not ooasp_assoc_specialization(_,Name).
-attr(edge,(Object_id1,Object_id2), (xlabel,super), Super):-ooasp_associated(Name,Object_id1,Object_id2),ooasp_assoc_specialization(Name,Super).
+edge((ID1,ID2),config) :-shown_association(_,Name,ID1,ID2).
 
-attr(edge, (Object_id1,Object_id2), color, @color(green)) :- ooasp_associated(Name,Object_id1,Object_id2), not user(ooasp_associated(Name,Object_id1,Object_id2)),not ooasp_assoc_specialization(_,Name).
-attr(edge, (Object_id1,Object_id2), fontcolor, @color(green)) :- ooasp_associated(Name,Object_id1,Object_id2), not user(ooasp_associated(Name,Object_id1,Object_id2)),not ooasp_assoc_specialization(_,Name).
+attr(edge,(ID1,ID2), xlabel, "<{{name}} <br/><FONT POINT-SIZE='10' FACE='Helvetica Neue'> {{super}}</FONT>>"):-shown_association(_,Name,ID1,ID2).
+% attr(edge,(ID1,ID2), (xlabel,name), Name):-shown_association(_,Name,ID1,ID2), not ooasp_assoc_specialization(_,Name).
+attr(edge,(ID1,ID2), (xlabel,super), Name):-shown_association(_,Name,ID1,ID2),ooasp_assoc_specialization(Name,Super).
 
+attr(edge, (ID1,ID2), color, @color(green)) :- shown_association(browse,Name,ID1,ID2).
+attr(edge, (ID1,ID2), fontcolor, @color(green)) :- shown_association(browse,Name,ID1,ID2).
 
+attr(edge, (ID1,ID2), color, gray) :- shown_association(infer,Name,ID1,ID2).
+attr(edge, (ID1,ID2), fontcolor, gray) :- shown_association(infer,Name,ID1,ID2).
+
+attr(edge, (ID1,ID2), color, black) :- shown_association(assumed,Name,ID1,ID2).
+attr(edge, (ID1,ID2), fontcolor, black) :- shown_association(assumed,Name,ID1,ID2).
 
 #script (python)
 from clingo.symbol import String

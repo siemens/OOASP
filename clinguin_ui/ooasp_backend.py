@@ -14,6 +14,10 @@ class OOASPBackend(ClingraphBackend):
         # self.smart_solver.create_initial_objects()
         self._set_external(Function("check_potential_cv"), "false")
 
+    @property
+    def _assumption_list(self):
+        return super()._assumption_list.union(self.smart_solver.assumptions)
+
     def add_object(self, name, amount=1):
         for obj in range(int(amount)):
             self.smart_solver.add_object(name)
@@ -21,7 +25,7 @@ class OOASPBackend(ClingraphBackend):
         self._set_external(Function("check_potential_cv"), "false")
 
     def _prepare(self):
-        #self.smart_solver.ctl.assign_external(Function("check_potential_cv"), False)
+        # self.smart_solver.ctl.assign_external(Function("check_potential_cv"), False)
         pass
 
     def next_complete_solution(self):
