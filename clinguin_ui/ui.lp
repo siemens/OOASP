@@ -27,14 +27,24 @@ attr(menu_bar,icon,"fa-puzzle-piece").
     attr(find_btn,class,("btn-outline-secondary")).
 
     elem(next_btn,button,menu_bar).
-    attr(next_btn,label,"Next solution").
-    attr(next_btn,icon,"fa-forward").
-    attr(next_btn,class,("btn-outline-success")).
+    attr(next_btn,label,"Enforce Complete Configuration") :- _clinguin_external(check_potential_cv,false).
+    attr(next_btn,label,"Allow partial configuration.") :- _clinguin_external(check_potential_cv,true).
+    %attr(next_btn,icon,"fa-forward").
+    attr(next_btn,class,("btn-outline-success")):- _clinguin_external(check_potential_cv,false).
+    when(next_btn,click,call,(set_external(check_potential_cv,true))):- _clinguin_external(check_potential_cv,false).
+    when(next_btn,click,call,(set_external(check_potential_cv,false))):- _clinguin_external(check_potential_cv,true).
 
-    elem(select_btn,button,menu_bar).
-    attr(select_btn,label,"Select suggestion").
-    attr(select_btn,class,("btn-outline-success")).
-    attr(select_btn, icon, "fa-hand-pointer").
+    elem(suggest_btn,button,menu_bar).
+    attr(suggest_btn,label,"Next Solution").
+    attr(suggest_btn,icon,"fa-forward").
+    attr(suggest_btn,class,("btn-outline-success")).
+    when(suggest_btn,click,call, next_solution).
+
+    elem(select_btn,button,menu_bar) :- _clinguin_browsing.
+    attr(select_btn,label,"Select solution") :- _clinguin_browsing.
+    attr(select_btn,class,("btn-outline-success")) :- _clinguin_browsing.
+    attr(select_btn, icon, "fa-hand-pointer") :- _clinguin_browsing.
+    when(select_btn, click, call, select("#show ooasp_associated/3. #show ooasp_attr_value/3.")) :- _clinguin_browsing.
 
 
     elem(check_btn,button,menu_bar).
@@ -57,7 +67,7 @@ attr(config_viz, image_type, clingraph__config).
 
         elem(n(X), svg_node, config_viz) :- node(X,config).
         attr(n(X), clingraph_id, X) :- node(X,config).
-        when(n(X), click, call, restart):- node(X,config).
+        when(n(ID), click, update, (edit_context(ID), visibility, shown)):- node(ID,config).
 
 attr(config_viz,order,2).
 
@@ -108,15 +118,19 @@ attr(config_container,width,250).
 
 
             elem(addobject_dd,dropdown_menu,addobject_dd_c).
-            attr(addobject_dd,selected,"- class -").
+            attr(addobject_dd,selected,"object").
             % attr(addobject_dd,class,("m-2";"p-2";"border";"border-1")).
             attr(addobject_dd,class,("m-2";"p-2";"border";"border-1";"bg-primary";"bg-opacity-10")).
             attr(addobject_dd,order,1).
+            
+            class_to_add(C) :- ooasp_leafclass(C).
+            %class_to_add(object).
 
-                elem(dd_element(C),dropdown_menu_item,addobject_dd):-ooasp_leafclass(C).
-                attr(dd_element(C),label,C):-ooasp_leafclass(C).
-                when(dd_element(C),click,context,(class_name,C)):-ooasp_leafclass(C).
-                when(dd_element(C),click,update,(addobject_dd,selected,C)):-ooasp_leafclass(C).
+                elem(dd_element(C),dropdown_menu_item,addobject_dd):-class_to_add(C).
+                attr(dd_element(C),label,C):-class_to_add(C).
+                when(dd_element(C),click,context,(class_name,C)):-class_to_add(C).
+                when(dd_element(C),click,update,(addobject_dd,selected,C)):-class_to_add(C).
+
 
             elem(addobject_dd_amount,dropdown_menu,addobject_dd_c).
             attr(addobject_dd_amount,selected,"1").
@@ -135,7 +149,7 @@ attr(config_container,width,250).
             attr(addobject_btn,icon,"fa-plus").
             attr(addobject_btn,class,("btn-primary";"m-2";"border";"border-dark";"border-2")).
             attr(addobject_btn,order,3).
-            when(addobject_btn,click,call,add_object(_context_value(class_name))).
+            when(addobject_btn,click,call,add_object(_context_value(class_name,const,object),_context_value(amount,str,1))).
 
                 % I Assume backen will have a way to automate this
 
@@ -210,7 +224,33 @@ attr(config_container,width,250).
         %     attr(btn1,label,"placeholder").
         %     attr(btn1,order,4).
 
+% Contex menu
+elem(edit_context(ID),context_menu,w) :- ooasp_isa(_,ID).
+    %elem(attr_context_menu(ID),context_menu, w) :- ooasp_isa(_,ID).
 
+        %elem(attribute_context(ID),button, edit_context(ID)) :- ooasp_isa(_,ID).
+        %attr(attribute_context(ID),label, "Set Attributes") :- ooasp_isa(_,ID).
+        %when(attribute_context(ID),click,update,(attr_context_menu(ID),visibility, shown)) :- ooasp_isa(_,ID).
 
+    elem(add_assumption(NAME,VALUE,ID),button,edit_context(ID)) :- _any(ooasp_attr_value(NAME,ID,VALUE)), not _clinguin_assume(ooasp_attr_value(NAME,ID,VALUE),true).
+    attr(add_assumption(NAME,VALUE,ID),label,@format("Assign {}:{}",NAME,VALUE)) :- _any(ooasp_attr_value(NAME,ID,VALUE)), not _clinguin_assume(ooasp_attr_value(NAME,ID,VALUE),true).
+    attr(add_assumption(NAME,VALUE,ID),class,("bg-primary")) :- _any(ooasp_attr_value(NAME,ID,VALUE)), not _clinguin_assume(ooasp_attr_value(NAME,ID,VALUE),true).
+    when(add_assumption(NAME,VALUE,ID),click,call,add_assumption(ooasp_attr_value(NAME,ID,VALUE))) :- _any(ooasp_attr_value(NAME,ID,VALUE)), not _clinguin_assume(ooasp_attr_value(NAME,ID,VALUE),true).
+
+    elem(remove_assumption(NAME,VALUE,ID),button,edit_context(ID)) :- _clinguin_assume(ooasp_attr_value(NAME,ID,VALUE),true).
+    attr(remove_assumption(NAME,VALUE,ID),label,@format("Remove assumption {}:{}",NAME,VALUE)) :- _clinguin_assume(ooasp_attr_value(NAME,ID,VALUE),true).
+    attr(remove_assumption(NAME,VALUE,ID),class,("bg-warning")) :- _clinguin_assume(ooasp_attr_value(NAME,ID,VALUE),true).
+    when(remove_assumption(NAME,VALUE,ID),click,call,remove_assumption(ooasp_attr_value(NAME,ID,VALUE))) :- _clinguin_assume(ooasp_attr_value(NAME,ID,VALUE),true).
+
+    elem(add_association(NAME_FROM,NAME_TO),button,edit_context(NAME_FROM)) :- _any(ooasp_associated(NAME,NAME_FROM,NAME_TO)), not _clinguin_assume(ooasp_associated(NAME,NAME_FROM,NAME_TO),true).
+    attr(add_association(NAME_FROM,NAME_TO),label,@format("Associate to {} via {}",NAME_TO,NAME)) :- _any(ooasp_associated(NAME,NAME_FROM,NAME_TO)), not _clinguin_assume(ooasp_associated(NAME,NAME_FROM,NAME_TO),true).
+    attr(add_association(NAME_FROM,NAME_TO),class,("bg-secondary")) :- _any(ooasp_associated(NAME,NAME_FROM,NAME_TO)), not _clinguin_assume(ooasp_associated(NAME,NAME_FROM,NAME_TO),true).
+    when(add_association(NAME_FROM,NAME_TO),click,call,add_assumption(ooasp_associated(NAME,NAME_FROM,NAME_TO))) :- _any(ooasp_associated(NAME,NAME_FROM,NAME_TO)), not _clinguin_assume(ooasp_associated(NAME,NAME_FROM,NAME_TO),true).
+
+    elem(remove_association(NAME_FROM,NAME_TO),button,edit_context(NAME_FROM)) :- _clinguin_assume(ooasp_associated(NAME,NAME_FROM,NAME_TO),true).
+    attr(remove_association(NAME_FROM,NAME_TO),label,@format("Remove association {}:{}",NAME_TO,NAME)) :- _clinguin_assume(ooasp_associated(NAME,NAME_FROM,NAME_TO),true).
+    attr(remove_association(NAME_FROM,NAME_TO),class,("bg-warning")) :- _clinguin_assume(ooasp_associated(NAME,NAME_FROM,NAME_TO),true).
+    when(remove_association(NAME_FROM,NAME_TO),click,call,remove_assumption(ooasp_associated(NAME,NAME_FROM,NAME_TO))) :- _clinguin_assume(ooasp_associated(NAME,NAME_FROM,NAME_TO),true).
+    
 % dev borers
 %attr(E,class,("border-1";"border";"border-dark")):- elem(E, container, _).

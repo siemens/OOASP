@@ -12,11 +12,17 @@ class OOASPBackend(ClingraphBackend):
         )
         self.smart_solver.load_base()
         # self.smart_solver.create_initial_objects()
-        self.smart_solver.ctl.assign_external(Function("check_potential_cv"), False)
+        self._set_external(Function("check_potential_cv"), "false")
 
-    def add_object(self, name):
-        self.smart_solver.add_object(name)
+    def add_object(self, name, amount=1):
+        for obj in range(int(amount)):
+            self.smart_solver.add_object(name)
         self._outdate()
+        self._set_external(Function("check_potential_cv"), "false")
 
     def _prepare(self):
-        self.smart_solver.ctl.assign_external(Function("check_potential_cv"), False)
+        #self.smart_solver.ctl.assign_external(Function("check_potential_cv"), False)
+        pass
+
+    def next_complete_solution(self):
+        self.smart_solver.ctl.assign_external(Function("check_potential_cv"), True)

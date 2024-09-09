@@ -40,6 +40,8 @@ attr(node, Object_id, color, "#C4C4C4"):- domain_node(_,Object_id).
 
 % Is a nodes
 attr(node, Object_id, (label,bgcolor), @color(blue,20)):- isa_node(_,Object_id).
+
+% TODO diferentiate assumed class node
 % attr(node, Object_id, color, "black"):- isa_node(_,Object_id).
 
 % Leaf nodes
@@ -54,12 +56,20 @@ attr(node, T, hight, 0):- node(T,_).
 % User selections in green
 
 % Add arguments to nodes
+
+% browsing
 attr(node, Object_id, (label,attr,Attr_name), @argument_str(Attr_name,Value,"black")):-
     ooasp_attr_value(Attr_name,Object_id,Value),
-    user(ooasp_attr_value(Attr_name,Object_id,Value)).
+    _clinguin_browsing.
+% inferred input
+attr(node, Object_id, (label,attr,Attr_name), @argument_str(Attr_name,Value,"grey")):-
+    not _clinguin_browsing,
+    not _clinguin_assume(ooasp_attr_value(Attr_name,Object_id,Value),true),
+    _all(ooasp_attr_value(Attr_name,Object_id,Value)).
+% user input
 attr(node, Object_id, (label,attr,Attr_name), @argument_str(Attr_name,Value,@color(green))):-
     ooasp_attr_value(Attr_name,Object_id,Value),
-    not user(ooasp_attr_value(Attr_name,Object_id,Value)).
+    _clinguin_assume(ooasp_attr_value(Attr_name,Object_id,Value),true).
 
 % Add cvs to nodes
 attr(node, Object_id, (label,cv,(Name,Object_id,Args)), @cv_str(Name,Mes,Args)):-
@@ -67,7 +77,7 @@ attr(node, Object_id, (label,cv,(Name,Object_id,Args)), @cv_str(Name,Mes,Args)):
 
 
 % Associations
-edge((Object_id1,Object_id2)) :-ooasp_associated(Name,Object_id1,Object_id2).
+edge((Object_id1,Object_id2),config) :-ooasp_associated(Name,Object_id1,Object_id2).
 
 attr(edge,(Object_id1,Object_id2), xlabel, "<{{name}} <br/><FONT POINT-SIZE='10' FACE='Helvetica Neue'> {{super}}</FONT>>"):-ooasp_associated(Name,Object_id1,Object_id2).
 attr(edge,(Object_id1,Object_id2), (xlabel,name), Name):-ooasp_associated(Name,Object_id1,Object_id2), not ooasp_assoc_specialization(_,Name).
