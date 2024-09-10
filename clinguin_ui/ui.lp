@@ -6,6 +6,15 @@ elem(menu_bar,menu_bar,w).
 attr(menu_bar,title,"OOASP").
 attr(menu_bar,icon,"fa-puzzle-piece").
 
+    elem(restart_btn,button,menu_bar).
+    attr(restart_btn,label,"Restart").
+    attr(restart_btn,icon,"fa-trash").
+    attr(restart_btn,class,("btn-danger")).
+    when(restart_btn,click,call,force_restart).
+    %TODO it would be good to have a confirmation modal
+
+
+    %----------ENFORCEMENT SWITCH----------
     elem(next_btn,button,menu_bar).
     attr(next_btn,label,"Enforce Complete Configuration") :- _clinguin_external(check_potential_cv,false).
     attr(next_btn,label,"Allow partial configuration.") :- _clinguin_external(check_potential_cv,true).
@@ -18,15 +27,27 @@ attr(menu_bar,icon,"fa-puzzle-piece").
     when(next_btn,click,call,(set_external(check_potential_cv,true))):- _clinguin_external(check_potential_cv,false).
     when(next_btn,click,call,(set_external(check_potential_cv,false))):- _clinguin_external(check_potential_cv,true).
 
+    %-------------------------------------
+
     elem(menu_bar_load, button, menu_bar).
     attr(menu_bar_load,label, "Load").
     attr(menu_bar_load, icon, "fa-upload").
     attr(menu_bar_load, class, ("btn-outline-primary";"border-0")).
+    when(menu_bar_load,click,call,import_solution).
 
     elem(menu_bar_save, button, menu_bar).
     attr(menu_bar_save,label, "Save").
     attr(menu_bar_save, icon, "fa-download").
     attr(menu_bar_save, class, ("btn-outline-primary";"border-0")).
+    when(menu_bar_save,click,call,export_solution).
+    when(menu_bar_save,click,update,(save_modal,visibility,shown)).
+        %TODO on click show modal with entry option to select a file path
+        elem(save_modal,modal,w).
+        attr(save_modal,title,"Save file").
+        attr(save_modal,size,"sm").
+        %when(attribute_context(ID),click,update,(attr_context_menu(ID),visibility, shown)) :- ooasp_isa(_,ID).
+            elem(save_entry,label,save_modal).
+            attr(save_entry,label,"Save").
 
     elem(end_btn,button,menu_bar).
     attr(end_btn,label,"End browsing").
@@ -55,13 +76,6 @@ attr(menu_bar,icon,"fa-puzzle-piece").
     attr(check_btn,label,"Check").
     attr(check_btn,icon,"fa-magnifying-glass").
     attr(check_btn,class,("btn-outline-danger")).
-
-
-    elem(restart_btn,button,menu_bar).
-    attr(restart_btn,label,"Restart").
-    attr(restart_btn,icon,"fa-trash").
-    attr(restart_btn,class,("btn-danger")).
-
 
 % Canvas
 elem(config_viz, canvas,w).
@@ -191,7 +205,9 @@ attr(config_container,width,250).
     attr(info_container,order,1).
 
         elem(domain_size_txt,label,info_container).
-        attr(domain_size_txt,label,"Domain Size:"). %I assume the concat will have to be used here, something like attr(domain_size_txt,label,@concat("Domain Size: ",DS)):-domain_size(DS).
+        %attr(domain_size_txt,label,@format("Domain Size: {}",DS)) :- domain_size(DS). %TODO fix sizing
+        attr(domain_size_txt,label,("Domain Size:")).
+%attr(add_assumption(NAME,VALUE,ID),label,@format("{} := {}",NAME,VALUE)) :- value_assume(NAME,VALUE,ID).
         attr(domain_size_txt,class,("text-start";"fw-semibold";"fs-6")).
         attr(domain_size_txt,order,1).
 
