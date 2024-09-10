@@ -1,6 +1,8 @@
+#const show_prg = "#show ooasp_associated/3. #show ooasp_attr_value/3. #show ooasp_isa(C,ID):ooasp_isa_leaf(C,ID).".
 elem(w,window,root).
 attr(w,flex_direction,row).
 
+% ================= Menu bar
 
 elem(menu_bar,menu_bar,w).
 attr(menu_bar,title,"OOASP").
@@ -10,7 +12,7 @@ attr(menu_bar,icon,"fa-puzzle-piece").
     attr(restart_btn,label,"Restart").
     attr(restart_btn,icon,"fa-trash").
     attr(restart_btn,class,("btn-danger")).
-    when(restart_btn,click,call,force_restart).
+    when(restart_btn,click,call,restart).
     %TODO it would be good to have a confirmation modal
 
 
@@ -18,7 +20,7 @@ attr(menu_bar,icon,"fa-puzzle-piece").
     elem(next_btn,button,menu_bar).
     attr(next_btn,label,"Enforce Complete Configuration") :- _clinguin_external(check_potential_cv,false).
     attr(next_btn,label,"Allow partial configuration.") :- _clinguin_external(check_potential_cv,true).
-    
+
     attr(next_btn,icon,"fa-circle") :- _clinguin_external(check_potential_cv,false).
     attr(next_btn,icon,"fa-circle-half-stroke") :- _clinguin_external(check_potential_cv,true).
 
@@ -39,25 +41,46 @@ attr(menu_bar,icon,"fa-puzzle-piece").
     attr(menu_bar_save,label, "Save").
     attr(menu_bar_save, icon, "fa-download").
     attr(menu_bar_save, class, ("btn-outline-primary";"border-0")).
-    when(menu_bar_save,click,call,export_solution).
+    % when(menu_bar_save,click,call,export_solution).
     when(menu_bar_save,click,update,(save_modal,visibility,shown)).
+
         %TODO on click show modal with entry option to select a file path
+
+
         elem(save_modal,modal,w).
         attr(save_modal,title,"Save file").
-        attr(save_modal,size,"sm").
-        %when(attribute_context(ID),click,update,(attr_context_menu(ID),visibility, shown)) :- ooasp_isa(_,ID).
-            elem(save_entry,label,save_modal).
-            attr(save_entry,label,"Save").
+        % attr(save_modal,size,"sm").
+            elem(c_save, container, save_modal).
+            attr(c_save, flex_direction, "column").
+            attr(c_save, class, "align-items-end").
 
-    elem(end_btn,button,menu_bar).
-    attr(end_btn,label,"End browsing").
-    attr(end_btn,icon,"fa-xmark").
-    attr(end_btn,class,("btn-warning")).
+                elem(b1, button, c_save).
+                when(b1, click, call, download(show_prg,_context_value(file_name,str,"ooasp_configuration.lp"))).
+                attr(b1, label, "Save").
+                attr(b1, class, "m-1").
+                attr(b1, class, "btn-success").
+                attr(b1, icon, "fa-download").
+
+                elem(t1, textfield, c_save).
+                attr(t1, placeholder, "Optional file name").
+                attr(t1, width, 450).
+                when(t1, input, context, (file_name, _value)).
+
+        % %when(attribute_context(ID),click,update,(attr_context_menu(ID),visibility, shown)) :- ooasp_isa(_,ID).
+        %     elem(save_entry,label,save_modal).
+        %     attr(save_entry,label,"Save").
+
+    elem(end_btn,button,menu_bar):-_clinguin_browsing.
+    attr(end_btn,label,"End browsing"):-_clinguin_browsing.
+    attr(end_btn,icon,"fa-xmark"):-_clinguin_browsing.
+    attr(end_btn,class,("btn-warning")):-_clinguin_browsing.
+    when(end_btn,click,call,stop_browsing):-_clinguin_browsing.
 
     elem(find_btn,button,menu_bar).
     attr(find_btn,label,"Find Incrementally").
     attr(find_btn,icon,"fa-gears").
     attr(find_btn,class,("btn-outline-secondary")).
+    when(find_btn,click,call,find_incrementally).
 
     elem(suggest_btn,button,menu_bar).
     attr(suggest_btn,label,"Next Solution").
@@ -69,7 +92,7 @@ attr(menu_bar,icon,"fa-puzzle-piece").
     attr(select_btn,label,"Select solution") :- _clinguin_browsing.
     attr(select_btn,class,("btn-outline-success")) :- _clinguin_browsing.
     attr(select_btn, icon, "fa-hand-pointer") :- _clinguin_browsing.
-    when(select_btn, click, call, select("#show ooasp_associated/3. #show ooasp_attr_value/3. #show ooasp_isa(C,ID):ooasp_isa_leaf(C,ID).")) :- _clinguin_browsing.
+    when(select_btn, click, call, select(show_prg)) :- _clinguin_browsing.
 
 
     elem(check_btn,button,menu_bar).
@@ -77,7 +100,8 @@ attr(menu_bar,icon,"fa-puzzle-piece").
     attr(check_btn,icon,"fa-magnifying-glass").
     attr(check_btn,class,("btn-outline-danger")).
 
-% Canvas
+% ================= Clingraph image
+
 elem(config_viz, canvas,w).
 % attr(config_viz,class,("vw-75";"vh-75")).
 attr(config_viz, image_type, clingraph__config).
@@ -89,40 +113,24 @@ attr(config_viz, image_type, clingraph__config).
 
 attr(config_viz,order,2).
 
-% Config Container
+% ================= Side bar
+
 elem(config_container, container,w).
 attr(config_container,flex_direction,column).
 attr(config_container,class,("p-3";"bg-info";"bg-opacity-10")).
 attr(config_container,order,1).
 attr(config_container,width,250).
 
-% Extend container
+
     elem(extend_container,container,config_container).
     attr(extend_container,flex_direction,column).
     attr(extend_container,class,("col-sm";"flex-column")).
     attr(extend_container,order,2).
 
-        % elem(extend_buttons,container,extend_container).
-        % attr(extend_buttons,flex_direction,column).
-        % attr(extend_buttons,class,("col-sm";"flex-column")).
-        % attr(extend_buttons,order,1).
-
-            % elem(extend_domain_button,button,extend_buttons).
-            % attr(extend_domain_button,label,"Extend Domain").
-            % attr(extend_domain_button,icon,"fa-plus").
-            % attr(extend_domain_button,class,("btn-secondary")).
-            % attr(extend_domain_button,order,1).
-
-            % elem(create_required_btn,button,extend_buttons).
-            % attr(create_required_btn,label,"Create Required").
-            % attr(create_required_btn,icon,"fa-object-group").
-            % attr(create_required_btn,class,("btn-outline-secondary")).
-            % attr(create_required_btn,order,2).
 
 
         elem(addobject_dd_container,container,extend_container).
         attr(addobject_dd_container,class,("d-flex";"flex-col";"mt-5";"align-items-start")).
-        % attr(addobject_dd_container,class,("d-flex";"flex-row";"bg-primary";"bg-opacity-75";"rounded";"p-2")).
         attr(addobject_dd_container,order,2).
 
             elem(addobject_dd_label,label, addobject_dd_container).
@@ -132,42 +140,53 @@ attr(config_container,width,250).
 
             elem(addobject_dd_c,container,addobject_dd_container).
             attr(addobject_dd_c,class,("d-flex";"flex-row";"mt-1")).
+            attr(addobject_dd_c,class,("opacity-20")):- _clinguin_browsing.
             attr(addobject_dd_c,order,2).
 
 
-            elem(addobject_dd,dropdown_menu,addobject_dd_c).
-            attr(addobject_dd,selected,"object").
-            % attr(addobject_dd,class,("m-2";"p-2";"border";"border-1")).
-            attr(addobject_dd,class,("m-2";"p-2";"border";"border-1";"bg-primary";"bg-opacity-10")).
-            attr(addobject_dd,order,1).
 
-            class_to_add(C) :- ooasp_leafclass(C).
-            %class_to_add(object).
+                elem(addobject_dd,dropdown_menu,addobject_dd_c).
+                attr(addobject_dd,selected,"object").
+                % attr(addobject_dd,class,("m-2";"p-2";"border";"border-1")).
+                attr(addobject_dd,class,("m-2";"p-2";"border";"border-1";"bg-primary";"bg-opacity-10")).
+                attr(class,class,("disabled")):- _clinguin_browsing.
+                attr(addobject_dd,order,1).
 
-                elem(dd_element(C),dropdown_menu_item,addobject_dd):-class_to_add(C).
-                attr(dd_element(C),label,C):-class_to_add(C).
-                when(dd_element(C),click,context,(class_name,C)):-class_to_add(C).
-                when(dd_element(C),click,update,(addobject_dd,selected,C)):-class_to_add(C).
+                class_to_add(C) :- ooasp_leafclass(C).
+
+                    elem(dd_element(C),dropdown_menu_item,addobject_dd):-class_to_add(C).
+                    attr(dd_element(C),label,C):-class_to_add(C).
+                    when(dd_element(C),click,context,(class_name,C)):-class_to_add(C).
+                    when(dd_element(C),click,update,(addobject_dd,selected,C)):-class_to_add(C).
 
 
-            elem(addobject_dd_amount,dropdown_menu,addobject_dd_c).
-            attr(addobject_dd_amount,selected,"1").
-            % attr(addobject_dd_amount,class,("m-2";"p-2";"border";"border-1")).
-            attr(addobject_dd_amount,class,("m-2";"p-2";"border";"border-1";"bg-primary";"bg-opacity-10")).
-            attr(addobject_dd_amount,order,1).
+                elem(addobject_dd_amount,dropdown_menu,addobject_dd_c).
+                attr(addobject_dd_amount,selected,"1").
+                attr(addobject_dd_amount,class,("m-2";"p-2";"border";"border-1";"bg-primary";"bg-opacity-10")).
+                attr(addobject_dd_amount,class,("disabled")):- _clinguin_browsing.
+                attr(addobject_dd_amount,order,1).
 
-                amount(1..10).
-                elem(dd_element(C),dropdown_menu_item,addobject_dd_amount):-amount(C).
-                attr(dd_element(C),label,C):-amount(C).
-                attr(dd_element(C),order,10-C):-amount(C).
-                when(dd_element(C),click,context,(amount,C)):-amount(C).
-                when(dd_element(C),click,update,(addobject_dd_amount,selected,C)):-amount(C).
+                    amount(1..10).
+                    elem(dd_element(C),dropdown_menu_item,addobject_dd_amount):-amount(C).
+                    attr(dd_element(C),label,C):-amount(C).
+                    attr(dd_element(C),order,10-C):-amount(C).
+                    when(dd_element(C),click,context,(amount,C)):-amount(C).
+                    when(dd_element(C),click,update,(addobject_dd_amount,selected,C)):-amount(C).
 
-            elem(addobject_btn,button,addobject_dd_c).
-            attr(addobject_btn,icon,"fa-plus").
-            attr(addobject_btn,class,("btn-primary";"m-2";"border";"border-dark";"border-2")).
-            attr(addobject_btn,order,3).
-            when(addobject_btn,click,call,add_object(_context_value(class_name,const,object),_context_value(amount,int,1))).
+                elem(addobject_btn,button,addobject_dd_c).
+                attr(addobject_btn,icon,"fa-plus").
+                attr(addobject_btn,class,("btn-primary";"m-2";"border";"border-dark";"border-2")).
+                attr(addobject_btn,class,("opacity-25")):- _clinguin_browsing.
+                attr(addobject_btn,order,3).
+                when(addobject_btn,click,call,add_object(_context_value(class_name,const,object),_context_value(amount,int,1))):- not _clinguin_browsing.
+                when(addobject_btn,mouseenter,update,(add_warning,visibility,shown)):- _clinguin_browsing.
+
+                    elem(add_warning, message, w).
+                    attr(add_warning, message, "Adding objects is disabled while browsing").
+                    attr(add_warning, type, "warning").
+                    attr(add_warning, title, "Adding deactivated").
+                    attr(add_warning, visibility, hidden).
+
 
                 % I Assume backen will have a way to automate this
 
@@ -198,54 +217,30 @@ attr(config_container,width,250).
             % attr(addobject_p_btn,class,("btn-outline-dark")).
             % attr(addobject_p_btn,order,3).
 
-% Info container
+    % Info container
     elem(info_container,container,config_container).
     attr(info_container,flex_direction,column).
     attr(info_container,class,("col-sm";"flex-column")).
     attr(info_container,order,1).
 
+        domain_size(S):- #count{1,ID:ooasp_domain(_,ID)} = S.
         elem(domain_size_txt,label,info_container).
-        %attr(domain_size_txt,label,@format("Domain Size: {}",DS)) :- domain_size(DS). %TODO fix sizing
-        attr(domain_size_txt,label,("Domain Size:")).
-%attr(add_assumption(NAME,VALUE,ID),label,@format("{} := {}",NAME,VALUE)) :- value_assume(NAME,VALUE,ID).
+        attr(domain_size_txt,label,@format("Domain Size: {}",DS)) :- domain_size(DS). %TODO fix sizing
         attr(domain_size_txt,class,("text-start";"fw-semibold";"fs-6")).
         attr(domain_size_txt,order,1).
 
+        assigned_object(ID):- ooasp_isa(_,ID), _clinguin_browsing.
+        assigned_object(ID):- _clinguin_assume(ooasp_isa(_,ID),true).
+        configuration_size(S):- #count{1,ID:assigned_object(ID)} = S.
+
         elem(config_size_txt,label,info_container).
-        attr(config_size_txt,label,"Configuration Size:").
+        attr(config_size_txt,label,@format("Configuration Size: {}",CS)):-configuration_size(CS).
         attr(config_size_txt,class,("text-start";"fw-semibold";"fs-6")).
         attr(config_size_txt,order,2).
 
-        % elem(extra_opts,container,info_container).
-        % attr(extra_opts,flex_direction,column).
-        % attr(extra_opts,class,("d-flex";"flex-row";"justify-content-evenly";"p-2")).
-        % attr(extra_opts,background_color,"#ededed").
-        % attr(extra_opts,order,3).
+% ================= Context menu
 
-        %     elem(inferences_btn,button,extra_opts).
-        %     attr(inferences_btn,label,"Add inferences").
-        %     attr(inferences_btn,icon,"fa-plus").
-        %     attr(inferences_btn,class,("btn-outline-secondary")).
-        %     attr(inferences_btn,order,1).
-
-        %     elem(clear_checks_btn,button,extra_opts).
-        %     attr(clear_checks_btn,label,"Clear checks").
-        %     attr(clear_checks_btn,icon,"fa-eraser").
-        %     attr(clear_checks_btn,class,("btn-outline-danger")).
-        %     attr(clear_checks_btn,order,2).
-
-        %     elem(clear_config_btn,button,extra_opts).
-        %     attr(clear_config_btn,label,"Clear configuration").
-        %     attr(clear_config_btn,icon,"fa-trash").
-        %     attr(clear_config_btn,class,("btn-danger")).
-        %     attr(clear_config_btn,order,3).
-
-        %     elem(btn1,button,extra_opts).
-        %     attr(btn1,label,"placeholder").
-        %     attr(btn1,order,4).
-
-% Contex menu
-elem(edit_context(ID),context_menu,w) :- ooasp_isa(_,ID).
+elem(edit_context(ID),context_menu,w) :- ooasp_domain(_,ID).
     %elem(attr_context_menu(ID),context_menu, w) :- ooasp_isa(_,ID).
 
         %elem(attribute_context(ID),button, edit_context(ID)) :- ooasp_isa(_,ID).
@@ -277,6 +272,14 @@ elem(edit_context(ID),context_menu,w) :- ooasp_isa(_,ID).
     attr(remove_association(NAME_FROM,NAME_TO),label,@format("{} → {}",NAME,NAME_TO)) :- assoc_remove(NAME, NAME_FROM, NAME_TO).
     attr(remove_association(NAME_FROM,NAME_TO),class,("text-white";"bg-danger")) :- assoc_remove(NAME, NAME_FROM, NAME_TO).
     when(remove_association(NAME_FROM,NAME_TO),click,call,remove_assumption(ooasp_associated(NAME,NAME_FROM,NAME_TO))) :- assoc_remove(NAME, NAME_FROM, NAME_TO).
+
+
+    isa_remove(ID) :- _clinguin_assume(ooasp_isa(C, ID),true).
+    elem(remove_isa(ID),button,edit_context(ID)) :- isa_remove(ID).
+    attr(remove_isa(ID),icon,"fa-trash") :- isa_remove(ID).
+    attr(remove_isa(ID),label,"Remove") :- isa_remove(ID).
+    attr(remove_isa(ID),class,("text-white";"bg-danger")) :- isa_remove(ID).
+    when(remove_isa(ID),click,call,remove_assumption(ooasp_isa(C,ID))) :- isa_remove(ID), _clinguin_assume(ooasp_isa(C, ID),true).
 
 % dev borers
 %attr(E,class,("border-1";"border";"border-dark")):- elem(E, container, _).

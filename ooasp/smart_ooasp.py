@@ -54,8 +54,7 @@ class SmartOOASPSolver:
         self.view = view
 
         self.next_id = 1
-        self.associations = []
-        self.object_atoms = []
+        self.assumptions = set()
         self.model = None
         self.shown_model = None
         self.cautious = None
@@ -117,19 +116,16 @@ class SmartOOASPSolver:
         results = {
             "#objects": self.next_id - 1,
             "#objects_added_per_type": self.objects,
-            "#associations": len(self.associations),
             "times": times,
         }
         return results
 
     @property
-    def assumptions(self) -> None:
+    def assumption_list(self) -> None:
         """
         List of assumptions for the solver. All associations are used as assumptions.
         """
-        return [(parse_term(a), True) for a in self.associations] + [
-            (parse_term(a), True) for a in self.object_atoms
-        ]
+        return [(parse_term(a), True) for a in self.assumptions]
 
     def create_initial_objects(self) -> None:
         """
@@ -173,8 +169,7 @@ class SmartOOASPSolver:
         )  # Needed for symmetry breaking
         # self.ctl.add("domain", [str(self.next_id), o], f"{obj_atom}.")
         # self.ctl.add("domain", [str(self.next_id), o], f"{dom_atom}.")
-        self.object_atoms.append(obj_atom)
-        # self.object_atoms.append(dom_atom)
+        self.assumptions.add(obj_atom)
         self.objects[o] += 1
         self.ground(o)
         self.next_id += 1
@@ -191,7 +186,7 @@ class SmartOOASPSolver:
             f"ooasp_associated({association[0]},{association[1]},{association[2]})"
         )
         self.log(green(f"\t\tAdding association  {assoc_atom}"))
-        self.associations.append(assoc_atom)
+        self.assumptions.add(assoc_atom)
         self.cautious = None
         self.brave = None
 
@@ -209,7 +204,9 @@ class SmartOOASPSolver:
         self.ctl.configuration.solve.models = "0"
         self.ctl.configuration.solve.enum_mode = "cautious"
         with self.ctl.solve(
-            yield_=True, assumptions=self.assumptions, on_statistics=self.on_statistics
+            yield_=True,
+            assumptions=self.assumption_list,
+            on_statistics=self.on_statistics,
         ) as hdn:
             for model in hdn:
                 self.cautious = model.symbols(shown=True)
@@ -236,7 +233,9 @@ class SmartOOASPSolver:
         self.ctl.configuration.solve.models = "0"
         self.ctl.configuration.solve.enum_mode = "brave"
         with self.ctl.solve(
-            yield_=True, assumptions=self.assumptions, on_statistics=self.on_statistics
+            yield_=True,
+            assumptions=self.assumption_list,
+            on_statistics=self.on_statistics,
         ) as hdn:
             for model in hdn:
                 self.brave = model.symbols(shown=True)
@@ -259,9 +258,7 @@ class SmartOOASPSolver:
         if self.model:
             config = "\n".join([str(c) for c in self.model])
         else:
-            config = "\n".join(
-                [str(c) + "." for c in self.object_atoms + self.associations]
-            )
+            config = "\n".join([str(c) + "." for c in self.assumptions])
         viz_ctl = Control(["--warn=none"])
         fbs = []
         path = settings.encodings_path.joinpath("viz_config.lp")
@@ -298,14 +295,14 @@ class SmartOOASPSolver:
         """
         self.log(subtitle("Smart generation"))
         initial_size = self.next_id
-        initial_associations = len(self.associations)
+        initial_assumptions = len(self.assumptions)
         for f in self.smart_generation_functions:
             start = time.time()
             done = getattr(self, f)()
             self.times["smart_generation"]["functions"][f] += time.time() - start
             if done:
                 self.log(
-                    f"Smart generation: added {self.next_id - initial_size} objects and {len(self.associations) - initial_associations} associations"
+                    f"Smart generation: added {len(self.assumptions) - initial_assumptions} assumptions"
                 )
                 return True
         return False
@@ -465,9 +462,9 @@ class SmartOOASPSolver:
                 continue
             self.log(subtitle(f"Solving for size {self.next_id - 1}...", "RED"))
             self.ctl.configuration.solve.models = "1"
-
+            self.ctl.assign_external(Function("check_potential_cv"), True)
             with self.ctl.solve(
-                assumptions=self.assumptions,
+                assumptions=self.assumption_list,
                 on_model=self.on_model,
                 yield_=True,
                 on_statistics=self.on_statistics,

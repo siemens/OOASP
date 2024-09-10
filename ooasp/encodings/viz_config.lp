@@ -24,6 +24,7 @@ label_isa(C,ID):- browse_isa(C,ID).
 #defined ooasp_isa/3.
 graph(config).
 #const color_green = "#0DB144".
+#const my_gray = "#00000020".
 
 attr(graph_nodes, config, shape, rectangle).
 attr(graph, config, splines, ortho).
@@ -58,7 +59,7 @@ attr(node, ID, penwidth, 0):- any_node(ID).
 attr(node, ID,  (label,class), @stringify(Class,true)):- ooasp_domain(Class,ID).
 attr(node, ID,  (label,isa), @stringify(Class,true)):- label_isa(Class,ID).
 attr(node, ID,  (label,color), black):- assumed_isa(Class,ID).
-attr(node, ID,  (label,color), grey):- suggested_isa(Class,ID).
+attr(node, ID,  (label,color), my_gray):- suggested_isa(Class,ID).
 attr(node, ID,  (label,color), @color(green)):- browse_isa(Class,ID).
 
 % ------- Background color
@@ -69,7 +70,7 @@ attr(node, T, (label,bgcolor), @color(blue,40)):- leaf_node(_,T).
 
 % ------- Attributes
 % browsing
-attr(node, ID, (label,attr,Attr_name), @argument_str(Attr_name,Value,@color(green))):-
+attr(node, ID, (label,attr,Attr_name), @argument_str(Attr_name,Value,my_gray)):-
     ooasp_attr_value(Attr_name,ID,Value),
     _clinguin_browsing,
     not _clinguin_assume(ooasp_attr_value(Attr_name,ID,Value),true).
@@ -85,14 +86,15 @@ attr(node, ID, (label,attr,Attr_name), @argument_str(Attr_name,Value,"black")):-
     _clinguin_assume(ooasp_attr_value(Attr_name,ID,Value),true).
 
 % Add cvs to nodes
-% attr(node, ID, (label,cv,(Name,ID,Args)), @cv_str(Name,Mes,Args)):-
-    % ooasp_cv(Name,ID,Mes,Args).
-
+attr(node, ID, (label,cv,(MAX,C2,ASSOC)), @cv_str("Needs at least {} {}s via {}",(MAX,C2,ASSOC))):-
+    ooasp_smallest_assoc(ASSOC),
+    _all(object_needed(ID, ASSOC, _, C2, _, _)),
+    #max{N:_all(object_needed(ID, ASSOC, N, C2, _, _))}=MAX.
 
 % Associations
 shown_association(browse,Name,ID1,ID2):-ooasp_smallest_assoc(Name),not _clinguin_assume(ooasp_associated(Name,ID1,ID2),true), ooasp_associated(Name,ID1,ID2), _clinguin_browsing.
 shown_association(infer,Name,ID1,ID2):-ooasp_smallest_assoc(Name),_all(ooasp_associated(Name,ID1,ID2)), not _clinguin_assume(ooasp_associated(Name,ID1,ID2),true), not _clinguin_browsing.
-shown_association(assumed,Name,ID1,ID2):-ooasp_smallest_assoc(Name),_all(ooasp_associated(Name,ID1,ID2)), _clinguin_assume(ooasp_associated(Name,ID1,ID2),true), not _clinguin_browsing.
+shown_association(assumed,Name,ID1,ID2):-ooasp_smallest_assoc(Name),_all(ooasp_associated(Name,ID1,ID2)), _clinguin_assume(ooasp_associated(Name,ID1,ID2),true).
 
 edge((ID1,ID2),config) :-shown_association(_,Name,ID1,ID2).
 
@@ -103,8 +105,8 @@ attr(edge,(ID1,ID2), (xlabel,super), Name):-shown_association(_,Name,ID1,ID2),oo
 attr(edge, (ID1,ID2), color, @color(green)) :- shown_association(browse,Name,ID1,ID2).
 attr(edge, (ID1,ID2), fontcolor, @color(green)) :- shown_association(browse,Name,ID1,ID2).
 
-attr(edge, (ID1,ID2), color, gray) :- shown_association(infer,Name,ID1,ID2).
-attr(edge, (ID1,ID2), fontcolor, gray) :- shown_association(infer,Name,ID1,ID2).
+attr(edge, (ID1,ID2), color, my_gray) :- shown_association(infer,Name,ID1,ID2).
+attr(edge, (ID1,ID2), fontcolor, my_gray) :- shown_association(infer,Name,ID1,ID2).
 
 attr(edge, (ID1,ID2), color, black) :- shown_association(assumed,Name,ID1,ID2).
 attr(edge, (ID1,ID2), fontcolor, black) :- shown_association(assumed,Name,ID1,ID2).
@@ -117,12 +119,12 @@ def argument_str(name,type,color):
     s = f"<FONT FACE='Helvetica Neue' COLOR='{color.string}'>" + str(name) + " = " + "<I> "+ str(type)  + "</I></FONT><br ALIGN='left'/> "
     return String(s)
 
-def cv_str(name,message,args):
+def cv_str(message,args):
     args_symbols = [str(a) for a in args.arguments]
     formatted_message = f"{message.string.format(*args_symbols)}"
     s_wrap_list = textwrap.wrap(formatted_message, 40)
     message_wrapped = "<br ALIGN='left'/>   ".join(s_wrap_list)
-    s = f"<FONT FACE='Helvetica Neue' COLOR='red' POINT-SIZE='12'><I> "+ message_wrapped  + "</I> (" + str(name) + ") </FONT><br ALIGN='left'/> "
+    s = f"<FONT FACE='Helvetica Neue' COLOR='red' POINT-SIZE='12'><I> "+ message_wrapped  + "</I> </FONT><br ALIGN='left'/> "
     return String(s)
 
 #end.
