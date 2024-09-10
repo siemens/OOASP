@@ -6,6 +6,18 @@ elem(menu_bar,menu_bar,w).
 attr(menu_bar,title,"OOASP").
 attr(menu_bar,icon,"fa-puzzle-piece").
 
+    elem(next_btn,button,menu_bar).
+    attr(next_btn,label,"Enforce Complete Configuration") :- _clinguin_external(check_potential_cv,false).
+    attr(next_btn,label,"Allow partial configuration.") :- _clinguin_external(check_potential_cv,true).
+    
+    attr(next_btn,icon,"fa-circle") :- _clinguin_external(check_potential_cv,false).
+    attr(next_btn,icon,"fa-circle-half-stroke") :- _clinguin_external(check_potential_cv,true).
+
+    attr(next_btn,class,("btn-outline-primary")):- _clinguin_external(check_potential_cv,false).
+    attr(next_btn,class,("btn-primary")):- _clinguin_external(check_potential_cv,true).
+    when(next_btn,click,call,(set_external(check_potential_cv,true))):- _clinguin_external(check_potential_cv,false).
+    when(next_btn,click,call,(set_external(check_potential_cv,false))):- _clinguin_external(check_potential_cv,true).
+
     elem(menu_bar_load, button, menu_bar).
     attr(menu_bar_load,label, "Load").
     attr(menu_bar_load, icon, "fa-upload").
@@ -25,14 +37,6 @@ attr(menu_bar,icon,"fa-puzzle-piece").
     attr(find_btn,label,"Find Incrementally").
     attr(find_btn,icon,"fa-gears").
     attr(find_btn,class,("btn-outline-secondary")).
-
-    elem(next_btn,button,menu_bar).
-    attr(next_btn,label,"Enforce Complete Configuration") :- _clinguin_external(check_potential_cv,false).
-    attr(next_btn,label,"Allow partial configuration.") :- _clinguin_external(check_potential_cv,true).
-    %attr(next_btn,icon,"fa-forward").
-    attr(next_btn,class,("btn-outline-success")):- _clinguin_external(check_potential_cv,false).
-    when(next_btn,click,call,(set_external(check_potential_cv,true))):- _clinguin_external(check_potential_cv,false).
-    when(next_btn,click,call,(set_external(check_potential_cv,false))):- _clinguin_external(check_potential_cv,true).
 
     elem(suggest_btn,button,menu_bar).
     attr(suggest_btn,label,"Next Solution").
