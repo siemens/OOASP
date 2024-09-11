@@ -142,15 +142,16 @@ attr(window_flex, flex_direction,column).
     attr(config_viz,order,1).
 
     elem(bottom_container,container,window_flex).
-    attr(bottom_container,class,("fixed-bottom")).
+    attr(bottom_container,flex_direction,row).
+    attr(bottom_container,class,("fixed-bottom";"justify-content-between")).
     attr(bottom_container,order,3).
 
-        % ================= Side bar
+        % ================= Add object
 
         elem(config_container, container,bottom_container).
         attr(config_container,flex_direction,column).
         attr(config_container,class,("p-3";"bg-info";"bg-opacity-10")).
-        attr(config_container,order,2).
+        attr(config_container,order,1).
         attr(config_container,width,250).
 
             elem(extend_container,container,config_container).
@@ -236,49 +237,95 @@ attr(window_flex, flex_direction,column).
                 attr(config_size_txt,label,@format("Configuration Size: {}",CS)):-configuration_size(CS).
                 attr(config_size_txt,class,("text-start";"fw-semibold";"fs-6")).
                 attr(config_size_txt,order,2).
+    
+    % ================= Edit object
+    elem(edit_c, container,bottom_container).
+    attr(edit_c,flex_direction,row).
+    attr(edit_c,class,("justify-content-evenly";"p-3")).
+    attr(edit_c,order,1).
+
+        elem(selected_object_c,container,edit_c).
+        attr(selected_object_c,flex_direction,row).
+        attr(selected_object_c,class,("p-3")).
+        attr(selected_object_c,order,1).
+
+            elem(selected_object_info,label,selected_object_c).
+            attr(selected_object_info,label,"Selected Object: ").
+            attr(selected_object_info,order,1).
+
+            elem(selected_object,label,selected_object_c).
+            attr(selected_object,label,"None").
+            attr(selected_object,class,("text-primary")).
+            attr(selected_object,order,2).
+
+        elem(edit_value,container,edit_c).
+        attr(edit_value,flex_direction,column).
+        attr(edit_value,class,("p-3")).
+        attr(edit_value,order,2).
+
+            elem(edit_value_label,label,edit_value).
+            attr(edit_value_label,label,"Attribute Values").
+        
+        elem(edit_assoc,container,edit_c).
+        attr(edit_assoc,flex_direction,column).
+        attr(edit_assoc,class,("p-3")).
+        attr(edit_assoc,order,3).
+
+            elem(edit_assoc_label,label,edit_assoc).
+            attr(edit_assoc_label,label,"Object Associations").
+
+
 
     % ================= Context menu
 
-    elem(edit_context(ID),context_menu,w) :- ooasp_domain(_,ID).
-        %elem(attr_context_menu(ID),context_menu, w) :- ooasp_isa(_,ID).
+elem(edit_context(ID),context_menu,w) :- ooasp_domain(_,ID).
+    elem(selector(ID),button,edit_context(ID)) :- ooasp_domain(_,ID).
+    attr(selector(ID),label,"Select for editing") :- ooasp_domain(_,ID).
+    attr(selector(ID),class,("bg-success")) :- ooasp_domain(_,ID).
+    
+    when(selector(ID),click,update,(selected_object,label,@format("{}",ID))) :- ooasp_domain(_,ID).
+    %when(selector(ID),click,update,(selector(ID),label,"Deselect")) :- ooasp_domain(_,ID).
+    %when(selector(ID),click,update,(selector(ID),class,("bg-warning"))) :- ooasp_domain(_,ID).
 
-            %elem(attribute_context(ID),button, edit_context(ID)) :- ooasp_isa(_,ID).
-            %attr(attribute_context(ID),label, "Set Attributes") :- ooasp_isa(_,ID).
-            %when(attribute_context(ID),click,update,(attr_context_menu(ID),visibility, shown)) :- ooasp_isa(_,ID).
+    %elem(attr_context_menu(ID),context_menu, w) :- ooasp_isa(_,ID).
 
-        value_assume(NAME,VALUE,ID) :- _any(ooasp_attr_value(NAME,ID,VALUE)), not _clinguin_assume(ooasp_attr_value(NAME,ID,VALUE),true).
-        elem(add_assumption(NAME,VALUE,ID),button,edit_context(ID)) :- value_assume(NAME,VALUE,ID).
-        attr(add_assumption(NAME,VALUE,ID),label,@format("{} := {}",NAME,VALUE)) :- value_assume(NAME,VALUE,ID).
-        attr(add_assumption(NAME,VALUE,ID),class,("text-white";"bg-primary")) :- value_assume(NAME,VALUE,ID).
-        when(add_assumption(NAME,VALUE,ID),click,call,add_assumption(ooasp_attr_value(NAME,ID,VALUE))) :- value_assume(NAME,VALUE,ID).
+        %elem(attribute_context(ID),button, edit_context(ID)) :- ooasp_isa(_,ID).
+        %attr(attribute_context(ID),label, "Set Attributes") :- ooasp_isa(_,ID).
+        %when(attribute_context(ID),click,update,(attr_context_menu(ID),visibility, shown)) :- ooasp_isa(_,ID).
 
-        value_remove_assume(NAME,VALUE,ID) :- _clinguin_assume(ooasp_attr_value(NAME,ID,VALUE),true).
-        elem(remove_assumption(NAME,VALUE,ID),button,edit_context(ID)) :-value_remove_assume(NAME,VALUE,ID).
-        attr(remove_assumption(NAME,VALUE,ID),icon,"fa-trash") :-value_remove_assume(NAME,VALUE,ID).
-        attr(remove_assumption(NAME,VALUE,ID),label,@format("{} := {}",NAME,VALUE)) :-value_remove_assume(NAME,VALUE,ID).
-        attr(remove_assumption(NAME,VALUE,ID),class,("text-white";"bg-danger")) :-value_remove_assume(NAME,VALUE,ID).
-        when(remove_assumption(NAME,VALUE,ID),click,call,remove_assumption(ooasp_attr_value(NAME,ID,VALUE))) :-value_remove_assume(NAME,VALUE,ID).
+    value_assume(NAME,VALUE,ID) :- _any(ooasp_attr_value(NAME,ID,VALUE)), not _clinguin_assume(ooasp_attr_value(NAME,ID,VALUE),true).
+    elem(add_assumption(NAME,VALUE,ID),button,edit_context(ID)) :- value_assume(NAME,VALUE,ID).
+    attr(add_assumption(NAME,VALUE,ID),label,@format("{} := {}",NAME,VALUE)) :- value_assume(NAME,VALUE,ID).
+    attr(add_assumption(NAME,VALUE,ID),class,("text-white";"bg-primary")) :- value_assume(NAME,VALUE,ID).
+    when(add_assumption(NAME,VALUE,ID),click,call,add_assumption(ooasp_attr_value(NAME,ID,VALUE))) :- value_assume(NAME,VALUE,ID).
 
-        assoc_assume(NAME,NAME_FROM,NAME_TO) :- _any(ooasp_associated(NAME,NAME_FROM,NAME_TO)), not _clinguin_assume(ooasp_associated(NAME,NAME_FROM,NAME_TO),true).
-        elem(add_association(NAME_FROM,NAME_TO),button,edit_context(NAME_FROM)) :- assoc_assume(NAME,NAME_FROM,NAME_TO).
-        attr(add_association(NAME_FROM,NAME_TO),label,@format("{} → {}",NAME,NAME_TO)) :- assoc_assume(NAME,NAME_FROM,NAME_TO).
-        attr(add_association(NAME_FROM,NAME_TO),class,("text-white";"bg-secondary")) :- assoc_assume(NAME,NAME_FROM,NAME_TO).
-        when(add_association(NAME_FROM,NAME_TO),click,call,add_assumption(ooasp_associated(NAME,NAME_FROM,NAME_TO))) :- assoc_assume(NAME,NAME_FROM,NAME_TO).
+    value_remove_assume(NAME,VALUE,ID) :- _clinguin_assume(ooasp_attr_value(NAME,ID,VALUE),true).
+    elem(remove_assumption(NAME,VALUE,ID),button,edit_context(ID)) :-value_remove_assume(NAME,VALUE,ID).
+    attr(remove_assumption(NAME,VALUE,ID),icon,"fa-trash") :-value_remove_assume(NAME,VALUE,ID).
+    attr(remove_assumption(NAME,VALUE,ID),label,@format("{} := {}",NAME,VALUE)) :-value_remove_assume(NAME,VALUE,ID).
+    attr(remove_assumption(NAME,VALUE,ID),class,("text-white";"bg-danger")) :-value_remove_assume(NAME,VALUE,ID).
+    when(remove_assumption(NAME,VALUE,ID),click,call,remove_assumption(ooasp_attr_value(NAME,ID,VALUE))) :-value_remove_assume(NAME,VALUE,ID).
 
-        assoc_remove(NAME, NAME_FROM, NAME_TO) :- _clinguin_assume(ooasp_associated(NAME,NAME_FROM,NAME_TO),true).
-        elem(remove_association(NAME_FROM,NAME_TO),button,edit_context(NAME_FROM)) :- assoc_remove(NAME, NAME_FROM, NAME_TO).
-        attr(remove_association(NAME_FROM,NAME_TO),icon,"fa-trash") :- assoc_remove(NAME, NAME_FROM, NAME_TO).
-        attr(remove_association(NAME_FROM,NAME_TO),label,@format("{} → {}",NAME,NAME_TO)) :- assoc_remove(NAME, NAME_FROM, NAME_TO).
-        attr(remove_association(NAME_FROM,NAME_TO),class,("text-white";"bg-danger")) :- assoc_remove(NAME, NAME_FROM, NAME_TO).
-        when(remove_association(NAME_FROM,NAME_TO),click,call,remove_assumption(ooasp_associated(NAME,NAME_FROM,NAME_TO))) :- assoc_remove(NAME, NAME_FROM, NAME_TO).
+    assoc_assume(NAME,NAME_FROM,NAME_TO) :- _any(ooasp_associated(NAME,NAME_FROM,NAME_TO)), not _clinguin_assume(ooasp_associated(NAME,NAME_FROM,NAME_TO),true).
+    elem(add_association(NAME_FROM,NAME_TO),button,edit_context(NAME_FROM)) :- assoc_assume(NAME,NAME_FROM,NAME_TO).
+    attr(add_association(NAME_FROM,NAME_TO),label,@format("{} → {}",NAME,NAME_TO)) :- assoc_assume(NAME,NAME_FROM,NAME_TO).
+    attr(add_association(NAME_FROM,NAME_TO),class,("text-white";"bg-secondary")) :- assoc_assume(NAME,NAME_FROM,NAME_TO).
+    when(add_association(NAME_FROM,NAME_TO),click,call,add_assumption(ooasp_associated(NAME,NAME_FROM,NAME_TO))) :- assoc_assume(NAME,NAME_FROM,NAME_TO).
+
+    assoc_remove(NAME, NAME_FROM, NAME_TO) :- _clinguin_assume(ooasp_associated(NAME,NAME_FROM,NAME_TO),true).
+    elem(remove_association(NAME_FROM,NAME_TO),button,edit_context(NAME_FROM)) :- assoc_remove(NAME, NAME_FROM, NAME_TO).
+    attr(remove_association(NAME_FROM,NAME_TO),icon,"fa-trash") :- assoc_remove(NAME, NAME_FROM, NAME_TO).
+    attr(remove_association(NAME_FROM,NAME_TO),label,@format("{} → {}",NAME,NAME_TO)) :- assoc_remove(NAME, NAME_FROM, NAME_TO).
+    attr(remove_association(NAME_FROM,NAME_TO),class,("text-white";"bg-danger")) :- assoc_remove(NAME, NAME_FROM, NAME_TO).
+    when(remove_association(NAME_FROM,NAME_TO),click,call,remove_assumption(ooasp_associated(NAME,NAME_FROM,NAME_TO))) :- assoc_remove(NAME, NAME_FROM, NAME_TO).
 
 
-        isa_remove(ID) :- _clinguin_assume(ooasp_isa(C, ID),true).
-        elem(remove_isa(ID),button,edit_context(ID)) :- isa_remove(ID).
-        attr(remove_isa(ID),icon,"fa-trash") :- isa_remove(ID).
-        attr(remove_isa(ID),label,"Remove") :- isa_remove(ID).
-        attr(remove_isa(ID),class,("text-white";"bg-danger")) :- isa_remove(ID).
-        when(remove_isa(ID),click,call,remove_assumption(ooasp_isa(C,ID))) :- isa_remove(ID), _clinguin_assume(ooasp_isa(C, ID),true).
+    isa_remove(ID) :- _clinguin_assume(ooasp_isa(C, ID),true).
+    elem(remove_isa(ID),button,edit_context(ID)) :- isa_remove(ID).
+    attr(remove_isa(ID),icon,"fa-trash") :- isa_remove(ID).
+    attr(remove_isa(ID),label,"Un-assign class.") :- isa_remove(ID).
+    attr(remove_isa(ID),class,("text-white";"bg-danger")) :- isa_remove(ID).
+    when(remove_isa(ID),click,call,remove_assumption(ooasp_isa(C,ID))) :- isa_remove(ID), _clinguin_assume(ooasp_isa(C, ID),true).
 
     % dev borers
-    attr(E,class,("border-1";"border";"border-dark")):- elem(E, container, _).
+attr(E,class,("border-1";"border";"border-dark")):- elem(E, container, _).
