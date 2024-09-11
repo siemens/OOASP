@@ -10,7 +10,7 @@ isa_smallest(SUPER,ID) :-
     ooasp_isa(SUPER,ID),
 	not ooasp_isa(SUB, ID): ooasp_subclass(SUB,SUPER).
 
-unused_node(Class,ID) :- ooasp_domain(Class,ID), not _all(ooasp_isa(_,ID)).
+unused_node(object,ID) :- ooasp_domain(_,ID), _any(ooasp_unused(ID)).
 unused_node(Class,ID) :- ooasp_domain(Class,ID), _clinguin_browsing, not ooasp_isa(_,ID).
 
 assumed_isa(C,ID) :- ooasp_domain(Class,ID), _all(ooasp_isa_leaf(C,ID)), _clinguin_assume(ooasp_isa(C,ID), true).
@@ -70,13 +70,13 @@ attr(node, T, (label,bgcolor), @color(blue,40)):- leaf_node(_,T).
 
 % ------- Attributes
 % browsing
-attr(node, ID, (label,attr,Attr_name), @argument_str(Attr_name,Value,my_gray)):-
+attr(node, ID, (label,attr,Attr_name), @argument_str(Attr_name,Value,@color(green))):-
     ooasp_attr_value(Attr_name,ID,Value),
     _clinguin_browsing,
     not _clinguin_assume(ooasp_attr_value(Attr_name,ID,Value),true).
 
 % inferred input
-attr(node, ID, (label,attr,Attr_name), @argument_str(Attr_name,Value,"grey")):-
+attr(node, ID, (label,attr,Attr_name), @argument_str(Attr_name,Value,my_gray)):-
     not _clinguin_browsing,
     not _clinguin_assume(ooasp_attr_value(Attr_name,ID,Value),true),
     _all(ooasp_attr_value(Attr_name,ID,Value)).
@@ -86,21 +86,22 @@ attr(node, ID, (label,attr,Attr_name), @argument_str(Attr_name,Value,"black")):-
     _clinguin_assume(ooasp_attr_value(Attr_name,ID,Value),true).
 
 % Add cvs to nodes
-attr(node, ID, (label,cv,(MAX,C2,ASSOC)), @cv_str("Needs at least {} {}s via {}",(MAX,C2,ASSOC))):-
+attr(node, ID, (label,cv,(MAX,C2,ASSOC)), @cv_str("Needs at least {} more {}s",(MAX,C2,ASSOC))):-
+    not _clinguin_browsing,
     ooasp_smallest_assoc(ASSOC),
     _all(object_needed(ID, ASSOC, _, C2, _, _)),
     #max{N:_all(object_needed(ID, ASSOC, N, C2, _, _))}=MAX.
 
 % Associations
-shown_association(browse,Name,ID1,ID2):-ooasp_smallest_assoc(Name),not _clinguin_assume(ooasp_associated(Name,ID1,ID2),true), ooasp_associated(Name,ID1,ID2), _clinguin_browsing.
+shown_association(assumed,Name,ID1,ID2):-ooasp_smallest_assoc(Name),_clinguin_assume(ooasp_associated(Name,ID1,ID2),true).
+shown_association(browse,Name,ID1,ID2):-ooasp_smallest_assoc(Name), ooasp_associated(Name,ID1,ID2), _clinguin_browsing,  not _clinguin_assume(ooasp_associated(Name,ID1,ID2),true).
 shown_association(infer,Name,ID1,ID2):-ooasp_smallest_assoc(Name),_all(ooasp_associated(Name,ID1,ID2)), not _clinguin_assume(ooasp_associated(Name,ID1,ID2),true), not _clinguin_browsing.
-shown_association(assumed,Name,ID1,ID2):-ooasp_smallest_assoc(Name),_all(ooasp_associated(Name,ID1,ID2)), _clinguin_assume(ooasp_associated(Name,ID1,ID2),true).
 
 edge((ID1,ID2),config) :-shown_association(_,Name,ID1,ID2).
 
 attr(edge,(ID1,ID2), xlabel, "<{{name}} <br/><FONT POINT-SIZE='10' FACE='Helvetica Neue'> {{super}}</FONT>>"):-shown_association(_,Name,ID1,ID2).
 % attr(edge,(ID1,ID2), (xlabel,name), Name):-shown_association(_,Name,ID1,ID2), not ooasp_assoc_specialization(_,Name).
-attr(edge,(ID1,ID2), (xlabel,super), Name):-shown_association(_,Name,ID1,ID2),ooasp_assoc_specialization(Name,Super).
+attr(edge,(ID1,ID2), (xlabel,super), Name):-shown_association(_,Name,ID1,ID2).
 
 attr(edge, (ID1,ID2), color, @color(green)) :- shown_association(browse,Name,ID1,ID2).
 attr(edge, (ID1,ID2), fontcolor, @color(green)) :- shown_association(browse,Name,ID1,ID2).

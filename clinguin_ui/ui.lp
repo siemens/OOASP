@@ -2,6 +2,7 @@
 elem(w,window,root).
 attr(w,flex_direction,row).
 
+
 % ================= Menu bar
 
 elem(menu_bar,menu_bar,w).
@@ -33,32 +34,36 @@ attr(menu_bar,icon,"fa-puzzle-piece").
         % ----------- Restart confirmation
         elem(restart_confirmation,modal,w).
         attr(restart_confirmation,title,"Restart configuration?").
-            
-            elem(restart_btn_container,container,restart_confirmation).
-            attr(restart_btn_container,flex_direction,row).
-            attr(restart_btn_container,class,("flex-row")).
-            attr(restart_btn_container,order,2).
+        attr(restart_confirmation,size,"lg").
 
-                elem(restart_yes,button,restart_btn_container).
-                attr(restart_yes,label,"Yes").
-                attr(restart_yes,icon,"fa-trash").
-                attr(restart_yes,class,"btn-primary").
-                attr(restart_yes,order,2).
-                when(restart_yes,click,call,restart).
-                
+            elem(modal_content,container,restart_confirmation).
+            attr(modal_content,class,("d-flex";"flex-column")).
 
-                elem(restart_no,button,restart_btn_container).
-                attr(restart_no,label,"No").
-                attr(restart_no,icon,"fa-x").
-                attr(restart_no,class,"btn-outline-primary").
-                attr(restart_no,order,1).
-                when(restart_no,click,update,(restart_confirmation,visibility,hidden)).
-            
-            elem(restart_msg,label,restart_confirmation).
-            attr(restart_msg,label,"This action cannot be undone, are you sure you want to proceed?").
-            attr(restart_msg,class,"text-danger").
-            attr(restart_msg,order,1).
-        
+                elem(restart_btn_container,container,modal_content).
+                attr(restart_btn_container,flex_direction,row).
+                attr(restart_btn_container,class,("d-flex";"flex-row")).
+                attr(restart_btn_container,order,2).
+
+                    elem(restart_yes,button,restart_btn_container).
+                    attr(restart_yes,label,"Yes").
+                    attr(restart_yes,icon,"fa-trash").
+                    attr(restart_yes,class,"btn-primary").
+                    attr(restart_yes,order,2).
+                    when(restart_yes,click,call,restart).
+
+
+                    elem(restart_no,button,restart_btn_container).
+                    attr(restart_no,label,"No").
+                    attr(restart_no,icon,"fa-x").
+                    attr(restart_no,class,"btn-outline-primary").
+                    attr(restart_no,order,1).
+                    when(restart_no,click,update,(restart_confirmation,visibility,hidden)).
+
+                elem(restart_msg,label,modal_content).
+                attr(restart_msg,label,"This action cannot be undone, are you sure you want to proceed?").
+                attr(restart_msg,class,"text-danger").
+                attr(restart_msg,order,1).
+
 
 
     %----------ENFORCEMENT SWITCH----------
@@ -125,7 +130,8 @@ attr(menu_bar,icon,"fa-puzzle-piece").
 
     elem(suggest_btn,button,menu_bar).
     attr(suggest_btn,label,"Next Solution") :- _clinguin_external(check_potential_cv,true).
-    attr(suggest_btn,label,"Make suggestion") :- _clinguin_external(check_potential_cv,false).
+    attr(suggest_btn,label,"Make suggestion") :- _clinguin_external(check_potential_cv,false), not _clinguin_browsing.
+    attr(suggest_btn,label,"Next suggestion") :- _clinguin_external(check_potential_cv,false),_clinguin_browsing.
     attr(suggest_btn,icon,"fa-forward") :- _clinguin_external(check_potential_cv,true).
     attr(suggest_btn,icon,"fa-border-top-left") :- _clinguin_external(check_potential_cv,false).
     attr(suggest_btn,class,("btn-outline-success")) :- _clinguin_external(check_potential_cv,false).
@@ -139,11 +145,15 @@ attr(menu_bar,icon,"fa-puzzle-piece").
     attr(select_btn, icon, "fa-hand-pointer") :- _clinguin_browsing.
     when(select_btn, click, call, select(show_prg)) :- _clinguin_browsing.
 
+elem(unsat_msg, message, w):-_clinguin_unsat.
+attr(unsat_msg, message, "No solution with the current objects"):-_clinguin_unsat.
+attr(unsat_msg, type, "error"):-_clinguin_unsat.
+attr(unsat_msg, title, "Unsatisfiable"):-_clinguin_unsat.
 
-    elem(check_btn,button,menu_bar).
-    attr(check_btn,label,"Check").
-    attr(check_btn,icon,"fa-magnifying-glass").
-    attr(check_btn,class,("btn-outline-danger")).
+    % elem(check_btn,button,menu_bar).
+    % attr(check_btn,label,"Check").
+    % attr(check_btn,icon,"fa-magnifying-glass").
+    % attr(check_btn,class,("btn-outline-danger")).
 
 elem(window_flex, container,w).
 attr(window_flex, flex_direction,column).
@@ -157,7 +167,15 @@ attr(window_flex, flex_direction,column).
 
             elem(n(X), svg_node, config_viz) :- node(X,config).
             attr(n(X), clingraph_id, X) :- node(X,config).
-            when(n(ID), click, update, (edit_context(ID), visibility, shown)):- node(ID,config).
+            % when(n(ID), click, update, (edit_context(ID), visibility, shown)):- node(ID,config).
+            % when(n(ID), click, update, (edit_context(ID), visibility, shown)):- node(ID,config).
+            when(n(X),click,update,(selected_object,label,@format("{}",X))) :- node(X,config).
+            when(n(X),click,update,(assoc_edit_options(X),visibility,shown)) :- node(X,config).
+            when(n(X),click,update,(assoc_edit_options(X'),visibility,hidden)) :- node(X,config), node(X',config), X'!=X.
+            when(n(X),click,update,(value_edit_options(X),visibility,shown)) :- node(X,config).
+            when(n(X),click,update,(value_edit_options(X'),visibility,hidden)) :- node(X,config), node(X',config), X'!=X.
+            when(n(X),click,update,(deselect_btn_c(X),visibility,shown)) :- node(X,config).
+            when(n(X),click,update,(deselect_btn_c(X'),visibility,hidden)) :- node(X,config), node(X',config), X'!=X.
 
     attr(config_viz,order,1).
 
@@ -255,7 +273,7 @@ attr(window_flex, flex_direction,column).
                 attr(config_size_txt,label,@format("Configuration Size: {}",CS)):-configuration_size(CS).
                 attr(config_size_txt,class,("text-start";"fw-semibold";"fs-6")).
                 attr(config_size_txt,order,2).
-    
+
     % ================= Edit object
     elem(edit_c, container,bottom_container).
     attr(edit_c,flex_direction,row).
@@ -281,39 +299,111 @@ attr(window_flex, flex_direction,column).
                 attr(selected_object,label,"None").
                 attr(selected_object,class,("text-primary";"h3";"p-2")).
                 attr(selected_object,order,2).
-            
-            elem(deselect_btn,button, selected_object_c).
-            attr(deselect_btn,label,"De-select").
-            attr(deselect_btn,order,2).
-            when(deselect_btn,click,update,(selected_object, label, "None")).
-            % TODO actually deselect
+
+            elem(deselect_c, container, selected_object_c).
+            attr(deselect_c, child_layout, absstatic).
+            attr(deselect_c,order,2).
+
+                elem(deselect_btn_c(ID),container, deselect_c):-_clinguin_assume(ooasp_isa(C, ID),true).
+                attr(deselect_btn_c(ID),pos_x, 0):-_clinguin_assume(ooasp_isa(C, ID),true).
+                attr(deselect_btn_c(ID),pos_y, 0):-_clinguin_assume(ooasp_isa(C, ID),true).
+                attr(deselect_btn_c(ID),visibility, hidden):-_clinguin_assume(ooasp_isa(C, ID),true).
+
+                    elem(deselect_btn(ID),button, deselect_btn_c(ID)):-_clinguin_assume(ooasp_isa(C, ID),true).
+                    attr(deselect_btn(ID),label,"Remove"):-_clinguin_assume(ooasp_isa(C, ID),true).
+                    attr(deselect_btn(ID),icon,"fa-trash"):-_clinguin_assume(ooasp_isa(C, ID),true).
+                    % when(deselect_btn(ID),click,update,(selected_object, label, "None")):-node(ID,_).
+                    when(deselect_btn(ID),click,call,remove_assumption(ooasp_isa(C,ID))) :- _clinguin_assume(ooasp_isa(C, ID),true).
+
+
+    % isa_remove(ID) :- _clinguin_assume(ooasp_isa(C, ID),true).
+    % elem(remove_isa(ID),button,edit_context(ID)) :- isa_remove(ID).
+    % attr(remove_isa(ID),icon,"fa-trash") :- isa_remove(ID).
+    % attr(remove_isa(ID),label,"Un-assign class.") :- isa_remove(ID).
+    % attr(remove_isa(ID),class,("text-white";"bg-danger")) :- isa_remove(ID).
+    % when(remove_isa(ID),click,call,remove_assumption(ooasp_isa(C,ID))) :- isa_remove(ID), _clinguin_assume(ooasp_isa(C, ID),true).
+
 
         elem(edit_value,container,edit_c).
         attr(edit_value,flex_direction,column).
-        attr(edit_value,class,("p-3";"bg-primary";"bg-opacity-25";"rounded-start";"border";"border-2";"border-end-0";"border-secondary")).
+        attr(edit_value,class,("overflow-auto";"p-3";"bg-primary";"bg-opacity-25";"rounded-start";"border";"border-2";"border-end-0";"border-secondary")).
         attr(edit_value,order,2).
+        attr(edit_value,width,400).
 
             elem(edit_value_label,label,edit_value).
             attr(edit_value_label,label,"Attribute Values").
-        
+            attr(edit_value_label,order,2).
+
+            elem(all_edit_opts,container,edit_value) :- ooasp_domain(_,ID).
+            attr(all_edit_opts,child_layout,absstatic).
+            attr(all_edit_opts,order,1).
+
+
+                elem(value_edit_options(ID),container,all_edit_opts) :- ooasp_domain(_,ID).
+                attr(value_edit_options(ID),visibility,hidden) :- ooasp_domain(_,ID).
+                attr(value_edit_options(ID),order,2) :- ooasp_domain(_,ID).
+                attr(value_edit_options(ID),pos_x,20) :- ooasp_domain(_,ID).
+                attr(value_edit_options(ID),pos_y,20) :- ooasp_domain(_,ID).
+
+                    value_assume(NAME,VALUE,ID) :- _any(ooasp_attr_value(NAME,ID,VALUE)), not _clinguin_assume(ooasp_attr_value(NAME,ID,VALUE),true).
+                    elem(add_assumption(NAME,VALUE,ID),button,value_edit_options(ID)) :- value_assume(NAME,VALUE,ID).
+                    attr(add_assumption(NAME,VALUE,ID),label,@format("{} := {}",NAME,VALUE)) :- value_assume(NAME,VALUE,ID).
+                    attr(add_assumption(NAME,VALUE,ID),class,("text-white";"bg-primary")) :- value_assume(NAME,VALUE,ID).
+                    when(add_assumption(NAME,VALUE,ID),click,call,add_assumption(ooasp_attr_value(NAME,ID,VALUE))) :- value_assume(NAME,VALUE,ID).
+
+                    value_remove_assume(NAME,VALUE,ID) :- _clinguin_assume(ooasp_attr_value(NAME,ID,VALUE),true).
+                    elem(remove_assumption(NAME,VALUE,ID),button,value_edit_options(ID)) :-value_remove_assume(NAME,VALUE,ID).
+                    attr(remove_assumption(NAME,VALUE,ID),icon,"fa-trash") :-value_remove_assume(NAME,VALUE,ID).
+                    attr(remove_assumption(NAME,VALUE,ID),label,@format("{} := {}",NAME,VALUE)) :-value_remove_assume(NAME,VALUE,ID).
+                    attr(remove_assumption(NAME,VALUE,ID),class,("text-white";"bg-danger")) :-value_remove_assume(NAME,VALUE,ID).
+                    when(remove_assumption(NAME,VALUE,ID),click,call,remove_assumption(ooasp_attr_value(NAME,ID,VALUE))) :-value_remove_assume(NAME,VALUE,ID).
+
+
+
         elem(edit_assoc,container,edit_c).
         attr(edit_assoc,flex_direction,column).
-        attr(edit_assoc,class,("p-3";"bg-secondary";"bg-opacity-25";"rounded-end";"border";"border-2";"border-start-0";"border-secondary")).
+        attr(edit_assoc,class,("overflow-auto";"p-3";"bg-secondary";"bg-opacity-25";"rounded-end";"border";"border-2";"border-start-0";"border-secondary")).
         attr(edit_assoc,order,3).
+        attr(edit_assoc,width,400).
 
             elem(edit_assoc_label,label,edit_assoc).
             attr(edit_assoc_label,label,"Object Associations").
+            attr(edit_assoc_label,order,2).
+
+            elem(all_assoc_opts,container,edit_assoc) :- ooasp_domain(_,ID).
+            attr(all_assoc_opts,child_layout,absstatic).
+            attr(all_assoc_opts,order,1).
+
+                elem(assoc_edit_options(ID),container,all_assoc_opts) :- ooasp_domain(_,ID).
+                attr(assoc_edit_options(ID),visibility,hidden) :- ooasp_domain(_,ID).
+                attr(assoc_edit_options(ID),order,2) :- ooasp_domain(_,ID).
+                attr(assoc_edit_options(ID),pos_x,20) :- ooasp_domain(_,ID).
+                attr(assoc_edit_options(ID),pos_y,20) :- ooasp_domain(_,ID).
+
+                    assoc_assume(ASSOC,ID_FROM,ID_TO) :- _any(ooasp_associated(ASSOC,ID_FROM,ID_TO)), not _clinguin_assume(ooasp_associated(ASSOC,ID_FROM,ID_TO),true), ooasp_smallest_assoc(ASSOC).
+                    elem(add_association(ASSOC,ID_FROM,ID_TO),button,assoc_edit_options(ID_FROM)) :- assoc_assume(ASSOC,ID_FROM,ID_TO).
+                    attr(add_association(ASSOC,ID_FROM,ID_TO),label,@format("{} → {}",ASSOC,ID_TO)) :- assoc_assume(ASSOC,ID_FROM,ID_TO).
+                    attr(add_association(ASSOC,ID_FROM,ID_TO),class,("text-white";"bg-secondary")) :- assoc_assume(ASSOC,ID_FROM,ID_TO).
+                    when(add_association(ASSOC,ID_FROM,ID_TO),click,call,add_assumption(ooasp_associated(ASSOC,ID_FROM,ID_TO))) :- assoc_assume(ASSOC,ID_FROM,ID_TO).
+
+                    assoc_remove(ASSOC, ID_FROM, ID_TO) :- _clinguin_assume(ooasp_associated(ASSOC,ID_FROM,ID_TO),true).
+                    elem(remove_association(ASSOC,ID_FROM,ID_TO),button,assoc_edit_options(ID_FROM)) :- assoc_remove(ASSOC, ID_FROM, ID_TO).
+                    attr(remove_association(ASSOC,ID_FROM,ID_TO),icon,"fa-trash") :- assoc_remove(ASSOC, ID_FROM, ID_TO).
+                    attr(remove_association(ASSOC,ID_FROM,ID_TO),label,@format("{} → {}",ASSOC,ID_TO)) :- assoc_remove(ASSOC, ID_FROM, ID_TO).
+                    attr(remove_association(ASSOC,ID_FROM,ID_TO),class,("text-white";"bg-danger")) :- assoc_remove(ASSOC, ID_FROM, ID_TO).
+                    when(remove_association(ASSOC,ID_FROM,ID_TO),click,call,remove_assumption(ooasp_associated(ASSOC,ID_FROM,ID_TO))) :- assoc_remove(ASSOC, ID_FROM, ID_TO).
+
 
     % ================= Context menu
 
-elem(edit_context(ID),context_menu,w) :- ooasp_domain(_,ID).
-    elem(selector(ID),button,edit_context(ID)) :- ooasp_domain(_,ID).
-    attr(selector(ID),label,"Select for editing") :- ooasp_domain(_,ID).
-    attr(selector(ID),class,("bg-success")) :- ooasp_domain(_,ID).
-    
-    when(selector(ID),click,update,(selected_object,label,@format("{}",ID))) :- ooasp_domain(_,ID).
-    when(selector(ID),click,update,(assoc_edit_options(ID),visibility,shown)) :- ooasp_domain(_,ID).
-    when(selector(ID),click,update,(value_edit_options(ID),visibility,shown)) :- ooasp_domain(_,ID).
+% elem(edit_context(ID),context_menu,w) :- ooasp_domain(_,ID).
+%     elem(selector(ID),button,edit_context(ID)) :- ooasp_domain(_,ID).
+%     attr(selector(ID),label,"Select for editing") :- ooasp_domain(_,ID).
+%     attr(selector(ID),class,("bg-success")) :- ooasp_domain(_,ID).
+
+    % when(selector(ID),click,update,(selected_object,label,@format("{}",ID))) :- ooasp_domain(_,ID).
+    % when(selector(ID),click,update,(assoc_edit_options(ID),visibility,shown)) :- ooasp_domain(_,ID).
+    % when(selector(ID),click,update,(value_edit_options(ID),visibility,shown)) :- ooasp_domain(_,ID).
     %when(selector(ID),click,update,(selector(ID),label,"Deselect")) :- ooasp_domain(_,ID).
     %when(selector(ID),click,update,(selector(ID),class,("bg-warning"))) :- ooasp_domain(_,ID).
 
@@ -323,47 +413,16 @@ elem(edit_context(ID),context_menu,w) :- ooasp_domain(_,ID).
         %attr(attribute_context(ID),label, "Set Attributes") :- ooasp_isa(_,ID).
         %when(attribute_context(ID),click,update,(attr_context_menu(ID),visibility, shown)) :- ooasp_isa(_,ID).
 
-elem(assoc_edit_options(ID),container,edit_assoc) :- ooasp_domain(_,ID).
-attr(assoc_edit_options(ID),visibility,hidden) :- ooasp_domain(_,ID).
-attr(assoc_edit_options(ID),order,2) :- ooasp_domain(_,ID).
-
-elem(value_edit_options(ID),container,edit_value) :- ooasp_domain(_,ID).
-attr(value_edit_options(ID),visibility,hidden) :- ooasp_domain(_,ID).
-attr(value_edit_options(ID),order,2) :- ooasp_domain(_,ID).
-
-    value_assume(NAME,VALUE,ID) :- _any(ooasp_attr_value(NAME,ID,VALUE)), not _clinguin_assume(ooasp_attr_value(NAME,ID,VALUE),true).
-    elem(add_assumption(NAME,VALUE,ID),button,edit_context(ID)) :- value_assume(NAME,VALUE,ID).
-    attr(add_assumption(NAME,VALUE,ID),label,@format("{} := {}",NAME,VALUE)) :- value_assume(NAME,VALUE,ID).
-    attr(add_assumption(NAME,VALUE,ID),class,("text-white";"bg-primary")) :- value_assume(NAME,VALUE,ID).
-    when(add_assumption(NAME,VALUE,ID),click,call,add_assumption(ooasp_attr_value(NAME,ID,VALUE))) :- value_assume(NAME,VALUE,ID).
-
-    value_remove_assume(NAME,VALUE,ID) :- _clinguin_assume(ooasp_attr_value(NAME,ID,VALUE),true).
-    elem(remove_assumption(NAME,VALUE,ID),button,edit_context(ID)) :-value_remove_assume(NAME,VALUE,ID).
-    attr(remove_assumption(NAME,VALUE,ID),icon,"fa-trash") :-value_remove_assume(NAME,VALUE,ID).
-    attr(remove_assumption(NAME,VALUE,ID),label,@format("{} := {}",NAME,VALUE)) :-value_remove_assume(NAME,VALUE,ID).
-    attr(remove_assumption(NAME,VALUE,ID),class,("text-white";"bg-danger")) :-value_remove_assume(NAME,VALUE,ID).
-    when(remove_assumption(NAME,VALUE,ID),click,call,remove_assumption(ooasp_attr_value(NAME,ID,VALUE))) :-value_remove_assume(NAME,VALUE,ID).
-
-    assoc_assume(NAME,NAME_FROM,NAME_TO) :- _any(ooasp_associated(NAME,NAME_FROM,NAME_TO)), not _clinguin_assume(ooasp_associated(NAME,NAME_FROM,NAME_TO),true).
-    elem(add_association(NAME_FROM,NAME_TO),button,edit_context(NAME_FROM)) :- assoc_assume(NAME,NAME_FROM,NAME_TO).
-    attr(add_association(NAME_FROM,NAME_TO),label,@format("{} → {}",NAME,NAME_TO)) :- assoc_assume(NAME,NAME_FROM,NAME_TO).
-    attr(add_association(NAME_FROM,NAME_TO),class,("text-white";"bg-secondary")) :- assoc_assume(NAME,NAME_FROM,NAME_TO).
-    when(add_association(NAME_FROM,NAME_TO),click,call,add_assumption(ooasp_associated(NAME,NAME_FROM,NAME_TO))) :- assoc_assume(NAME,NAME_FROM,NAME_TO).
-
-    assoc_remove(NAME, NAME_FROM, NAME_TO) :- _clinguin_assume(ooasp_associated(NAME,NAME_FROM,NAME_TO),true).
-    elem(remove_association(NAME_FROM,NAME_TO),button,edit_context(NAME_FROM)) :- assoc_remove(NAME, NAME_FROM, NAME_TO).
-    attr(remove_association(NAME_FROM,NAME_TO),icon,"fa-trash") :- assoc_remove(NAME, NAME_FROM, NAME_TO).
-    attr(remove_association(NAME_FROM,NAME_TO),label,@format("{} → {}",NAME,NAME_TO)) :- assoc_remove(NAME, NAME_FROM, NAME_TO).
-    attr(remove_association(NAME_FROM,NAME_TO),class,("text-white";"bg-danger")) :- assoc_remove(NAME, NAME_FROM, NAME_TO).
-    when(remove_association(NAME_FROM,NAME_TO),click,call,remove_assumption(ooasp_associated(NAME,NAME_FROM,NAME_TO))) :- assoc_remove(NAME, NAME_FROM, NAME_TO).
 
 
-    isa_remove(ID) :- _clinguin_assume(ooasp_isa(C, ID),true).
-    elem(remove_isa(ID),button,edit_context(ID)) :- isa_remove(ID).
-    attr(remove_isa(ID),icon,"fa-trash") :- isa_remove(ID).
-    attr(remove_isa(ID),label,"Un-assign class.") :- isa_remove(ID).
-    attr(remove_isa(ID),class,("text-white";"bg-danger")) :- isa_remove(ID).
-    when(remove_isa(ID),click,call,remove_assumption(ooasp_isa(C,ID))) :- isa_remove(ID), _clinguin_assume(ooasp_isa(C, ID),true).
+
+
+    % isa_remove(ID) :- _clinguin_assume(ooasp_isa(C, ID),true).
+    % elem(remove_isa(ID),button,edit_context(ID)) :- isa_remove(ID).
+    % attr(remove_isa(ID),icon,"fa-trash") :- isa_remove(ID).
+    % attr(remove_isa(ID),label,"Un-assign class.") :- isa_remove(ID).
+    % attr(remove_isa(ID),class,("text-white";"bg-danger")) :- isa_remove(ID).
+    % when(remove_isa(ID),click,call,remove_assumption(ooasp_isa(C,ID))) :- isa_remove(ID), _clinguin_assume(ooasp_isa(C, ID),true).
 
     % dev borers
-%attr(E,class,("border-1";"border";"border-dark")):- elem(E, container, _).
+% attr(E,class,("border-1";"border";"border-dark")):- elem(E, container, _).

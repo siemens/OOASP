@@ -7,6 +7,8 @@
 
 ooasp_domain(cls,new_object).
 
+ooasp_unused(new_object):- not ooasp_isa(object,new_object), ooasp_domain(_, new_object).
+
 % Transitive closure when a leaf class is selected via choice
 ooasp_isa(LEAFCLASS,new_object) :-
     ooasp_isa_leaf(LEAFCLASS,new_object).

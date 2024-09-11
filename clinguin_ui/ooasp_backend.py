@@ -6,12 +6,31 @@ from clingo import Function
 SAVE_FILE = "ui_save_test.lp"
 
 
+ASSOCIATION_SPECIALIZATIONS = [
+    "rack_framesS",
+    "rack_framesD",
+    "element_modules1",
+    "element_modules2",
+    "element_modules3",
+    "element_modules4",
+]
+
+
 class OOASPBackend(ClingraphBackend):
 
     def _init_ctl(self):
         super()._init_ctl()
         self.smart_solver = SmartOOASPSolver(
-            initial_objects=[], ctl=self._ctl, verbose=True
+            initial_objects=[],
+            ctl=self._ctl,
+            verbose=True,
+            associations_with_priority=ASSOCIATION_SPECIALIZATIONS,
+            smart_generation_functions=[
+                "object_needed",
+                "global_lb",
+                "global_ub",
+                "association_needed",
+            ],
         )
         self.smart_solver.load_base()
         # self.smart_solver.create_initial_objects()
@@ -43,9 +62,6 @@ class OOASPBackend(ClingraphBackend):
         if atom in self.smart_solver.assumptions:
             self.smart_solver.assumptions.remove(atom)
 
-    def next_complete_solution(self):
-        self.smart_solver.ctl.assign_external(Function("check_potential_cv"), True)
-
     def export_solution(self, f_path=SAVE_FILE):
         """
         Takes current selected solution and saves it as a file.
@@ -57,6 +73,7 @@ class OOASPBackend(ClingraphBackend):
         Finds the next solution incrementally.
         """
         self._outdate()
+        self._set_external(Function("check_potential_cv"), "true")
         self.smart_solver.smart_complete()
         self.next_solution()  # Called so that we start browsing automatically
 
@@ -69,4 +86,3 @@ class OOASPBackend(ClingraphBackend):
         # add assumptions for all things in file
         # Add this into the API first ad a parameter iin the init ()must add self.values assumptions
         print("CALLED IMPORT")
-
