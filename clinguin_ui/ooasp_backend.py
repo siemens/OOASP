@@ -40,12 +40,6 @@ class OOASPBackend(ClingraphBackend):
     def _assumption_list(self):
         return super()._assumption_list.union(self.smart_solver.assumption_list)
 
-    def add_object(self, name, amount=1):
-        for obj in range(int(amount)):
-            self.smart_solver.add_object(name)
-        self._outdate()
-        self._set_external(Function("check_potential_cv"), "false")
-
     def _prepare(self):
         # self.smart_solver.ctl.assign_external(Function("check_potential_cv"), False)
         pass
@@ -55,18 +49,23 @@ class OOASPBackend(ClingraphBackend):
         super()._add_assumption(symbol, value)
         self.smart_solver.assumptions.add(str(symbol))
 
+    # ------ Operations
+
+    def add_object(self, name, amount=1):
+        must_be_used = name != "object"
+        print(must_be_used)
+        for obj in range(int(amount)):
+            # We force the use of the object to improve performance
+            self.smart_solver.add_object(name, must_be_used=must_be_used)
+        self._outdate()
+        self._set_external(Function("check_potential_cv"), "false")
+
     def remove_assumption(self, atom):
         print("Super")
         super().remove_assumption(atom)
         print(self.smart_solver.assumptions)
         if atom in self.smart_solver.assumptions:
             self.smart_solver.assumptions.remove(atom)
-
-    def export_solution(self, f_path=SAVE_FILE):
-        """
-        Takes current selected solution and saves it as a file.
-        """
-        print("CALLED EXPORT")
 
     def find_incrementally(self):
         """

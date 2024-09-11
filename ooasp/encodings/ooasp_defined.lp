@@ -11,3 +11,4 @@
 #defined global_ub/3.
 #defined association_needed/4.
 #defined lb_violation/4.
+#defined ooasp_domain/2.

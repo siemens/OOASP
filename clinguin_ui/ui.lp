@@ -67,17 +67,17 @@ attr(menu_bar,icon,"fa-puzzle-piece").
 
 
     %----------ENFORCEMENT SWITCH----------
-    elem(next_btn,button,menu_bar).
-    attr(next_btn,label,"Enforce Complete Configuration") :- _clinguin_external(check_potential_cv,false).
-    attr(next_btn,label,"Allow partial configuration.") :- _clinguin_external(check_potential_cv,true).
+    elem(enforce_btn,button,menu_bar).
+    attr(enforce_btn,label,"Enforce Complete Configuration") :- _clinguin_external(check_potential_cv,false).
+    attr(enforce_btn,label,"Allow partial configuration.") :- _clinguin_external(check_potential_cv,true).
 
-    attr(next_btn,icon,"fa-circle") :- _clinguin_external(check_potential_cv,false).
-    attr(next_btn,icon,"fa-circle-half-stroke") :- _clinguin_external(check_potential_cv,true).
+    attr(enforce_btn,icon,"fa-circle") :- _clinguin_external(check_potential_cv,false).
+    attr(enforce_btn,icon,"fa-circle-half-stroke") :- _clinguin_external(check_potential_cv,true).
 
-    attr(next_btn,class,("btn-outline-primary")):- _clinguin_external(check_potential_cv,false).
-    attr(next_btn,class,("btn-primary")):- _clinguin_external(check_potential_cv,true).
-    when(next_btn,click,call,(set_external(check_potential_cv,true))):- _clinguin_external(check_potential_cv,false).
-    when(next_btn,click,call,(set_external(check_potential_cv,false))):- _clinguin_external(check_potential_cv,true).
+    attr(enforce_btn,class,("btn-outline-warning")):- _clinguin_external(check_potential_cv,false).
+    attr(enforce_btn,class,("btn-warning")):- _clinguin_external(check_potential_cv,true).
+    when(enforce_btn,click,call,(set_external(check_potential_cv,true))):- _clinguin_external(check_potential_cv,false).
+    when(enforce_btn,click,call,(set_external(check_potential_cv,false))):- _clinguin_external(check_potential_cv,true).
 
     %-------------------------------------
 
@@ -91,7 +91,6 @@ attr(menu_bar,icon,"fa-puzzle-piece").
     attr(menu_bar_save,label, "Save").
     attr(menu_bar_save, icon, "fa-download").
     attr(menu_bar_save, class, ("btn-outline-primary";"border-0")).
-    % when(menu_bar_save,click,call,export_solution).
     when(menu_bar_save,click,update,(save_modal,visibility,shown)).
 
         %TODO on click show modal with entry option to select a file path
@@ -119,7 +118,7 @@ attr(menu_bar,icon,"fa-puzzle-piece").
     elem(end_btn,button,menu_bar):-_clinguin_browsing.
     attr(end_btn,label,"End browsing"):-_clinguin_browsing.
     attr(end_btn,icon,"fa-xmark"):-_clinguin_browsing.
-    attr(end_btn,class,("btn-warning")):-_clinguin_browsing.
+    attr(end_btn,class,("btn-success")):-_clinguin_browsing.
     when(end_btn,click,call,stop_browsing):-_clinguin_browsing.
 
     elem(find_btn,button,menu_bar).
@@ -134,8 +133,8 @@ attr(menu_bar,icon,"fa-puzzle-piece").
     attr(suggest_btn,label,"Next suggestion") :- _clinguin_external(check_potential_cv,false),_clinguin_browsing.
     attr(suggest_btn,icon,"fa-forward") :- _clinguin_external(check_potential_cv,true).
     attr(suggest_btn,icon,"fa-border-top-left") :- _clinguin_external(check_potential_cv,false).
-    attr(suggest_btn,class,("btn-outline-success")) :- _clinguin_external(check_potential_cv,false).
-    attr(suggest_btn,class,("btn-success")) :- _clinguin_external(check_potential_cv,true).
+    attr(suggest_btn,class,("btn-outline-success")).
+    % attr(suggest_btn,class,("btn-success")) :- _clinguin_external(check_potential_cv,true).
     when(suggest_btn,click,call, next_solution).
 
     elem(select_btn,button,menu_bar) :- _clinguin_browsing.
@@ -190,7 +189,7 @@ attr(window_flex, flex_direction,column).
         attr(config_container,flex_direction,column).
         attr(config_container,class,("p-3";"bg-info";"bg-opacity-10";"rounded";"border";"border-3";"m-2";"shadow")).
         attr(config_container,order,1).
-        attr(config_container,width,250).
+        attr(config_container,width,280).
 
             elem(extend_container,container,config_container).
             attr(extend_container,flex_direction,column).
@@ -215,7 +214,7 @@ attr(window_flex, flex_direction,column).
                         attr(addobject_dd,selected,"object").
                         % attr(addobject_dd,class,("m-2";"p-2";"border";"border-1")).
                         attr(addobject_dd,class,("m-2";"p-2";"border";"border-1";"bg-primary";"bg-opacity-10")).
-                        attr(class,class,("disabled")):- _clinguin_browsing.
+                        attr(addobject_dd,class,("disabled")):- _clinguin_browsing.
                         attr(addobject_dd,order,1).
 
                         class_to_add(C) :- ooasp_leafclass(C).
@@ -292,12 +291,12 @@ attr(window_flex, flex_direction,column).
 
                 elem(selected_object_info,label,selected_object_cd).
                 attr(selected_object_info,label,"Selected Object: ").
-                attr(selected_object_info,class,("h3")).
+                attr(selected_object_info,class,("h4")).
                 attr(selected_object_info,order,1).
 
                 elem(selected_object,label,selected_object_cd).
                 attr(selected_object,label,"None").
-                attr(selected_object,class,("text-primary";"h3";"p-2")).
+                attr(selected_object,class,("text-primary";"h4";"p-2")).
                 attr(selected_object,order,2).
 
             elem(deselect_c, container, selected_object_c).
@@ -309,11 +308,11 @@ attr(window_flex, flex_direction,column).
                 attr(deselect_btn_c(ID),pos_y, 0):-_clinguin_assume(ooasp_isa(C, ID),true).
                 attr(deselect_btn_c(ID),visibility, hidden):-_clinguin_assume(ooasp_isa(C, ID),true).
 
-                    elem(deselect_btn(ID),button, deselect_btn_c(ID)):-_clinguin_assume(ooasp_isa(C, ID),true).
-                    attr(deselect_btn(ID),label,"Remove"):-_clinguin_assume(ooasp_isa(C, ID),true).
-                    attr(deselect_btn(ID),icon,"fa-trash"):-_clinguin_assume(ooasp_isa(C, ID),true).
+                    elem(deselect_btn(ID),button, deselect_btn_c(ID)):-_clinguin_assume(ooasp_isa(C, ID),true), _any(ooasp_unused(ID)).
+                    attr(deselect_btn(ID),label,"Remove"):-_clinguin_assume(ooasp_isa(C, ID),true), _any(ooasp_unused(ID)).
+                    attr(deselect_btn(ID),icon,"fa-trash"):-_clinguin_assume(ooasp_isa(C, ID),true), _any(ooasp_unused(ID)).
                     % when(deselect_btn(ID),click,update,(selected_object, label, "None")):-node(ID,_).
-                    when(deselect_btn(ID),click,call,remove_assumption(ooasp_isa(C,ID))) :- _clinguin_assume(ooasp_isa(C, ID),true).
+                    when(deselect_btn(ID),click,call,remove_assumption(ooasp_isa(C,ID))) :- _clinguin_assume(ooasp_isa(C, ID),true), _any(ooasp_unused(ID)).
 
 
     % isa_remove(ID) :- _clinguin_assume(ooasp_isa(C, ID),true).

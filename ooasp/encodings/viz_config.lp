@@ -66,7 +66,6 @@ attr(node, ID,  (label,color), @color(green)):- browse_isa(Class,ID).
 attr(node, ID, (label,bgcolor), "#C4C4C420"):- unused_node(_,ID).
 attr(node, ID, color, "#C4C4C4"):- unused_node(_,ID).
 attr(node, ID, (label,bgcolor), @color(blue,20)):- node(ID,_), not unused_node(_,ID).
-attr(node, T, (label,bgcolor), @color(blue,40)):- leaf_node(_,T).
 
 % ------- Attributes
 % browsing

@@ -21,10 +21,10 @@ check_permanent_cv. % Checks for permanent constraints apply
 #include "ooasp_symmetry.lp". % Symmetry breaking constraints
 #include "ooasp_smart_generation.lp". % Functions for smart generation
 
-% Show statements. Notice that anything that is used in the smart generation functions
+% !!!!!!!!!!!! Show statements. Notice that anything that is used in the smart generation functions
 % as well as clinguin UI encoding should be shown to avoid incorrect results.
-%#show object_needed/6.
-%#show global_ub/3.
-%#show global_lb/3.
-%#show association_needed/4.
-%#show .
+% #show object_needed/6.
+% #show global_ub/3.
+% #show global_lb/3.
+% #show association_needed/4.
+% #show .

@@ -153,7 +153,7 @@ class SmartOOASPSolver:
             self.ctl.release_external(Function("active", [Number(self.next_id - 1)]))
         self.ctl.assign_external(Function("active", [Number(self.next_id)]), True)
 
-    def add_object(self, o: str) -> None:
+    def add_object(self, o: str, must_be_used=True) -> None:
         """
         Adds a new object to the configuration. This addition includes the user predicate
         to know the class for the object that was added and distinguish it in the encodings.
@@ -167,8 +167,8 @@ class SmartOOASPSolver:
         self.ctl.add(
             "domain", [str(self.next_id), o], f"user({obj_atom})."
         )  # Needed for symmetry breaking
-        # self.ctl.add("domain", [str(self.next_id), o], f"{obj_atom}.")
-        # self.ctl.add("domain", [str(self.next_id), o], f"{dom_atom}.")
+        if must_be_used:
+            self.ctl.add("domain", [str(self.next_id), "object"], f"{obj_atom}.")
         self.assumptions.add(obj_atom)
         self.objects[o] += 1
         self.ground(o)
