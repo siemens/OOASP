@@ -13,13 +13,6 @@ isa_smallest(SUPER,ID) :-
 unused_node(object,ID) :- ooasp_domain(_,ID), _any(ooasp_unused(ID)).
 unused_node(Class,ID) :- ooasp_domain(Class,ID), _clinguin_browsing, not ooasp_isa(_,ID).
 
-assumed_isa(C,ID) :- ooasp_domain(Class,ID), _all(ooasp_isa_leaf(C,ID)), _clinguin_assume(ooasp_isa(C,ID), true).
-suggested_isa(C,ID) :- ooasp_domain(Class,ID), _all(ooasp_isa_leaf(C,ID)), not _clinguin_assume(ooasp_isa(C,ID), true), not _clinguin_browsing.
-browse_isa(C,ID) :- ooasp_domain(Class,ID), ooasp_isa_leaf(C,ID), not _clinguin_assume(ooasp_isa(C,ID), true), _clinguin_browsing.
-
-label_isa(C,ID):- assumed_isa(C,ID).
-label_isa(C,ID):- suggested_isa(C,ID).
-label_isa(C,ID):- browse_isa(C,ID).
 
 #defined ooasp_isa/3.
 graph(config).

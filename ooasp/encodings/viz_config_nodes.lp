@@ -19,6 +19,13 @@
 % infered_class_node(Class,Object_id) :- ooasp_domain(Class,Object_id), not _all(ooasp_isa(_,Object_id)).
 % unused_node(Class,Object_id) :- ooasp_domain(Class,Object_id), _clinguin_browsing, not ooasp_isa(_,Object_id).
 
+assumed_isa(C,ID) :- ooasp_domain(Class,ID), _all(ooasp_isa_leaf(C,ID)), _clinguin_assume(ooasp_isa(C,ID), true).
+suggested_isa(C,ID) :- ooasp_domain(Class,ID), _all(ooasp_isa_leaf(C,ID)), not _clinguin_assume(ooasp_isa(C,ID), true), not _clinguin_browsing.
+browse_isa(C,ID) :- ooasp_domain(Class,ID), ooasp_isa_leaf(C,ID), not _clinguin_assume(ooasp_isa(C,ID), true), _clinguin_browsing.
+
+label_isa(C,ID):- assumed_isa(C,ID).
+label_isa(C,ID):- suggested_isa(C,ID).
+label_isa(C,ID):- browse_isa(C,ID).
 
 any_node(Object_id) :- ooasp_domain(_,Object_id).
 node(Object_id,config) :- ooasp_domain(_,Object_id).

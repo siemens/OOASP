@@ -33,7 +33,7 @@ attr(menu_bar,icon,"fa-puzzle-piece").
 
         % ----------- Restart confirmation
         elem(restart_confirmation,modal,w).
-        attr(restart_confirmation,title,"Restart configuration?").
+        attr(restart_confirmation,title,"Restart configuration").
         attr(restart_confirmation,size,"lg").
 
             elem(modal_content,container,restart_confirmation).
@@ -41,13 +41,13 @@ attr(menu_bar,icon,"fa-puzzle-piece").
 
                 elem(restart_btn_container,container,modal_content).
                 attr(restart_btn_container,flex_direction,row).
-                attr(restart_btn_container,class,("d-flex";"flex-row")).
+                attr(restart_btn_container,class,("d-flex";"flex-row";"justify-content-end")).
                 attr(restart_btn_container,order,2).
 
                     elem(restart_yes,button,restart_btn_container).
                     attr(restart_yes,label,"Yes").
                     attr(restart_yes,icon,"fa-trash").
-                    attr(restart_yes,class,"btn-primary").
+                    attr(restart_yes,class,("btn-danger";"m-1")).
                     attr(restart_yes,order,2).
                     when(restart_yes,click,call,restart).
 
@@ -55,12 +55,12 @@ attr(menu_bar,icon,"fa-puzzle-piece").
                     elem(restart_no,button,restart_btn_container).
                     attr(restart_no,label,"No").
                     attr(restart_no,icon,"fa-x").
-                    attr(restart_no,class,"btn-outline-primary").
+                    attr(restart_no,class,("btn-outline-danger";"m-1")).
                     attr(restart_no,order,1).
                     when(restart_no,click,update,(restart_confirmation,visibility,hidden)).
 
                 elem(restart_msg,label,modal_content).
-                attr(restart_msg,label,"This action cannot be undone, are you sure you want to proceed?").
+                attr(restart_msg,label,"This action will remove everything and cannot be undone, are you sure you want to proceed?").
                 attr(restart_msg,class,"text-danger").
                 attr(restart_msg,order,1).
 
@@ -168,13 +168,19 @@ attr(window_flex, flex_direction,column).
             attr(n(X), clingraph_id, X) :- node(X,config).
             % when(n(ID), click, update, (edit_context(ID), visibility, shown)):- node(ID,config).
             % when(n(ID), click, update, (edit_context(ID), visibility, shown)):- node(ID,config).
-            when(n(X),click,update,(selected_object,label,@format("{}",X))) :- node(X,config).
+            when(n(X),click,update,(selected_object,label,@format("{} ({})",@stringify(Class,true),X))) :- node(X,config),label_isa(Class,X).
+            when(n(X),click,update,(selected_object,label,@format("({})",X))) :- node(X,config),not label_isa(_,X).
+            when(n(X),click,update,(selected_object_info,label,@stringify(C,true))) :- node(X,config),ooasp_domain(C, X).
+
             when(n(X),click,update,(assoc_edit_options(X),visibility,shown)) :- node(X,config).
             when(n(X),click,update,(assoc_edit_options(X'),visibility,hidden)) :- node(X,config), node(X',config), X'!=X.
             when(n(X),click,update,(value_edit_options(X),visibility,shown)) :- node(X,config).
             when(n(X),click,update,(value_edit_options(X'),visibility,hidden)) :- node(X,config), node(X',config), X'!=X.
             when(n(X),click,update,(deselect_btn_c(X),visibility,shown)) :- node(X,config).
             when(n(X),click,update,(deselect_btn_c(X'),visibility,hidden)) :- node(X,config), node(X',config), X'!=X.
+            when(n(X),click,update,(n(X),filter,"hue-rotate(180deg)")) :- node(X,config).
+            when(n(X),click,update,(n(X'),filter,"unset")) :- node(X,config), node(X',config), X'!=X.
+            when(n(X),click,update,(selected_object_cd,visibility,shown)) :- node(X,config).
 
     attr(config_viz,order,1).
 
@@ -276,7 +282,7 @@ attr(window_flex, flex_direction,column).
     % ================= Edit object
     elem(edit_c, container,bottom_container).
     attr(edit_c,flex_direction,row).
-    attr(edit_c,class,("justify-content-evenly";"p-3";"bg-info";"bg-opacity-10";"rounded";"border";"border-3";"m-2";"shadow")).
+    attr(edit_c,class,("justify-content-evenly";"p-2";"bg-info";"bg-opacity-10";"rounded";"border";"border-3";"m-2";"shadow")).
     attr(edit_c,order,1).
 
         elem(selected_object_c,container,edit_c).
@@ -285,19 +291,20 @@ attr(window_flex, flex_direction,column).
         attr(selected_object_c,order,1).
 
             elem(selected_object_cd,container,selected_object_c).
-            attr(selected_object_cd,flex_direction,row).
-            attr(selected_object_cd,class,("p-3")).
+            attr(selected_object_cd,flex_direction,column).
+            attr(selected_object_cd,class,"p-3").
+            attr(selected_object_cd,class,("bg-warning";"bg-opacity-10";"border";"border-dark";"border-2")).
+            attr(selected_object_cd,visibility,hidden).
             attr(selected_object_cd,order,1).
+            attr(selected_object_cd,width,200).
 
                 elem(selected_object_info,label,selected_object_cd).
-                attr(selected_object_info,label,"Selected Object: ").
-                attr(selected_object_info,class,("h4")).
-                attr(selected_object_info,order,1).
+                attr(selected_object_info,class,("h6";"p-1";"fw-light")).
+                attr(selected_object_info,order,2).
 
                 elem(selected_object,label,selected_object_cd).
-                attr(selected_object,label,"None").
-                attr(selected_object,class,("text-primary";"h4";"p-2")).
-                attr(selected_object,order,2).
+                attr(selected_object,class,("h5")).
+                attr(selected_object,order,1).
 
             elem(deselect_c, container, selected_object_c).
             attr(deselect_c, child_layout, absstatic).
@@ -325,13 +332,15 @@ attr(window_flex, flex_direction,column).
 
         elem(edit_value,container,edit_c).
         attr(edit_value,flex_direction,column).
-        attr(edit_value,class,("overflow-auto";"p-3";"bg-primary";"bg-opacity-25";"rounded-start";"border";"border-2";"border-end-0";"border-secondary")).
+        attr(edit_value,class,("overflow-auto";"p-2";"bg-primary";"bg-opacity-10";"rounded-start";"border";"border-2";"border-end-0";"border-secondary")).
         attr(edit_value,order,2).
         attr(edit_value,width,400).
 
             elem(edit_value_label,label,edit_value).
             attr(edit_value_label,label,"Attribute Values").
             attr(edit_value_label,order,2).
+            attr(edit_value_label,class,"h6").
+
 
             elem(all_edit_opts,container,edit_value) :- ooasp_domain(_,ID).
             attr(all_edit_opts,child_layout,absstatic).
@@ -341,33 +350,34 @@ attr(window_flex, flex_direction,column).
                 elem(value_edit_options(ID),container,all_edit_opts) :- ooasp_domain(_,ID).
                 attr(value_edit_options(ID),visibility,hidden) :- ooasp_domain(_,ID).
                 attr(value_edit_options(ID),order,2) :- ooasp_domain(_,ID).
-                attr(value_edit_options(ID),pos_x,20) :- ooasp_domain(_,ID).
-                attr(value_edit_options(ID),pos_y,20) :- ooasp_domain(_,ID).
+                attr(value_edit_options(ID),pos_x,30) :- ooasp_domain(_,ID).
+                attr(value_edit_options(ID),pos_y,30) :- ooasp_domain(_,ID).
 
                     value_assume(NAME,VALUE,ID) :- _any(ooasp_attr_value(NAME,ID,VALUE)), not _clinguin_assume(ooasp_attr_value(NAME,ID,VALUE),true).
                     elem(add_assumption(NAME,VALUE,ID),button,value_edit_options(ID)) :- value_assume(NAME,VALUE,ID).
                     attr(add_assumption(NAME,VALUE,ID),label,@format("{} := {}",NAME,VALUE)) :- value_assume(NAME,VALUE,ID).
-                    attr(add_assumption(NAME,VALUE,ID),class,("text-white";"bg-primary")) :- value_assume(NAME,VALUE,ID).
+                    attr(add_assumption(NAME,VALUE,ID),class,("btn-outline-primary";"m-1")) :- value_assume(NAME,VALUE,ID).
                     when(add_assumption(NAME,VALUE,ID),click,call,add_assumption(ooasp_attr_value(NAME,ID,VALUE))) :- value_assume(NAME,VALUE,ID).
 
                     value_remove_assume(NAME,VALUE,ID) :- _clinguin_assume(ooasp_attr_value(NAME,ID,VALUE),true).
                     elem(remove_assumption(NAME,VALUE,ID),button,value_edit_options(ID)) :-value_remove_assume(NAME,VALUE,ID).
                     attr(remove_assumption(NAME,VALUE,ID),icon,"fa-trash") :-value_remove_assume(NAME,VALUE,ID).
                     attr(remove_assumption(NAME,VALUE,ID),label,@format("{} := {}",NAME,VALUE)) :-value_remove_assume(NAME,VALUE,ID).
-                    attr(remove_assumption(NAME,VALUE,ID),class,("text-white";"bg-danger")) :-value_remove_assume(NAME,VALUE,ID).
+                    attr(remove_assumption(NAME,VALUE,ID),class,("btn-outline-danger";"m-1")) :-value_remove_assume(NAME,VALUE,ID).
                     when(remove_assumption(NAME,VALUE,ID),click,call,remove_assumption(ooasp_attr_value(NAME,ID,VALUE))) :-value_remove_assume(NAME,VALUE,ID).
 
 
 
         elem(edit_assoc,container,edit_c).
         attr(edit_assoc,flex_direction,column).
-        attr(edit_assoc,class,("overflow-auto";"p-3";"bg-secondary";"bg-opacity-25";"rounded-end";"border";"border-2";"border-start-0";"border-secondary")).
+        attr(edit_assoc,class,("overflow-auto";"p-2";"bg-secondary";"bg-opacity-10";"rounded-end";"border";"border-2";"border-start-0";"border-secondary")).
         attr(edit_assoc,order,3).
         attr(edit_assoc,width,400).
 
             elem(edit_assoc_label,label,edit_assoc).
             attr(edit_assoc_label,label,"Object Associations").
             attr(edit_assoc_label,order,2).
+            attr(edit_assoc_label,class,"h6").
 
             elem(all_assoc_opts,container,edit_assoc) :- ooasp_domain(_,ID).
             attr(all_assoc_opts,child_layout,absstatic).
@@ -376,21 +386,28 @@ attr(window_flex, flex_direction,column).
                 elem(assoc_edit_options(ID),container,all_assoc_opts) :- ooasp_domain(_,ID).
                 attr(assoc_edit_options(ID),visibility,hidden) :- ooasp_domain(_,ID).
                 attr(assoc_edit_options(ID),order,2) :- ooasp_domain(_,ID).
-                attr(assoc_edit_options(ID),pos_x,20) :- ooasp_domain(_,ID).
-                attr(assoc_edit_options(ID),pos_y,20) :- ooasp_domain(_,ID).
+                attr(assoc_edit_options(ID),pos_x,30) :- ooasp_domain(_,ID).
+                attr(assoc_edit_options(ID),pos_y,30) :- ooasp_domain(_,ID).
 
-                    assoc_assume(ASSOC,ID_FROM,ID_TO) :- _any(ooasp_associated(ASSOC,ID_FROM,ID_TO)), not _clinguin_assume(ooasp_associated(ASSOC,ID_FROM,ID_TO),true), ooasp_smallest_assoc(ASSOC).
-                    elem(add_association(ASSOC,ID_FROM,ID_TO),button,assoc_edit_options(ID_FROM)) :- assoc_assume(ASSOC,ID_FROM,ID_TO).
-                    attr(add_association(ASSOC,ID_FROM,ID_TO),label,@format("{} → {}",ASSOC,ID_TO)) :- assoc_assume(ASSOC,ID_FROM,ID_TO).
-                    attr(add_association(ASSOC,ID_FROM,ID_TO),class,("text-white";"bg-secondary")) :- assoc_assume(ASSOC,ID_FROM,ID_TO).
-                    when(add_association(ASSOC,ID_FROM,ID_TO),click,call,add_assumption(ooasp_associated(ASSOC,ID_FROM,ID_TO))) :- assoc_assume(ASSOC,ID_FROM,ID_TO).
 
-                    assoc_remove(ASSOC, ID_FROM, ID_TO) :- _clinguin_assume(ooasp_associated(ASSOC,ID_FROM,ID_TO),true).
-                    elem(remove_association(ASSOC,ID_FROM,ID_TO),button,assoc_edit_options(ID_FROM)) :- assoc_remove(ASSOC, ID_FROM, ID_TO).
-                    attr(remove_association(ASSOC,ID_FROM,ID_TO),icon,"fa-trash") :- assoc_remove(ASSOC, ID_FROM, ID_TO).
-                    attr(remove_association(ASSOC,ID_FROM,ID_TO),label,@format("{} → {}",ASSOC,ID_TO)) :- assoc_remove(ASSOC, ID_FROM, ID_TO).
-                    attr(remove_association(ASSOC,ID_FROM,ID_TO),class,("text-white";"bg-danger")) :- assoc_remove(ASSOC, ID_FROM, ID_TO).
-                    when(remove_association(ASSOC,ID_FROM,ID_TO),click,call,remove_assumption(ooasp_associated(ASSOC,ID_FROM,ID_TO))) :- assoc_remove(ASSOC, ID_FROM, ID_TO).
+                    assoc_assume(ASSOC,ID_FROM,ID_TO,left) :- _any(ooasp_associated(ASSOC,ID_FROM,ID_TO)), not _clinguin_assume(ooasp_associated(ASSOC,ID_FROM,ID_TO),true), ooasp_smallest_assoc(ASSOC).
+                    assoc_assume(ASSOC,ID_TO,ID_FROM,right) :- _any(ooasp_associated(ASSOC,ID_FROM,ID_TO)), not _clinguin_assume(ooasp_associated(ASSOC,ID_FROM,ID_TO),true), ooasp_smallest_assoc(ASSOC).
+                    elem(add_association(ASSOC,ID_FROM,ID_TO),button,assoc_edit_options(ID_FROM)) :- assoc_assume(ASSOC,ID_FROM,ID_TO,_).
+                    attr(add_association(ASSOC,ID_FROM,ID_TO),label,@format("{} → {}",ASSOC,ID_TO)) :- assoc_assume(ASSOC,ID_FROM,ID_TO,left).
+                    attr(add_association(ASSOC,ID_FROM,ID_TO),label,@format("{} ← {}",ASSOC,ID_TO)) :- assoc_assume(ASSOC,ID_FROM,ID_TO,right).
+                    attr(add_association(ASSOC,ID_FROM,ID_TO),class,("btn-outline-secondary";"m-1")) :- assoc_assume(ASSOC,ID_FROM,ID_TO,_).
+                    when(add_association(ASSOC,ID_FROM,ID_TO),click,call,add_assumption(ooasp_associated(ASSOC,ID_FROM,ID_TO))) :- assoc_assume(ASSOC,ID_FROM,ID_TO,left).
+                    when(add_association(ASSOC,ID_FROM,ID_TO),click,call,add_assumption(ooasp_associated(ASSOC,ID_TO,ID_FROM))) :- assoc_assume(ASSOC,ID_FROM,ID_TO,right).
+
+                    assoc_remove(ASSOC, ID_FROM, ID_TO,left) :- _clinguin_assume(ooasp_associated(ASSOC,ID_FROM,ID_TO),true), ooasp_smallest_assoc(ASSOC).
+                    assoc_remove(ASSOC, ID_TO, ID_FROM,right) :- _clinguin_assume(ooasp_associated(ASSOC,ID_FROM,ID_TO),true), ooasp_smallest_assoc(ASSOC).
+                    elem(remove_association(ASSOC,ID_FROM,ID_TO),button,assoc_edit_options(ID_FROM)) :- assoc_remove(ASSOC, ID_FROM, ID_TO,_).
+                    attr(remove_association(ASSOC,ID_FROM,ID_TO),icon,"fa-trash") :- assoc_remove(ASSOC, ID_FROM, ID_TO,_).
+                    attr(remove_association(ASSOC,ID_FROM,ID_TO),label,@format("{} → {}",ASSOC,ID_TO)) :- assoc_remove(ASSOC, ID_FROM, ID_TO,_).
+                    attr(remove_association(ASSOC,ID_FROM,ID_TO),class,("btn-outline-danger";"m-1")) :- assoc_remove(ASSOC, ID_FROM, ID_TO,_).
+                    when(remove_association(ASSOC,ID_FROM,ID_TO),click,call,remove_assumption(ooasp_associated(ASSOC,ID_FROM,ID_TO))) :- assoc_remove(ASSOC, ID_FROM, ID_TO,left).
+                    when(remove_association(ASSOC,ID_FROM,ID_TO),click,call,remove_assumption(ooasp_associated(ASSOC,ID_TO,ID_FROM))) :- assoc_remove(ASSOC, ID_FROM, ID_TO,right).
+
 
 
     % ================= Context menu
