@@ -124,9 +124,12 @@ attr(menu_bar,icon,"fa-puzzle-piece").
     when(find_btn,click,call,find_incrementally).
 
     elem(suggest_btn,button,menu_bar).
-    attr(suggest_btn,label,"Next Solution").
-    attr(suggest_btn,icon,"fa-forward").
-    attr(suggest_btn,class,("btn-outline-success")).
+    attr(suggest_btn,label,"Next Solution") :- _clinguin_external(check_potential_cv,true).
+    attr(suggest_btn,label,"Make suggestion") :- _clinguin_external(check_potential_cv,false).
+    attr(suggest_btn,icon,"fa-forward") :- _clinguin_external(check_potential_cv,true).
+    attr(suggest_btn,icon,"fa-border-top-left") :- _clinguin_external(check_potential_cv,false).
+    attr(suggest_btn,class,("btn-outline-success")) :- _clinguin_external(check_potential_cv,false).
+    attr(suggest_btn,class,("btn-success")) :- _clinguin_external(check_potential_cv,true).
     when(suggest_btn,click,call, next_solution).
 
     elem(select_btn,button,menu_bar) :- _clinguin_browsing.
