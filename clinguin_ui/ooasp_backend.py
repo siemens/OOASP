@@ -70,8 +70,3 @@ class OOASPBackend(ClingraphBackend):
         # Add this into the API first ad a parameter iin the init ()must add self.values assumptions
         print("CALLED IMPORT")
 
-    def force_restart(self):
-        """
-        Remove all elements and reset the environment.
-        """
-        print("FORCING RESTART")
