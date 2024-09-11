@@ -8,6 +8,22 @@ elem(menu_bar,menu_bar,w).
 attr(menu_bar,title,"OOASP").
 attr(menu_bar,icon,"fa-puzzle-piece").
 
+    % ---------- Help ----------
+    elem(help_btn,button,menu_bar).
+    attr(help_btn,icon,"fa-circle-question").
+    attr(help_btn,class,("btn-light")).
+    when(help_btn,click,update,(help_modal,visibility,shown)).
+
+        elem(help_modal,modal,w).
+        attr(help_modal,title,"Help").
+        attr(help_modal,size,"xl").
+        attr(help_modal,class,("justify-content-start")). %Check if this actually does anything.
+
+            elem(help_text,label,help_modal).
+            attr(help_text,label,"TBA (help text)").
+
+    % ------------ Restart button ----------
+
     elem(restart_btn,button,menu_bar).
     attr(restart_btn,label,"Restart").
     attr(restart_btn,icon,"fa-trash").
@@ -143,14 +159,14 @@ attr(window_flex, flex_direction,column).
 
     elem(bottom_container,container,window_flex).
     attr(bottom_container,flex_direction,row).
-    attr(bottom_container,class,("fixed-bottom";"justify-content-between")).
+    attr(bottom_container,class,("fixed-bottom";"justify-content-between";"mh-50")).
     attr(bottom_container,order,3).
 
         % ================= Add object
 
         elem(config_container, container,bottom_container).
         attr(config_container,flex_direction,column).
-        attr(config_container,class,("p-3";"bg-info";"bg-opacity-10")).
+        attr(config_container,class,("p-3";"bg-info";"bg-opacity-10";"rounded";"border";"border-3";"m-2")).
         attr(config_container,order,1).
         attr(config_container,width,250).
 
@@ -172,8 +188,6 @@ attr(window_flex, flex_direction,column).
                     attr(addobject_dd_c,class,("d-flex";"flex-row";"mt-1")).
                     attr(addobject_dd_c,class,("opacity-20")):- _clinguin_browsing.
                     attr(addobject_dd_c,order,2).
-
-
 
                         elem(addobject_dd,dropdown_menu,addobject_dd_c).
                         attr(addobject_dd,selected,"object").
@@ -241,26 +255,38 @@ attr(window_flex, flex_direction,column).
     % ================= Edit object
     elem(edit_c, container,bottom_container).
     attr(edit_c,flex_direction,row).
-    attr(edit_c,class,("justify-content-evenly";"p-3")).
+    attr(edit_c,class,("justify-content-evenly";"p-3";"bg-info";"bg-opacity-10";"rounded";"border";"border-3";"m-2")).
     attr(edit_c,order,1).
 
         elem(selected_object_c,container,edit_c).
-        attr(selected_object_c,flex_direction,row).
-        attr(selected_object_c,class,("p-3")).
+        attr(selected_object_c,flex_direction,column).
+        attr(selected_object_c,class,("p-3";"align-items-center")).
         attr(selected_object_c,order,1).
 
-            elem(selected_object_info,label,selected_object_c).
-            attr(selected_object_info,label,"Selected Object: ").
-            attr(selected_object_info,order,1).
+            elem(selected_object_cd,container,selected_object_c).
+            attr(selected_object_cd,flex_direction,row).
+            attr(selected_object_cd,class,("p-3")).
+            attr(selected_object_cd,order,1).
 
-            elem(selected_object,label,selected_object_c).
-            attr(selected_object,label,"None").
-            attr(selected_object,class,("text-primary")).
-            attr(selected_object,order,2).
+                elem(selected_object_info,label,selected_object_cd).
+                attr(selected_object_info,label,"Selected Object: ").
+                attr(selected_object_info,class,("h3")).
+                attr(selected_object_info,order,1).
+
+                elem(selected_object,label,selected_object_cd).
+                attr(selected_object,label,"None").
+                attr(selected_object,class,("text-primary";"h4")).
+                attr(selected_object,order,2).
+            
+            elem(deselect_btn,button, selected_object_c).
+            attr(deselect_btn,label,"De-select").
+            attr(deselect_btn,order,2).
+            when(deselect_btn,click,update,(selected_object, label, "None")).
+            % TODO actually deselect
 
         elem(edit_value,container,edit_c).
         attr(edit_value,flex_direction,column).
-        attr(edit_value,class,("p-3")).
+        attr(edit_value,class,("p-3";"bg-primary";"bg-opacity-25";"rounded-start")).
         attr(edit_value,order,2).
 
             elem(edit_value_label,label,edit_value).
@@ -268,7 +294,7 @@ attr(window_flex, flex_direction,column).
         
         elem(edit_assoc,container,edit_c).
         attr(edit_assoc,flex_direction,column).
-        attr(edit_assoc,class,("p-3")).
+        attr(edit_assoc,class,("p-3";"bg-secondary";"bg-opacity-25";"rounded-end")).
         attr(edit_assoc,order,3).
 
             elem(edit_assoc_label,label,edit_assoc).
@@ -284,6 +310,8 @@ elem(edit_context(ID),context_menu,w) :- ooasp_domain(_,ID).
     attr(selector(ID),class,("bg-success")) :- ooasp_domain(_,ID).
     
     when(selector(ID),click,update,(selected_object,label,@format("{}",ID))) :- ooasp_domain(_,ID).
+    when(selector(ID),click,update,(assoc_edit_options(ID),visibility,shown)) :- ooasp_domain(_,ID).
+    when(selector(ID),click,update,(value_edit_options(ID),visibility,shown)) :- ooasp_domain(_,ID).
     %when(selector(ID),click,update,(selector(ID),label,"Deselect")) :- ooasp_domain(_,ID).
     %when(selector(ID),click,update,(selector(ID),class,("bg-warning"))) :- ooasp_domain(_,ID).
 
@@ -292,6 +320,14 @@ elem(edit_context(ID),context_menu,w) :- ooasp_domain(_,ID).
         %elem(attribute_context(ID),button, edit_context(ID)) :- ooasp_isa(_,ID).
         %attr(attribute_context(ID),label, "Set Attributes") :- ooasp_isa(_,ID).
         %when(attribute_context(ID),click,update,(attr_context_menu(ID),visibility, shown)) :- ooasp_isa(_,ID).
+
+elem(assoc_edit_options(ID),container,edit_assoc) :- ooasp_domain(_,ID).
+attr(assoc_edit_options(ID),visibility,hidden) :- ooasp_domain(_,ID).
+attr(assoc_edit_options(ID),order,2) :- ooasp_domain(_,ID).
+
+elem(value_edit_options(ID),container,edit_value) :- ooasp_domain(_,ID).
+attr(value_edit_options(ID),visibility,hidden) :- ooasp_domain(_,ID).
+attr(value_edit_options(ID),order,2) :- ooasp_domain(_,ID).
 
     value_assume(NAME,VALUE,ID) :- _any(ooasp_attr_value(NAME,ID,VALUE)), not _clinguin_assume(ooasp_attr_value(NAME,ID,VALUE),true).
     elem(add_assumption(NAME,VALUE,ID),button,edit_context(ID)) :- value_assume(NAME,VALUE,ID).
@@ -328,4 +364,4 @@ elem(edit_context(ID),context_menu,w) :- ooasp_domain(_,ID).
     when(remove_isa(ID),click,call,remove_assumption(ooasp_isa(C,ID))) :- isa_remove(ID), _clinguin_assume(ooasp_isa(C, ID),true).
 
     % dev borers
-attr(E,class,("border-1";"border";"border-dark")):- elem(E, container, _).
+%attr(E,class,("border-1";"border";"border-dark")):- elem(E, container, _).
