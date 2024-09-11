@@ -166,7 +166,7 @@ attr(window_flex, flex_direction,column).
 
         elem(config_container, container,bottom_container).
         attr(config_container,flex_direction,column).
-        attr(config_container,class,("p-3";"bg-info";"bg-opacity-10";"rounded";"border";"border-3";"m-2")).
+        attr(config_container,class,("p-3";"bg-info";"bg-opacity-10";"rounded";"border";"border-3";"m-2";"shadow")).
         attr(config_container,order,1).
         attr(config_container,width,250).
 
@@ -255,7 +255,7 @@ attr(window_flex, flex_direction,column).
     % ================= Edit object
     elem(edit_c, container,bottom_container).
     attr(edit_c,flex_direction,row).
-    attr(edit_c,class,("justify-content-evenly";"p-3";"bg-info";"bg-opacity-10";"rounded";"border";"border-3";"m-2")).
+    attr(edit_c,class,("justify-content-evenly";"p-3";"bg-info";"bg-opacity-10";"rounded";"border";"border-3";"m-2";"shadow")).
     attr(edit_c,order,1).
 
         elem(selected_object_c,container,edit_c).
@@ -275,7 +275,7 @@ attr(window_flex, flex_direction,column).
 
                 elem(selected_object,label,selected_object_cd).
                 attr(selected_object,label,"None").
-                attr(selected_object,class,("text-primary";"h4")).
+                attr(selected_object,class,("text-primary";"h3";"p-2")).
                 attr(selected_object,order,2).
             
             elem(deselect_btn,button, selected_object_c).
@@ -286,7 +286,7 @@ attr(window_flex, flex_direction,column).
 
         elem(edit_value,container,edit_c).
         attr(edit_value,flex_direction,column).
-        attr(edit_value,class,("p-3";"bg-primary";"bg-opacity-25";"rounded-start")).
+        attr(edit_value,class,("p-3";"bg-primary";"bg-opacity-25";"rounded-start";"border";"border-2";"border-end-0";"border-secondary")).
         attr(edit_value,order,2).
 
             elem(edit_value_label,label,edit_value).
@@ -294,13 +294,11 @@ attr(window_flex, flex_direction,column).
         
         elem(edit_assoc,container,edit_c).
         attr(edit_assoc,flex_direction,column).
-        attr(edit_assoc,class,("p-3";"bg-secondary";"bg-opacity-25";"rounded-end")).
+        attr(edit_assoc,class,("p-3";"bg-secondary";"bg-opacity-25";"rounded-end";"border";"border-2";"border-start-0";"border-secondary")).
         attr(edit_assoc,order,3).
 
             elem(edit_assoc_label,label,edit_assoc).
             attr(edit_assoc_label,label,"Object Associations").
-
-
 
     % ================= Context menu
 
