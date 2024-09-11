@@ -133,7 +133,8 @@ attr(menu_bar,icon,"fa-puzzle-piece").
     when(suggest_btn,click,call, next_solution).
 
     elem(select_btn,button,menu_bar) :- _clinguin_browsing.
-    attr(select_btn,label,"Select solution") :- _clinguin_browsing.
+    attr(select_btn,label,"Select solution") :- _clinguin_browsing, _clinguin_external(check_potential_cv,true).
+    attr(select_btn,label,"Select suggestion") :- _clinguin_browsing, _clinguin_external(check_potential_cv,false).
     attr(select_btn,class,("btn-outline-success")) :- _clinguin_browsing.
     attr(select_btn, icon, "fa-hand-pointer") :- _clinguin_browsing.
     when(select_btn, click, call, select(show_prg)) :- _clinguin_browsing.
