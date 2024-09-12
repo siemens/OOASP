@@ -169,7 +169,7 @@ class SmartOOASPSolver:
         )  # Needed for symmetry breaking
         if must_be_used:
             self.ctl.add("domain", [str(self.next_id), "object"], f"{obj_atom}.")
-        self.assumptions.add(obj_atom)
+            self.assumptions.add(obj_atom)
         self.objects[o] += 1
         self.ground(o)
         self.next_id += 1

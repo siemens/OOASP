@@ -40,7 +40,7 @@ elem(edit_c, container,bottom_container).
                     when(deselect_btn(ID),click,call,remove_assumption(ooasp_isa(C,ID))) :- _clinguin_assume(ooasp_isa(C, ID),true), _any(ooasp_unused(ID)).
 
 
-    % isa_remove(ID) :- _clinguin_assume(ooasp_isa(C, ID),true).
+    % isa_remove(ID) :- _clinguin_assume(ooasp_isa(C, ID),true), _any(ooasp_unused(ID)).
     % elem(remove_isa(ID),button,edit_context(ID)) :- isa_remove(ID).
     % attr(remove_isa(ID),icon,"fa-trash") :- isa_remove(ID).
     % attr(remove_isa(ID),label,"Un-assign class.") :- isa_remove(ID).

@@ -1,9 +1,9 @@
 from clinguin.server.application.backends import ClingraphBackend
 from ooasp.smart_ooasp import SmartOOASPSolver
-from clingo import Function
+from clingo import Function, Control, parse_term
 
 
-SAVE_FILE = "ui_save_test.lp"
+SAVE_FILE = "ooasp_configuration.lp"
 
 
 ASSOCIATION_SPECIALIZATIONS = [
@@ -61,9 +61,7 @@ class OOASPBackend(ClingraphBackend):
         self._set_external(Function("check_potential_cv"), "false")
 
     def remove_assumption(self, atom):
-        print("Super")
         super().remove_assumption(atom)
-        print(self.smart_solver.assumptions)
         if atom in self.smart_solver.assumptions:
             self.smart_solver.assumptions.remove(atom)
 
@@ -80,8 +78,25 @@ class OOASPBackend(ClingraphBackend):
         """
         Takes a file containing a configuration encoding and loads it into the editor.
         """
-        # check the size from the file
-        # ground for each object in the file
-        # add assumptions for all things in file
-        # Add this into the API first ad a parameter iin the init ()must add self.values assumptions
-        print("CALLED IMPORT")
+        self._restart()
+        ctl = Control(["1"])
+        ctl.load(f_path)
+        ctl.ground([("base", [])])
+        model = None
+        objects = {}
+        assumptions = []
+        with ctl.solve(yield_=True) as handle:
+            for model in handle:
+                for atom in model.symbols(atoms=True):
+                    assumptions.append(str(atom))
+                    if atom.match("ooasp_isa", 2):
+                        atom.arguments
+                        objects[atom.arguments[1].number] = atom.arguments[0].name
+                model = model.symbols(atoms=True)
+        objects = dict(sorted(objects.items(), key=lambda x: x[0]))
+        for expected_next_id, c in objects.items():
+            while expected_next_id > self.smart_solver.next_id:
+                self.smart_solver.add_object("object", must_be_used=False)
+            self.smart_solver.add_object(c, must_be_used=True)
+        for a in assumptions:
+            self._add_assumption(parse_term(a))
