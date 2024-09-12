@@ -1,0 +1,24 @@
+    elem(config_viz, canvas,window_flex).
+    % attr(config_viz,class,("vw-75";"vh-75")).
+    attr(config_viz, image_type, clingraph__config).
+            #include "ooasp/encodings/viz_config_nodes.lp".
+
+            elem(n(X), svg_node, config_viz) :- node(X,config).
+            attr(n(X), clingraph_id, X) :- node(X,config).
+            % when(n(ID), click, update, (edit_context(ID), visibility, shown)):- node(ID,config).
+            % when(n(ID), click, update, (edit_context(ID), visibility, shown)):- node(ID,config).
+            when(n(X),click,update,(selected_object,label,@format("{} ({})",@stringify(Class,true),X))) :- node(X,config),label_isa(Class,X).
+            when(n(X),click,update,(selected_object,label,@format("({})",X))) :- node(X,config),not label_isa(_,X).
+            when(n(X),click,update,(selected_object_info,label,@stringify(C,true))) :- node(X,config),ooasp_domain(C, X).
+
+            when(n(X),click,update,(assoc_edit_options(X),visibility,shown)) :- node(X,config).
+            when(n(X),click,update,(assoc_edit_options(X'),visibility,hidden)) :- node(X,config), node(X',config), X'!=X.
+            when(n(X),click,update,(value_edit_options(X),visibility,shown)) :- node(X,config).
+            when(n(X),click,update,(value_edit_options(X'),visibility,hidden)) :- node(X,config), node(X',config), X'!=X.
+            when(n(X),click,update,(deselect_btn_c(X),visibility,shown)) :- node(X,config).
+            when(n(X),click,update,(deselect_btn_c(X'),visibility,hidden)) :- node(X,config), node(X',config), X'!=X.
+            when(n(X),click,update,(n(X),filter,"hue-rotate(180deg)")) :- node(X,config).
+            when(n(X),click,update,(n(X'),filter,"unset")) :- node(X,config), node(X',config), X'!=X.
+            when(n(X),click,update,(selected_object_cd,visibility,shown)) :- node(X,config).
+
+    attr(config_viz,order,1).
