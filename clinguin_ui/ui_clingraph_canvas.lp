@@ -17,8 +17,10 @@
             when(n(X),click,update,(value_edit_options(X'),visibility,hidden)) :- node(X,config), node(X',config), X'!=X.
             when(n(X),click,update,(deselect_btn_c(X),visibility,shown)) :- node(X,config).
             when(n(X),click,update,(deselect_btn_c(X'),visibility,hidden)) :- node(X,config), node(X',config), X'!=X.
+            when(n(X),click,update,(n(Y),filter,"grayscale(1)")) :- node(X,config), shown_association(_,_,X,Y).
+            when(n(X),click,update,(n(Y),filter,"grayscale(1)")) :- node(X,config), shown_association(_,_,Y,X).
             when(n(X),click,update,(n(X),filter,"hue-rotate(180deg)")) :- node(X,config).
-            when(n(X),click,update,(n(X'),filter,"unset")) :- node(X,config), node(X',config), X'!=X.
+            when(n(X),click,update,(n(X'),filter,"unset")) :- node(X,config), node(X',config), X'!=X, not shown_association(_,_,X,X'), not shown_association(_,_,X',X).
             when(n(X),click,update,(selected_object_cd,visibility,shown)) :- node(X,config).
 
     attr(config_viz,order,1).

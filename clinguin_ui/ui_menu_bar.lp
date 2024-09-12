@@ -1,3 +1,21 @@
+#const help_message = @concat(
+    "<p><i>This UI allows to create a configuration</i></p>",
+    "<h5>Add objects</h5>",
+    "<p>In the add 'Add object' section one can add a new object to the system. Only leaf classes can be added as objects. Click on + to add the </p>",
+    "<h5>Edit objects</h5>",
+    "<p>Click on the node in the configuration graph to edit the object. The lower right pannel will show the selected node and posible changes. </p>",
+    "<h5>Partial and full configuration</h5>",
+    "<p>The yellow button on the menu can toggle between partial and full configuration. In partial configuration objects might not have values for attributes and lowebounds might not be filled. In full configuration the system will enforce the complete configuration. </p>",
+    "<h5>Find incrementally</h5>",
+    "<p>Click on the 'Find incrementally' button to allow the system to create all the required objects to complete de configuration. </p>",
+    "<h5>Next solution</h5>",
+    "<p>Browse the solutions for a complete configuration. The new information is highlighted in green.</p>",
+    "<h5>Make suggestion</h5>",
+    "<p>Give possiblities for a partial configuration. The new information is highlighted in green.</p>",
+    "<h5>Select a solution</h5>",
+    "<p>When browsing the solutions, select the one that you want to keep. </p>",
+    ""
+).
 % ================= Menu bar
 
 elem(menu_bar,menu_bar,w).
@@ -16,7 +34,8 @@ attr(menu_bar,icon,"fa-puzzle-piece").
         attr(help_modal,class,("justify-content-start")). %Check if this actually does anything.
 
             elem(help_text,label,help_modal).
-            attr(help_text,label,"TBA (help text)").
+            attr(help_text,label,help_message).
+            attr(help_text,class,("text-start";"fw-light";"lh-sm")).
 
     % ------------ Restart button ----------
 

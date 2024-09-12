@@ -85,9 +85,6 @@ attr(node, ID, (label,cv,(MAX,C2,ASSOC)), @cv_str("Needs at least {} more {}s",(
     #max{N:_all(object_needed(ID, ASSOC, N, C2, _, _))}=MAX.
 
 % Associations
-shown_association(assumed,Name,ID1,ID2):-ooasp_smallest_assoc(Name),_clinguin_assume(ooasp_associated(Name,ID1,ID2),true).
-shown_association(browse,Name,ID1,ID2):-ooasp_smallest_assoc(Name), ooasp_associated(Name,ID1,ID2), _clinguin_browsing,  not _clinguin_assume(ooasp_associated(Name,ID1,ID2),true).
-shown_association(infer,Name,ID1,ID2):-ooasp_smallest_assoc(Name),_all(ooasp_associated(Name,ID1,ID2)), not _clinguin_assume(ooasp_associated(Name,ID1,ID2),true), not _clinguin_browsing.
 
 edge((ID1,ID2),config) :-shown_association(_,Name,ID1,ID2).
 
