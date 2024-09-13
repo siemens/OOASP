@@ -78,6 +78,7 @@ class OOASPBackend(ClingraphBackend):
         """
         Takes a file containing a configuration encoding and loads it into the editor.
         """
+        f_path = f_path.strip("\"") # It seems that passing the argument from the clinguin adds extra quotes which need to be removed
         self._restart()
         ctl = Control(["1"])
         ctl.load(f_path)

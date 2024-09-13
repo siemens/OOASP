@@ -99,7 +99,26 @@ attr(menu_bar,icon,"fa-puzzle-piece").
     attr(menu_bar_load,label, "Load").
     attr(menu_bar_load, icon, "fa-upload").
     attr(menu_bar_load, class, ("btn-outline-primary";"border-0")).
-    when(menu_bar_load,click,call,import_solution).
+    %when(menu_bar_load,click,call,import_solution).
+    when(menu_bar_load,click,update,(load_modal,visibility,shown)).
+
+        elem(load_modal,modal,w).
+        attr(load_modal,title,"Load file").
+            elem(c_load, container, load_modal).
+            attr(c_load, flex_direction, "column").
+            attr(c_load, class, "align-items-end").
+
+                elem(b2, button, c_load).
+                when(b2, click, call, import_solution(_context_value(file_name,str,"ooasp_configuration.lp"))).
+                attr(b2, label, "Save").
+                attr(b2, class, "m-1").
+                attr(b2, class, "btn-primary").
+                attr(b2, icon, "fa-file-code").
+
+                elem(t2, textfield, c_load).
+                attr(t2, placeholder, "ooasp_configuration.lp").
+                attr(t2, width, 450).
+                when(t2, input, context, (file_name, _value)).
 
     elem(menu_bar_save, button, menu_bar).
     attr(menu_bar_save,label, "Save").
@@ -121,11 +140,11 @@ attr(menu_bar,icon,"fa-puzzle-piece").
                 when(b1, click, call, download(show_prg,_context_value(file_name,str,"ooasp_configuration.lp"))).
                 attr(b1, label, "Save").
                 attr(b1, class, "m-1").
-                attr(b1, class, "btn-success").
+                attr(b1, class, "btn-primary").
                 attr(b1, icon, "fa-download").
 
                 elem(t1, textfield, c_save).
-                attr(t1, placeholder, "Optional file name").
+                attr(t1, placeholder, "ooasp_configuration.lp").
                 attr(t1, width, 450).
                 when(t1, input, context, (file_name, _value)).
 
