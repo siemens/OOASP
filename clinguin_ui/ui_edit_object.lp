@@ -110,12 +110,12 @@ elem(edit_c, container,bottom_container).
 
                     assoc_assume(ASSOC,ID_FROM,ID_TO,left) :- _any(ooasp_associated(ASSOC,ID_FROM,ID_TO)), not _clinguin_assume(ooasp_associated(ASSOC,ID_FROM,ID_TO),true), ooasp_smallest_assoc(ASSOC).
                     assoc_assume(ASSOC,ID_TO,ID_FROM,right) :- _any(ooasp_associated(ASSOC,ID_FROM,ID_TO)), not _clinguin_assume(ooasp_associated(ASSOC,ID_FROM,ID_TO),true), ooasp_smallest_assoc(ASSOC).
-                    elem(add_association(ASSOC,ID_FROM,ID_TO),button,assoc_edit_options(ID_FROM)) :- assoc_assume(ASSOC,ID_FROM,ID_TO,_).
-                    attr(add_association(ASSOC,ID_FROM,ID_TO),label,@format("{} → {}",ASSOC,ID_TO)) :- assoc_assume(ASSOC,ID_FROM,ID_TO,left).
-                    attr(add_association(ASSOC,ID_FROM,ID_TO),label,@format("{} ← {}",ASSOC,ID_TO)) :- assoc_assume(ASSOC,ID_FROM,ID_TO,right).
-                    attr(add_association(ASSOC,ID_FROM,ID_TO),class,("btn-outline-secondary";"m-1")) :- assoc_assume(ASSOC,ID_FROM,ID_TO,_).
-                    when(add_association(ASSOC,ID_FROM,ID_TO),click,call,add_assumption(ooasp_associated(ASSOC,ID_FROM,ID_TO))) :- assoc_assume(ASSOC,ID_FROM,ID_TO,left).
-                    when(add_association(ASSOC,ID_FROM,ID_TO),click,call,add_assumption(ooasp_associated(ASSOC,ID_TO,ID_FROM))) :- assoc_assume(ASSOC,ID_FROM,ID_TO,right).
+                    elem(add_association(ASSOC,ID_FROM,ID_TO,L_OR_R),button,assoc_edit_options(ID_FROM)) :- assoc_assume(ASSOC,ID_FROM,ID_TO,L_OR_R).
+                    attr(add_association(ASSOC,ID_FROM,ID_TO,left),label,@format("{} → {}",ASSOC,ID_TO)) :- assoc_assume(ASSOC,ID_FROM,ID_TO,left).
+                    attr(add_association(ASSOC,ID_FROM,ID_TO,right),label,@format("{} ← {}",ASSOC,ID_TO)) :- assoc_assume(ASSOC,ID_FROM,ID_TO,right).
+                    attr(add_association(ASSOC,ID_FROM,ID_TO,L_OR_R),class,("btn-outline-secondary";"m-1")) :- assoc_assume(ASSOC,ID_FROM,ID_TO,L_OR_R).
+                    when(add_association(ASSOC,ID_FROM,ID_TO,left),click,call,add_assumption(ooasp_associated(ASSOC,ID_FROM,ID_TO))) :- assoc_assume(ASSOC,ID_FROM,ID_TO,left).
+                    when(add_association(ASSOC,ID_FROM,ID_TO,right),click,call,add_assumption(ooasp_associated(ASSOC,ID_TO,ID_FROM))) :- assoc_assume(ASSOC,ID_FROM,ID_TO,right).
 
                     assoc_remove(ASSOC, ID_FROM, ID_TO,left) :- _clinguin_assume(ooasp_associated(ASSOC,ID_FROM,ID_TO),true), ooasp_smallest_assoc(ASSOC).
                     assoc_remove(ASSOC, ID_TO, ID_FROM,right) :- _clinguin_assume(ooasp_associated(ASSOC,ID_FROM,ID_TO),true), ooasp_smallest_assoc(ASSOC).
