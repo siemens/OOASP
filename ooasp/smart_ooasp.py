@@ -362,15 +362,22 @@ class SmartOOASPSolver:
             bool: True if objects were added, False otherwise
         """
         self.log("\t+++++ global_ub")
+        added_key = None
+        added = 0
         cautious = self.get_cautious()
-        for s in cautious:
-            if s.match("global_ub", 3):
+        global_ub = [s for s in cautious if s.match("global_ub", 3)]
+
+        for s in global_ub:
+            c, needed, _ = s.arguments
+            if added_key is None:
                 self.log("\t  ---> Apply ", s)
-                c2, needed, _ = s.arguments
-                for _ in range(0, needed.number):
-                    self.add_object(c2.name)
-                return True
-        return False
+                added_key = c
+            if added_key != c:
+                continue
+            for _ in range(added, needed.number):
+                self.add_object(c.name)
+                added += 1
+        return added > 0
 
     def global_lb(self) -> bool:
         """
@@ -387,15 +394,22 @@ class SmartOOASPSolver:
             bool: True if objects were added, False otherwise
         """
         self.log("\t+++++ global_lb")
+        added_key = None
+        added = 0
         cautious = self.get_cautious()
-        for s in cautious:
-            if s.match("global_lb", 3):
+        global_lb = [s for s in cautious if s.match("global_lb", 3)]
+
+        for s in global_lb:
+            c, needed, _ = s.arguments
+            if added_key is None:
                 self.log("\t  ---> Apply ", s)
-                c1, needed, _ = s.arguments
-                for _ in range(0, needed.number):
-                    self.add_object(c1.name)
-                return True
-        return False
+                added_key = c
+            if added_key != c:
+                continue
+            for _ in range(added, needed.number):
+                self.add_object(c.name)
+                added += 1
+        return added > 0
 
     def association_needed(self) -> bool:
         """
