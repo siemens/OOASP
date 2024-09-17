@@ -9,6 +9,15 @@ is_target_assoc(ASSOC,SIDE):-
     ooasp_assoc_limit(ASSOC,max,SIDE,C1,1,C2),
     ooasp_assoc_limit(ASSOC,min,SIDE,C1,1,C2).
 
+is_target_assoc_spec(ASSOC,SIDE):-
+    is_target_assoc(ASSOC',SIDE),
+    ooasp_assoc_specialization(ASSOC,ASSOC'),
+    ooasp_assoc_limit(ASSOC,max,SIDE,C1,1,C2),
+    ooasp_assoc_limit(ASSOC,min,SIDE,C1,0,C2).
+
+is_target_assoc_any(ASSOC,SIDE):-is_target_assoc(ASSOC,SIDE).
+is_target_assoc_any(ASSOC,SIDE):-is_target_assoc_spec(ASSOC,SIDE).
+
 % =====================
 % Incremental generation
 % =====================
@@ -72,7 +81,7 @@ global_ub(C2, 1..((NUM1 + MAX - 1) / MAX)-NUM2, new_object):-
 
 global_lb(C1,1..(N2*MIN)-N1,new_object):-
     % It is a target association: One side is 1..1 The other side is MIN.._
-    is_target_assoc(ASSOC, SIDE),
+    is_target_assoc_any(ASSOC, SIDE),
     SIDE2!=SIDE,
     ooasp_assoc_limit(ASSOC,min,SIDE2,C2,MIN,C1),
     % The numer of elements of class C1

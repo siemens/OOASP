@@ -78,7 +78,9 @@ class OOASPBackend(ClingraphBackend):
         """
         Takes a file containing a configuration encoding and loads it into the editor.
         """
-        f_path = f_path.strip("\"") # It seems that passing the argument from the clinguin adds extra quotes which need to be removed
+        f_path = f_path.strip(
+            '"'
+        )  # It seems that passing the argument from the clinguin adds extra quotes which need to be removed
         self._restart()
         ctl = Control(["1"])
         ctl.load(f_path)
@@ -101,3 +103,4 @@ class OOASPBackend(ClingraphBackend):
             self.smart_solver.add_object(c, must_be_used=True)
         for a in assumptions:
             self._add_assumption(parse_term(a))
+        self._set_external(Function("check_potential_cv"), "false")

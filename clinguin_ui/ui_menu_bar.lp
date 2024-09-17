@@ -10,8 +10,6 @@
     "<p>Click on the 'Find incrementally' button to allow the system to create all the required objects to complete de configuration. </p>",
     "<h5>Next solution</h5>",
     "<p>Browse the solutions for a complete configuration. The new information is highlighted in green.</p>",
-    "<h5>Make suggestion</h5>",
-    "<p>Give possiblities for a partial configuration. The new information is highlighted in green.</p>",
     "<h5>Select a solution</h5>",
     "<p>When browsing the solutions, select the one that you want to keep. </p>",
     ""
@@ -160,15 +158,12 @@ attr(menu_bar,icon,"fa-puzzle-piece").
     attr(find_btn,class,("btn-outline-secondary")).
     when(find_btn,click,call,find_incrementally).
 
-    elem(suggest_btn,button,menu_bar).
+    elem(suggest_btn,button,menu_bar):- _clinguin_external(check_potential_cv,true).
     attr(suggest_btn,label,"Next Solution") :- _clinguin_external(check_potential_cv,true).
-    attr(suggest_btn,label,"Make suggestion") :- _clinguin_external(check_potential_cv,false), not _clinguin_browsing.
-    attr(suggest_btn,label,"Next suggestion") :- _clinguin_external(check_potential_cv,false),_clinguin_browsing.
     attr(suggest_btn,icon,"fa-forward") :- _clinguin_external(check_potential_cv,true).
-    attr(suggest_btn,icon,"fa-border-top-left") :- _clinguin_external(check_potential_cv,false).
-    attr(suggest_btn,class,("btn-outline-success")).
+    attr(suggest_btn,class,("btn-outline-success")):- _clinguin_external(check_potential_cv,true).
     % attr(suggest_btn,class,("btn-success")) :- _clinguin_external(check_potential_cv,true).
-    when(suggest_btn,click,call, next_solution).
+    when(suggest_btn,click,call, next_solution):- _clinguin_external(check_potential_cv,true).
 
     elem(select_btn,button,menu_bar) :- _clinguin_browsing.
     attr(select_btn,label,"Select solution") :- _clinguin_browsing, _clinguin_external(check_potential_cv,true).
