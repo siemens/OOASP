@@ -55,7 +55,7 @@ attr(menu_bar,icon,"fa-puzzle-piece").
 
                 elem(restart_btn_container,container,modal_content).
                 attr(restart_btn_container,flex_direction,row).
-                attr(restart_btn_container,class,("d-flex";"flex-row";"justify-content-end")).
+                attr(restart_btn_container,class,("d-flex";"flex-row";"justify-content-end";"m-3")).
                 attr(restart_btn_container,order,2).
 
                     elem(restart_yes,button,restart_btn_container).
@@ -75,7 +75,7 @@ attr(menu_bar,icon,"fa-puzzle-piece").
 
                 elem(restart_msg,label,modal_content).
                 attr(restart_msg,label,"This action will remove everything and cannot be undone, are you sure you want to proceed?").
-                attr(restart_msg,class,"text-danger").
+                % attr(restart_msg,class,"text-danger").
                 attr(restart_msg,order,1).
 
 
@@ -110,7 +110,7 @@ attr(menu_bar,icon,"fa-puzzle-piece").
 
                 elem(b2, button, c_load).
                 when(b2, click, call, import_solution(_context_value(file_name,str,"ooasp_configuration.lp"))).
-                attr(b2, label, "Save").
+                attr(b2, label, "Load").
                 attr(b2, class, "m-1").
                 attr(b2, class, "btn-primary").
                 attr(b2, icon, "fa-file-code").

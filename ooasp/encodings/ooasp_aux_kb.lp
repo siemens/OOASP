@@ -56,6 +56,18 @@ ooasp_assoc_limit(ASSOC,max,2,C2,C1MAX,C1):-
 	ooasp_assoc(ASSOC,C1,C1MIN,C1MAX,C2,C2MIN,C2MAX).
 
 
+ooasp_smallest_assoc(ASSOC,C1,1):-
+	ooasp_assoc(ASSOC,C1,C1MIN,C1MAX,C2,C2MIN,C2MAX),
+    #false : ooasp_assoc(ASSOC',C1',_,_,_,_,_),
+    ooasp_subclass(C1', C1),
+    ooasp_assoc_specialization(ASSOC',ASSOC).
+
+ooasp_smallest_assoc(ASSOC,C2,2):-
+	ooasp_assoc(ASSOC,C1,C1MIN,C1MAX,C2,C2MIN,C2MAX),
+    #false : ooasp_assoc(ASSOC',_,_,_,C2',_,_),
+    ooasp_subclass(C2', C2),
+    ooasp_assoc_specialization(ASSOC',ASSOC).
+
 ooasp_smallest_assoc(ASSOC):-
 	ooasp_assoc(ASSOC,C1,C1MIN,C1MAX,C2,C2MIN,C2MAX),
     not ooasp_assoc_specialization(_,ASSOC).

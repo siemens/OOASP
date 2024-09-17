@@ -78,11 +78,18 @@ attr(node, ID, (label,attr,Attr_name), @argument_str(Attr_name,Value,"black")):-
     _clinguin_assume(ooasp_attr_value(Attr_name,ID,Value),true).
 
 % Add cvs to nodes
-attr(node, ID, (label,cv,(MAX,C2,ASSOC)), @cv_str("Needs at least {} more {}s",(MAX,C2,ASSOC))):-
+% This is now in the UI
+% attr(node, ID, (label,cv,(MAX,C2,ASSOC)), @cv_str("Needs at least {} more {}s",(MAX,C2,ASSOC))):-
+%     not _clinguin_browsing,
+%     ooasp_smallest_assoc(ASSOC, _, SIDE),
+%     _all(object_needed(ID, ASSOC, _, C2, SIDE, _)),
+%     #max{N:_all(object_needed(ID, ASSOC, N, C2, _, _))}=MAX.
+
+attr(node, ID, (label,cv,(ASSOC,CMIN,N,C,SIDE)), @cv_str(M,(ASSOC,CMIN,N,C,SIDE),@color(red))):-
     not _clinguin_browsing,
-    ooasp_smallest_assoc(ASSOC),
-    _all(object_needed(ID, ASSOC, _, C2, _, _)),
-    #max{N:_all(object_needed(ID, ASSOC, N, C2, _, _))}=MAX.
+    _clinguin_assume(ooasp_isa(Class, ID), true), Class!=object,
+    _any(ooasp_cv(lowerbound,ID,M,(ASSOC,CMIN,N,C,SIDE,_))),
+    #min{N':_any(ooasp_cv(lowerbound,ID,M,(ASSOC,CMIN,N',C,SIDE,_)))}=N.
 
 % Associations
 
@@ -109,12 +116,13 @@ def argument_str(name,type,color):
     s = f"<FONT FACE='Helvetica Neue' COLOR='{color.string}'>" + str(name) + " = " + "<I> "+ str(type)  + "</I></FONT><br ALIGN='left'/> "
     return String(s)
 
-def cv_str(message,args):
+def cv_str(message,args,color='red'):
     args_symbols = [str(a) for a in args.arguments]
     formatted_message = f"{message.string.format(*args_symbols)}"
     s_wrap_list = textwrap.wrap(formatted_message, 40)
     message_wrapped = "<br ALIGN='left'/>   ".join(s_wrap_list)
-    s = f"<FONT FACE='Helvetica Neue' COLOR='red' POINT-SIZE='12'><I> "+ message_wrapped  + "</I> </FONT><br ALIGN='left'/> "
+    color = (str(color)).strip('"')
+    s = f"<FONT FACE='Helvetica Neue' COLOR='{color}' POINT-SIZE='12'><I> "+ message_wrapped  + "</I> </FONT><br ALIGN='left'/> "
     return String(s)
 
 #end.

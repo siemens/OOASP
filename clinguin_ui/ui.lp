@@ -1,4 +1,4 @@
-#const show_prg = "#show ooasp_associated/3. #show ooasp_attr_value/3. #show ooasp_isa(C,ID):ooasp_isa_leaf(C,ID).".
+#const show_prg = "#show ooasp_associated(A,ID1,ID2):ooasp_associated(A,ID1,ID2),ooasp_smallest_assoc(A). #show ooasp_attr_value/3. #show ooasp_isa(C,ID):ooasp_isa_leaf(C,ID).".
 elem(w,window,root).
 attr(w,flex_direction,row).
 

@@ -85,3 +85,17 @@ elem(config_container, container,bottom_container).
                 attr(config_size_txt,label,@format("Configuration Size: {}",CS)):-configuration_size(CS).
                 attr(config_size_txt,class,("text-start";"fw-semibold";"fs-6")).
                 attr(config_size_txt,order,2).
+
+                needed(C,N):-  _all(global_ub(C,N,_)), not _clinguin_browsing.
+                needed(C,N):-  _all(global_lb(C,N,_)), not _clinguin_browsing.
+                elem(global_cv(C),button,info_container):- needed(C,N).
+                attr(global_cv(C),label,@format("Needs {} more: {}",(N,@stringify(C,true)))):- needed(C,N).
+                attr(global_cv(C),icon,"fa-warning"):- needed(C,N).
+                attr(global_cv(C),class,("text-start";"fs-6";"btn-outline-danger";"m-1")):- needed(C,N).
+                when(global_cv(C),click,call,add_object(C, N)):- needed(C,N).
+                attr(global_cv(C),order,3):- needed(C,N).
+
+
+
+
+
