@@ -1,7 +1,7 @@
 % Copyright (c) 2022 Siemens AG Oesterreich
 % SPDX-License-Identifier: MIT
 
-#include "constraints.lp".
+#include "alt_constraints.lp".
 
 % EXAMPLE racks
 % classes
