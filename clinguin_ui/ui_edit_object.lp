@@ -31,25 +31,22 @@ elem(edit_c, container,bottom_container).
             attr(deselect_c, order,1).
 
                 isa_remove(ID) :- ooasp_domain(_, ID), not ooasp_must_be_included(_,ID).
-                elem(deselect_btn_c(ID),container, deselect_c):-isa_remove(ID).
-                attr(deselect_btn_c(ID),pos_x, 0):-isa_remove(ID).
-                attr(deselect_btn_c(ID),pos_y, 100):-isa_remove(ID).
-                attr(deselect_btn_c(ID),visibility, hidden):-isa_remove(ID).
-                attr(deselect_btn_c(ID),width, 100):-isa_remove(ID).
 
-                    elem(deselect_lbl(ID),label, deselect_btn_c(ID)):-isa_remove(ID),not _clinguin_assume(ooasp_isa(_, ID),true).
-                    attr(deselect_lbl(ID),label,"Not required in configuration"):-isa_remove(ID),not _clinguin_assume(ooasp_isa(_, ID),true).
-                    attr(deselect_lbl(ID),class,("fw-light";"text-danger")):-isa_remove(ID),not _clinguin_assume(ooasp_isa(_, ID),true).
-                    attr(deselect_lbl(ID), width, 100):-isa_remove(ID),not _clinguin_assume(ooasp_isa(_, ID),true).
+                elem(deselect_btn_c(ID),container, deselect_c):-ooasp_domain(_,ID).
+                attr(deselect_btn_c(ID),pos_x, 0):-ooasp_domain(_,ID).
+                attr(deselect_btn_c(ID),pos_y, 100):-ooasp_domain(_,ID).
+                attr(deselect_btn_c(ID),visibility, hidden):-ooasp_domain(_,ID).
+                attr(deselect_btn_c(ID),width, 100):-ooasp_domain(_,ID).
 
-                    elem(deselect_btn(ID),button, deselect_btn_c(ID)):-isa_remove(ID),_clinguin_assume(ooasp_isa(_, ID),true).
-                    attr(deselect_btn(ID),label,"Ignore"):-isa_remove(ID),_clinguin_assume(ooasp_isa(_, ID),true).
-                    attr(deselect_btn(ID),icon,"fa-trash"):-isa_remove(ID),_clinguin_assume(ooasp_isa(_, ID),true).
-                    attr(deselect_btn(ID),class,("btn-danger")):-isa_remove(ID),_clinguin_assume(ooasp_isa(_, ID),true).
+
+                    elem(deselect_btn(ID),button, deselect_btn_c(ID)):-ooasp_domain(_,ID).
+                    attr(deselect_btn(ID),label,"Clear"):-ooasp_domain(_,ID).
+                    attr(deselect_btn(ID),icon,"fa-ban"):-ooasp_domain(_,ID).
+                    attr(deselect_btn(ID),class,("btn-sm";"btn-danger")):-ooasp_domain(_,ID).
                     when(deselect_btn(ID),click,call,remove_assumption(ooasp_isa(C,ID))) :- isa_remove(ID), _clinguin_assume(ooasp_isa(C, ID),true).
-                    when(deselect_btn(ID),click,call,remove_assumption(ooasp_associated(A, ID, ID'))) :- isa_remove(ID), _clinguin_assume(ooasp_associated(A, ID, ID'),true).
-                    when(deselect_btn(ID),click,call,remove_assumption(ooasp_associated(A, ID', ID))) :- isa_remove(ID), _clinguin_assume(ooasp_associated(A, ID', ID),true).
-                    when(deselect_btn(ID),click,call,remove_assumption(ooasp_attr_value(N, ID, V))) :- isa_remove(ID), _clinguin_assume(ooasp_attr_value(N, ID, V),true).
+                    when(deselect_btn(ID),click,call,remove_assumption(ooasp_associated(A, ID, ID'))) :- ooasp_domain(_,ID), _clinguin_assume(ooasp_associated(A, ID, ID'),true).
+                    when(deselect_btn(ID),click,call,remove_assumption(ooasp_associated(A, ID', ID))) :- ooasp_domain(_,ID), _clinguin_assume(ooasp_associated(A, ID', ID),true).
+                    when(deselect_btn(ID),click,call,remove_assumption(ooasp_attr_value(N, ID, V))) :- ooasp_domain(_,ID), _clinguin_assume(ooasp_attr_value(N, ID, V),true).
 
 
         elem(edit_value,container,edit_c).
