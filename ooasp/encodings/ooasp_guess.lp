@@ -6,7 +6,7 @@
 % Include for performance
 ooasp_isa(cls,new_object).
 
-% Fact used in the UI to indentify objects that must be included
+% Fact used in the UI to identify objects that must be included
 ooasp_must_be_included(cls,new_object).
 
 % Has to have a leaf class assigned
