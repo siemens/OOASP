@@ -136,6 +136,19 @@ class SmartOOASPSolver:
             self.add_object(o)
         self.times["initialization"] = time.time() - start
 
+    def ground_forced_inclusion(self, o: str) -> None:
+        """
+        Grounds the program corresponding to the inclusion of the object as a fact of ooasp_isa.
+        We use a different program since adding this as a fact to the right program with .add is not simple.
+
+        Args:
+            o (str): The name of the class of the object to ground.
+        """
+        self.log(f"\t\tGrounding forced inclusion {self.next_id} {o}")
+        start = time.time()
+        self.ctl.ground([("include", [Number(self.next_id), Function(o, [])])])
+        self.times["ground"] += time.time() - start
+
     def ground(self, o: str) -> None:
         """
         Grounds the program corresponding to the new object.
@@ -162,13 +175,12 @@ class SmartOOASPSolver:
             o (str): The name of the class of the object to ground.
         """
         obj_atom = f"ooasp_isa({o},{self.next_id})"
-        dom_atom = f"ooasp_domain({o},{self.next_id})"
         self.log(green(f"\t\tAdding object  {obj_atom}"))
         self.ctl.add(
             "domain", [str(self.next_id), o], f"user({obj_atom})."
         )  # Needed for symmetry breaking
         if must_be_used:
-            self.ctl.add("domain", [str(self.next_id), "object"], f"{obj_atom}.")
+            self.ground_forced_inclusion(o)  # Used to improve performance
             self.assumptions.add(obj_atom)
         self.objects[o] += 1
         self.ground(o)
@@ -294,7 +306,6 @@ class SmartOOASPSolver:
             bool: True if any of the smart generation functions added objects or associations, False otherwise.
         """
         self.log(subtitle("Smart generation"))
-        initial_size = self.next_id
         initial_assumptions = len(self.assumptions)
         for f in self.smart_generation_functions:
             start = time.time()
@@ -362,15 +373,22 @@ class SmartOOASPSolver:
             bool: True if objects were added, False otherwise
         """
         self.log("\t+++++ global_ub")
+        added_key = None
+        added = 0
         cautious = self.get_cautious()
-        for s in cautious:
-            if s.match("global_ub", 3):
+        global_ub = [s for s in cautious if s.match("global_ub", 3)]
+
+        for s in global_ub:
+            c, needed, _ = s.arguments
+            if added_key is None:
                 self.log("\t  ---> Apply ", s)
-                c2, needed, _ = s.arguments
-                for _ in range(0, needed.number):
-                    self.add_object(c2.name)
-                return True
-        return False
+                added_key = c
+            if added_key != c:
+                continue
+            for _ in range(added, needed.number):
+                self.add_object(c.name)
+                added += 1
+        return added > 0
 
     def global_lb(self) -> bool:
         """
@@ -387,15 +405,22 @@ class SmartOOASPSolver:
             bool: True if objects were added, False otherwise
         """
         self.log("\t+++++ global_lb")
+        added_key = None
+        added = 0
         cautious = self.get_cautious()
-        for s in cautious:
-            if s.match("global_lb", 3):
+        global_lb = [s for s in cautious if s.match("global_lb", 3)]
+
+        for s in global_lb:
+            c, needed, _ = s.arguments
+            if added_key is None:
                 self.log("\t  ---> Apply ", s)
-                c1, needed, _ = s.arguments
-                for _ in range(0, needed.number):
-                    self.add_object(c1.name)
-                return True
-        return False
+                added_key = c
+            if added_key != c:
+                continue
+            for _ in range(added, needed.number):
+                self.add_object(c.name)
+                added += 1
+        return added > 0
 
     def association_needed(self) -> bool:
         """

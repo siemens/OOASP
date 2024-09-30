@@ -9,6 +9,15 @@ is_target_assoc(ASSOC,SIDE):-
     ooasp_assoc_limit(ASSOC,max,SIDE,C1,1,C2),
     ooasp_assoc_limit(ASSOC,min,SIDE,C1,1,C2).
 
+is_target_assoc_spec(ASSOC,SIDE):-
+    is_target_assoc(ASSOC',SIDE),
+    ooasp_assoc_specialization(ASSOC,ASSOC'),
+    ooasp_assoc_limit(ASSOC,max,SIDE,C1,1,C2),
+    ooasp_assoc_limit(ASSOC,min,SIDE,C1,0,C2).
+
+is_target_assoc_any(ASSOC,SIDE):-is_target_assoc(ASSOC,SIDE).
+is_target_assoc_any(ASSOC,SIDE):-is_target_assoc_spec(ASSOC,SIDE).
+
 % =====================
 % Incremental generation
 % =====================
@@ -42,7 +51,7 @@ object_needed(ID1, ASSOC, 1..CMIN - N, C2, SIDE, new_object):-
 %  EXAMPLE:
 %   We can see the use of this predicate in an example with 9 frames and 1 rack.
 %   Where the need for one more rack since the upperbound of rack is 8 and the number of frames is 9.
-global_ub(C2, ((NUM1 + MAX - 1) / MAX)-NUM2, new_object):-
+global_ub(C2, 1..((NUM1 + MAX - 1) / MAX)-NUM2, new_object):-
     % It is a target association: One side is 1..1 The other side is _..MAX
     is_target_assoc(ASSOC, SIDE),
     ooasp_assoc_limit(ASSOC,max,SIDE2,C2,MAX,C1),
@@ -70,9 +79,9 @@ global_ub(C2, ((NUM1 + MAX - 1) / MAX)-NUM2, new_object):-
 %   We can see the use of this predicate in an example with 2 frames 2 racks.
 %   Where the need the additional frames to fill the lower bound of racks.
 
-global_lb(C1,(N2*MIN)-N1,new_object):-
+global_lb(C1,1..(N2*MIN)-N1,new_object):-
     % It is a target association: One side is 1..1 The other side is MIN.._
-    is_target_assoc(ASSOC, SIDE),
+    is_target_assoc_any(ASSOC, SIDE),
     SIDE2!=SIDE,
     ooasp_assoc_limit(ASSOC,min,SIDE2,C2,MIN,C1),
     % The numer of elements of class C1
@@ -82,6 +91,9 @@ global_lb(C1,(N2*MIN)-N1,new_object):-
     % The amount of elements C1 does not fill the lowe bound of C2
     N2 * MIN > N1,
 	active(new_object).
+
+
+
 
 % -----------------------------------
 % association_needed(ASSOC, ID1, ID2, new_object).
