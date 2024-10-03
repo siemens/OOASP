@@ -4,10 +4,10 @@
 #defined ooasp_associated/3.
 #defined ooasp_attr_value/3.
 #defined potential_assoc/5.
-#defined object_needed/6.
+#defined assoc_needs_object/6.
 #defined user/1.
 #defined ooasp_isa_leaf/2.
-#defined global_lb/3.
-#defined global_ub/3.
-#defined association_needed/4.
+#defined global_lb_gap/3.
+#defined global_ub_gap/3.
+#defined association_possible/4.
 #defined lb_violation/4.

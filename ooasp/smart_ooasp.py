@@ -1,34 +1,22 @@
+import os
 import time
+from collections import defaultdict
 
-from clingo import Control, Model, Function, Number, parse_term
-from clingo.symbol import Symbol
+from clingo import Control, Function, Model, Number, parse_term
 from clingo.statistics import StatisticsMap
+from clingo.symbol import Symbol
 from clingraph.clingo_utils import ClingraphContext
 from clingraph.graphviz import compute_graphs, render
 from clingraph.orm import Factbase
 
 import ooasp.settings as settings
 from ooasp.utils import green, red, subtitle, title
-from collections import defaultdict
-import os
 
 SMART_FUNCTIONS = {
-    "object_needed": {
-        "type": "cautious",
-        "arity": 6
-    },
-    "global_ub": {
-        "type": "cautious",
-        "arity": 3
-    },
-    "global_lb": {
-        "type": "cautious",
-        "arity": 3
-    },
-    "association_needed": {
-        "type": "brave",
-        "arity": 4
-    },
+    "assoc_needs_object": {"type": "cautious", "arity": 6},
+    "global_ub_gap": {"type": "cautious", "arity": 3},
+    "global_lb_gap": {"type": "cautious", "arity": 3},
+    "association_possible": {"type": "brave", "arity": 4},
 }
 
 
@@ -56,9 +44,9 @@ class SmartOOASPSolver:
             ctl (Control): The control object to use for the solver. This can come from the application class or clinguin
         """
         self.initial_objects = initial_objects if initial_objects is not None else []
-        self.smart_generation_functions = (smart_generation_functions
-                                           if smart_generation_functions
-                                           is not None else [])
+        self.smart_generation_functions = (
+            smart_generation_functions if smart_generation_functions is not None else []
+        )
         self.view = view
 
         self.next_id = 1
@@ -74,10 +62,7 @@ class SmartOOASPSolver:
                 "time": 0,
                 "cautious": 0,
                 "brave": 0,
-                "functions": {
-                    n: 0
-                    for n in self.smart_generation_functions
-                },
+                "functions": {n: 0 for n in self.smart_generation_functions},
             },
             "ground": 0,
         }
@@ -104,13 +89,11 @@ class SmartOOASPSolver:
             "initialization": round(self.times["initialization"], 3),
             "smart_generation": {
                 "time": round(self.times["smart_generation"]["time"], 3),
-                "cautious": round(self.times["smart_generation"]["cautious"],
-                                  3),
+                "cautious": round(self.times["smart_generation"]["cautious"], 3),
                 "brave": round(self.times["smart_generation"]["brave"], 3),
                 "functions": {
                     k: round(v, 3)
-                    for k, v in self.times["smart_generation"]
-                    ["functions"].items()
+                    for k, v in self.times["smart_generation"]["functions"].items()
                 },
             },
             "ground": round(self.times["ground"], 3),
@@ -121,8 +104,10 @@ class SmartOOASPSolver:
             if not considered_coseq[conseq_type]:
                 considered_coseq[conseq_type] = True
                 times["smart_generation"]["functions"][f] = round(
-                    (times["smart_generation"]["functions"][f] -
-                     times["smart_generation"][conseq_type]),
+                    (
+                        times["smart_generation"]["functions"][f]
+                        - times["smart_generation"][conseq_type]
+                    ),
                     3,
                 )
         results = {
@@ -163,10 +148,8 @@ class SmartOOASPSolver:
         self.ctl.ground([("domain", [Number(self.next_id), Function(o, [])])])
         self.times["ground"] += time.time() - start
         if self.next_id > 0:
-            self.ctl.release_external(
-                Function("active", [Number(self.next_id - 1)]))
-        self.ctl.assign_external(Function("active", [Number(self.next_id)]),
-                                 True)
+            self.ctl.release_external(Function("active", [Number(self.next_id - 1)]))
+        self.ctl.assign_external(Function("active", [Number(self.next_id)]), True)
 
     def add_object(self, o: str) -> None:
         """
@@ -179,8 +162,7 @@ class SmartOOASPSolver:
         obj_atom = f"ooasp_isa({o},{self.next_id})"
         dom_atom = f"ooasp_domain({o},{self.next_id})"
         self.log(green(f"\t\tAdding object  {obj_atom}"))
-        self.ctl.add("domain", [str(self.next_id), "object"],
-                     f"user({obj_atom}).")
+        self.ctl.add("domain", [str(self.next_id), "object"], f"user({obj_atom}).")
         self.ctl.add("domain", [str(self.next_id), "object"], f"{obj_atom}.")
         self.ctl.add("domain", [str(self.next_id), "object"], f"{dom_atom}.")
         self.object_atoms.append(obj_atom)
@@ -219,9 +201,9 @@ class SmartOOASPSolver:
         # self.ctl.assign_external(Function("computing_cautious"), True)
         self.ctl.configuration.solve.models = "0"
         self.ctl.configuration.solve.enum_mode = "cautious"
-        with self.ctl.solve(yield_=True,
-                            assumptions=self.assumptions,
-                            on_statistics=self.on_statistics) as hdn:
+        with self.ctl.solve(
+            yield_=True, assumptions=self.assumptions, on_statistics=self.on_statistics
+        ) as hdn:
             for model in hdn:
                 self.cautious = model.symbols(shown=True)
             if self.cautious is None:
@@ -249,9 +231,9 @@ class SmartOOASPSolver:
         # self.ctl.assign_external(Function("computing_brave"), True)
         self.ctl.configuration.solve.models = "0"
         self.ctl.configuration.solve.enum_mode = "brave"
-        with self.ctl.solve(yield_=True,
-                            assumptions=self.assumptions,
-                            on_statistics=self.on_statistics) as hdn:
+        with self.ctl.solve(
+            yield_=True, assumptions=self.assumptions, on_statistics=self.on_statistics
+        ) as hdn:
             for model in hdn:
                 self.brave = model.symbols(shown=True)
             if self.brave is None:
@@ -275,7 +257,8 @@ class SmartOOASPSolver:
             config = "\n".join([str(c) for c in self.model])
         else:
             config = "\n".join(
-                [str(c) + "." for c in self.object_atoms + self.associations])
+                [str(c) + "." for c in self.object_atoms + self.associations]
+            )
         viz_ctl = Control(["--warn=none"])
         fbs = []
         path = settings.encodings_path.joinpath("viz_config.lp")
@@ -286,8 +269,11 @@ class SmartOOASPSolver:
 
         viz_ctl.add("base", [], config)
         viz_ctl.ground([("base", [])], ClingraphContext())
-        viz_ctl.solve(on_model=lambda m: fbs.append(
-            Factbase.from_model(m, default_graph="config")))
+        viz_ctl.solve(
+            on_model=lambda m: fbs.append(
+                Factbase.from_model(m, default_graph="config")
+            )
+        )
         graphs = compute_graphs(fbs[0])
         render(
             graphs,
@@ -313,8 +299,7 @@ class SmartOOASPSolver:
         for f in self.smart_generation_functions:
             start = time.time()
             done = getattr(self, f)()
-            self.times["smart_generation"]["functions"][f] += time.time(
-            ) - start
+            self.times["smart_generation"]["functions"][f] += time.time() - start
             if done:
                 self.log(
                     f"Smart generation: added {self.next_id - initial_size} objects and {len(self.associations) - initial_associations} associations"
@@ -322,9 +307,9 @@ class SmartOOASPSolver:
                 return True
         return False
 
-    def object_needed(self) -> bool:
+    def assoc_needs_object(self) -> bool:
         """
-        The appearance of predicate object_needed(ID1, ASSOC, X, C2, SIDE, new_object)
+        The appearance of predicate assoc_needs_object(ID1, ASSOC, X, C2, SIDE, new_object)
         in the cautious consequences indicates the need to add
         at least X objects of type C2 which can be immediately associated to object ID1.
 
@@ -334,12 +319,12 @@ class SmartOOASPSolver:
         Returns:
             bool: True if objects were added, False otherwise
         """
-        self.log("\t+++++ object_needed")
+        self.log("\t+++++ assoc_needs_object")
         added_key = None
         added = 0
         cautious = self.get_cautious()
         for s in cautious:
-            if s.match("object_needed", 6):
+            if s.match("assoc_needs_object", 6):
                 o_id, assoc, needed, c, opt, _ = s.arguments
                 if added_key is None:
                     self.log("\t  ---> Apply ", s)
@@ -356,9 +341,9 @@ class SmartOOASPSolver:
                     added += 1
         return added > 0
 
-    def global_ub(self) -> bool:
+    def global_ub_gap(self) -> bool:
         """
-        The appearance of predicate global_ub(C2, N, new_object)
+        The appearance of predicate global_ub_gap(C2, N, new_object)
         in the cautious consequences indicates the need to add N objects of type C2
 
         Given a target association ASSOC where each C2 can be associated to at most MAX objects of C1
@@ -370,10 +355,10 @@ class SmartOOASPSolver:
         Returns:
             bool: True if objects were added, False otherwise
         """
-        self.log("\t+++++ global_ub")
+        self.log("\t+++++ global_ub_gap")
         cautious = self.get_cautious()
         for s in cautious:
-            if s.match("global_ub", 3):
+            if s.match("global_ub_gap", 3):
                 self.log("\t  ---> Apply ", s)
                 c2, needed, _ = s.arguments
                 for _ in range(0, needed.number):
@@ -381,9 +366,9 @@ class SmartOOASPSolver:
                 return True
         return False
 
-    def global_lb(self) -> bool:
+    def global_lb_gap(self) -> bool:
         """
-        The appearance of predicate global_lb(C1, N, new_object)
+        The appearance of predicate global_lb_gap(C1, N, new_object)
         in the cautious consequences indicates the need to add N objects of type C1
 
         Given a target association ASSOC where each C2 can be associated to at least MIN objects of C1
@@ -395,10 +380,10 @@ class SmartOOASPSolver:
         Returns:
             bool: True if objects were added, False otherwise
         """
-        self.log("\t+++++ global_lb")
+        self.log("\t+++++ global_lb_gap")
         cautious = self.get_cautious()
         for s in cautious:
-            if s.match("global_lb", 3):
+            if s.match("global_lb_gap", 3):
                 self.log("\t  ---> Apply ", s)
                 c1, needed, _ = s.arguments
                 for _ in range(0, needed.number):
@@ -406,9 +391,9 @@ class SmartOOASPSolver:
                 return True
         return False
 
-    def association_needed(self) -> bool:
+    def association_possible(self) -> bool:
         """
-        The appearance of predicate association_needed(ASSOC, ID1, ID2, new_object)
+        The appearance of predicate association_possible(ASSOC, ID1, ID2, new_object)
         in the brave consequences indicates the need to add an association between two objects.
 
         We know that ID1 needs at least one object of class C1 and ID2 needs at least one object of class C2
@@ -419,10 +404,10 @@ class SmartOOASPSolver:
         Returns:
             bool: True if associations were added, False otherwise
         """
-        self.log("\t+++++ association_needed")
+        self.log("\t+++++ association_possible")
         brave = self.get_brave()
         for s in brave:
-            if s.match("association_needed", 4):
+            if s.match("association_possible", 4):
                 self.log("\t  ---> Apply ", s)
                 assoc, id1, id2, _ = s.arguments
                 a = (str(assoc), id1, id2)
@@ -461,22 +446,20 @@ class SmartOOASPSolver:
         iteration = 0
         while not done:
             iteration += 1
-            self.log("\n" +
-                     title(f"Next iteration: {self.next_id - 1} objects"))
+            self.log("\n" + title(f"Next iteration: {self.next_id - 1} objects"))
             start = time.time()
             things_done = self.smart_generation()
             self.times["smart_generation"]["time"] += time.time() - start
             if things_done:
                 continue
-            self.log(subtitle(f"Solving for size {self.next_id - 1}...",
-                              "RED"))
+            self.log(subtitle(f"Solving for size {self.next_id - 1}...", "RED"))
             self.ctl.configuration.solve.models = "1"
 
             with self.ctl.solve(
-                    assumptions=self.assumptions,
-                    on_model=self.on_model,
-                    yield_=True,
-                    on_statistics=self.on_statistics,
+                assumptions=self.assumptions,
+                on_model=self.on_model,
+                yield_=True,
+                on_statistics=self.on_statistics,
             ) as hdl:
                 if hdl.get().satisfiable:
                     self.log(green("SAT"))
