@@ -32,6 +32,7 @@ class SmartOOASPSolver:
         verbose=False,
         view=False,
         ctl=None,
+        associations_with_priority=None,
     ):
         """
         Initialize the solver.
@@ -46,6 +47,9 @@ class SmartOOASPSolver:
         self.initial_objects = initial_objects if initial_objects is not None else []
         self.smart_generation_functions = (
             smart_generation_functions if smart_generation_functions is not None else []
+        )
+        self.associations_with_priority = (
+            associations_with_priority if associations_with_priority is not None else []
         )
         self.view = view
 
@@ -198,7 +202,6 @@ class SmartOOASPSolver:
             return self.cautious
         start = time.time()
         self.ctl.assign_external(Function("check_potential_cv"), False)
-        # self.ctl.assign_external(Function("computing_cautious"), True)
         self.ctl.configuration.solve.models = "0"
         self.ctl.configuration.solve.enum_mode = "cautious"
         with self.ctl.solve(
@@ -207,12 +210,10 @@ class SmartOOASPSolver:
             for model in hdn:
                 self.cautious = model.symbols(shown=True)
             if self.cautious is None:
-                self.log("\tUNSAT cautious!")
+                raise Exception("UNSAT cautious!")
         self.ctl.assign_external(Function("check_potential_cv"), True)
-        # self.ctl.assign_external(Function("computing_cautious"), False)
         self.ctl.configuration.solve.models = "1"
         self.ctl.configuration.solve.enum_mode = "auto"
-        self.ctl.configuration.solve.project = "auto"
         self.times["smart_generation"]["cautious"] += time.time() - start
         return self.cautious
 
@@ -228,7 +229,6 @@ class SmartOOASPSolver:
             return self.brave
         start = time.time()
         self.ctl.assign_external(Function("check_potential_cv"), False)
-        # self.ctl.assign_external(Function("computing_brave"), True)
         self.ctl.configuration.solve.models = "0"
         self.ctl.configuration.solve.enum_mode = "brave"
         with self.ctl.solve(
@@ -237,12 +237,11 @@ class SmartOOASPSolver:
             for model in hdn:
                 self.brave = model.symbols(shown=True)
             if self.brave is None:
-                self.log("\tUNSAT brave!")
+                raise Exception("UNSAT brave!")
+
         self.ctl.assign_external(Function("check_potential_cv"), True)
-        # self.ctl.assign_external(Function("computing_brave"), False)
         self.ctl.configuration.solve.models = "1"
         self.ctl.configuration.solve.enum_mode = "auto"
-        self.ctl.configuration.solve.project = "auto"
         self.times["smart_generation"]["brave"] += time.time() - start
         return self.brave
 
@@ -316,6 +315,8 @@ class SmartOOASPSolver:
         We choose the first appearance of this predicate and add the needed objects
         for the selected object and association until the needed number of needed objects is reached.
 
+        We order the objects needed to give preference to association specializations
+
         Returns:
             bool: True if objects were added, False otherwise
         """
@@ -323,22 +324,26 @@ class SmartOOASPSolver:
         added_key = None
         added = 0
         cautious = self.get_cautious()
-        for s in cautious:
-            if s.match("assoc_needs_object", 6):
-                o_id, assoc, needed, c, opt, _ = s.arguments
-                if added_key is None:
-                    self.log("\t  ---> Apply ", s)
-                    added_key = (o_id, assoc)
-                if added_key != (o_id, assoc):
-                    continue
-                for _ in range(added, needed.number):
-                    if str(opt) == "1":
-                        a = (str(assoc), o_id, self.next_id)
-                    else:
-                        a = (str(assoc), self.next_id, o_id)
-                    self.add_object(c.name)
-                    self.add_association(a)
-                    added += 1
+        assoc_needs_object = [s for s in cautious if s.match("assoc_needs_object", 6)]
+        assoc_needs_object.sort(
+            key=lambda x: str(x.arguments[1]) not in self.associations_with_priority
+        )
+
+        for s in assoc_needs_object:
+            o_id, assoc, needed, c, opt, _ = s.arguments
+            if added_key is None:
+                self.log("\t  ---> Apply ", s)
+                added_key = (o_id, assoc)
+            if added_key != (o_id, assoc):
+                continue
+            for _ in range(added, needed.number):
+                if str(opt) == "1":
+                    a = (str(assoc), o_id, self.next_id)
+                else:
+                    a = (str(assoc), self.next_id, o_id)
+                self.add_object(c.name)
+                self.add_association(a)
+                added += 1
         return added > 0
 
     def global_ub_gap(self) -> bool:
@@ -448,6 +453,8 @@ class SmartOOASPSolver:
             iteration += 1
             self.log("\n" + title(f"Next iteration: {self.next_id - 1} objects"))
             start = time.time()
+            if self.view:
+                self.save_png("out/solve", f"-O{self.next_id - 1}-iteration{iteration}")
             things_done = self.smart_generation()
             self.times["smart_generation"]["time"] += time.time() - start
             if things_done:

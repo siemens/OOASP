@@ -3,11 +3,6 @@
 % =====================
 
 
-#show assoc_needs_object/6.
-#show global_ub_gap/3.
-#show global_lb_gap/3.
-#show association_possible/4.
-
 % Target associations are those with cardinality 1..1-MIN..MAX
 % We only consider this type of associations for the bound calculations
 is_target_assoc(ASSOC,SIDE):-
@@ -18,7 +13,6 @@ is_target_assoc(ASSOC,SIDE):-
 % Incremental generation
 % =====================
 #program domain(new_object, cls).
-
 
 % -----------------------------------
 % assoc_needs_object(ID1, ASSOC, X, C2, SIDE, new_object)

@@ -28,6 +28,16 @@ CLASSES = [
     "moduleV",
 ]
 
+# TODO if this improves the performance, we can obtain these associations from the encoding
+ASSOCIATION_SPECIALIZATIONS = [
+    "rack_framesS",
+    "rack_framesD",
+    "element_modules1",
+    "element_modules2",
+    "element_modules3",
+    "element_modules4",
+]
+
 
 class OOASPRacksApp(clingo.Application):
     """
@@ -124,7 +134,12 @@ class OOASPRacksApp(clingo.Application):
         If the view is enabled, it saves the solution as a PNG.
         """
         smartOOASPSolver = SmartOOASPSolver(
-            self._initial_objects, self._smart_functions, self._debug, self._view, ctl
+            self._initial_objects,
+            self._smart_functions,
+            self._debug,
+            self._view,
+            ctl,
+            associations_with_priority=ASSOCIATION_SPECIALIZATIONS,
         )
         ctl.load(os.path.join("examples", "racks", "kb.lp"))
         smartOOASPSolver.load_base()
