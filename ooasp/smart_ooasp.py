@@ -102,11 +102,11 @@ class SmartOOASPSolver:
             },
             "ground": round(self.times["ground"], 3),
         }
-        considered_coseq = {"cautious": False, "brave": False}
+        considered_conseq = {"cautious": False, "brave": False}
         for f in self.smart_generation_functions:
             conseq_type = SMART_FUNCTIONS[f]["type"]
-            if not considered_coseq[conseq_type]:
-                considered_coseq[conseq_type] = True
+            if not considered_conseq[conseq_type]:
+                considered_conseq[conseq_type] = True
                 times["smart_generation"]["functions"][f] = round(
                     (
                         times["smart_generation"]["functions"][f]
@@ -308,6 +308,8 @@ class SmartOOASPSolver:
 
     def assoc_needs_object(self) -> bool:
         """
+        This is one of the smart functions that can be chosen for incremental generation.
+
         The appearance of predicate assoc_needs_object(ID1, ASSOC, X, C2, SIDE, new_object)
         in the cautious consequences indicates the need to add
         at least X objects of type C2 which can be immediately associated to object ID1.
@@ -348,13 +350,15 @@ class SmartOOASPSolver:
 
     def global_ub_gap(self) -> bool:
         """
+        This is one of the smart functions that can be chosen for incremental generation.
+
         The appearance of predicate global_ub_gap(C2, N, new_object)
         in the cautious consequences indicates the need to add N objects of type C2
 
         Given a target association ASSOC where each C2 can be associated to at most MAX objects of C1
         and each C1 has to be associated to exactly one C2.
-        We count the global number of objects of class C2 and this is not enough to cover all C2 objects
-        therefore the upper bound of classes C2 was already reached and we need to add N objects of class C2
+        We count the global number of objects of class C2 and this is not enough to cover all C1 objects.
+        Therefore, the upper bound of classes C1 was already reached and we need to add N objects of class C2
         to fill the gap.
 
         Returns:
@@ -373,13 +377,15 @@ class SmartOOASPSolver:
 
     def global_lb_gap(self) -> bool:
         """
+        This is one of the smart functions that can be chosen for incremental generation.
+
         The appearance of predicate global_lb_gap(C1, N, new_object)
         in the cautious consequences indicates the need to add N objects of type C1
 
-        Given a target association ASSOC where each C2 can be associated to at least MIN objects of C1
+        Given a target association ASSOC where each C2 must be associated to at least MIN objects of C1
         and each C1 has to be associated to exactly one C2.
         We count the global number of objects of class C1 and this is not enough to cover all C2 lower bounds.
-        Therefore the lower bound of classes C2 cant be filled and we need to add N objects of class C1.
+        Therefore, the lower bound of classes C2 cant be filled and we need to add N objects of class C1.
         to fill the gap.
 
         Returns:
@@ -398,6 +404,8 @@ class SmartOOASPSolver:
 
     def association_possible(self) -> bool:
         """
+        This is one of the smart functions that can be chosen for incremental generation.
+
         The appearance of predicate association_possible(ASSOC, ID1, ID2, new_object)
         in the brave consequences indicates the need to add an association between two objects.
 
