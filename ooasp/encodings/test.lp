@@ -1,3 +1,6 @@
+% Copyright (c) 2024 Siemens AG Oesterreich
+% SPDX-License-Identifier: MIT
+
 1{ ooasp_isa_leaf(LEAFCLASS,O):
 		ooasp_leafclass(LEAFCLASS),
   		ooasp_subclass_ref(LEAFCLASS,C) } 1:-

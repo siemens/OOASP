@@ -1,3 +1,6 @@
+% Copyright (c) 2024 Siemens AG Oesterreich
+% SPDX-License-Identifier: MIT
+
 #defined ooasp_cv/4.
 #defined lb_violation/6.
 #defined ooasp_isa/2.

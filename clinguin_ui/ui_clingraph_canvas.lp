@@ -1,3 +1,6 @@
+% Copyright (c) 2024 Siemens AG Oesterreich
+% SPDX-License-Identifier: MIT
+    
     elem(config_viz, canvas,window_flex).
     % attr(config_viz,class,("vw-75";"vh-75")).
     attr(config_viz, image_type, clingraph__config).

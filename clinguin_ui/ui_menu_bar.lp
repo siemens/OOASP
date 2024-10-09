@@ -1,3 +1,6 @@
+% Copyright (c) 2024 Siemens AG Oesterreich
+% SPDX-License-Identifier: MIT
+
 #const help_message = @concat(
     "<p><i>This UI allows to create a configuration</i></p>",
     "<h5>Add objects</h5>",
