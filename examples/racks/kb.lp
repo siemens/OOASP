@@ -1,4 +1,4 @@
-% Copyright (c) 2022 Siemens AG Oesterreich
+% Copyright (c) 2024 Siemens AG Oesterreich
 % SPDX-License-Identifier: MIT
 
 % EXAMPLE racks
@@ -71,5 +71,7 @@ ooasp_attr_maxInclusive(frame,frame_position,8).
 
 
 ooasp_special_cv(unique, (rack_frames, frame, frame_position)).
+
+#include "attribute_constraints.lp".
 
 % ooasp_special_cv(requires, (frame_modules, moduleII, moduleV)).
