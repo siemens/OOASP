@@ -1,2 +1,2 @@
-# Copyright (c) 2022 Siemens AG Oesterreich
+# Copyright (c) 2024 Siemens AG Oesterreich
 # SPDX-License-Identifier: MIT

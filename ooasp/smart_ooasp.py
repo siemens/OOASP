@@ -1,3 +1,6 @@
+# Copyright (c) 2024 Siemens AG Oesterreich
+# SPDX-License-Identifier: MIT
+
 import time
 
 from clingo import Control, Model, Function, Number, parse_term

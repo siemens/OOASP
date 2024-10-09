@@ -1,3 +1,6 @@
+# Copyright (c) 2024 Siemens AG Oesterreich
+# SPDX-License-Identifier: MIT
+
 from clinguin.server.application.backends import ClingraphBackend
 from ooasp.smart_ooasp import SmartOOASPSolver
 from clingo import Function, Control, parse_term
