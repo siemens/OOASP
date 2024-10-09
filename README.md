@@ -14,8 +14,17 @@ Prototype for interactive configuration using ASP initially developed by [Susana
 
 ### Installation
 
+#### Using Poetry _(recommmended)_
 ```bash
 poetry install
+poetry shell
+pip install .
+```
+
+#### Using requirements
+```bash
+pip install -r requirements.txt
+pip install .
 ```
 
 ### Usage
@@ -24,6 +33,7 @@ Before running any of the programs, make sure the virtual environment has been a
 ```
 poetry shell
 ```
+if you have performed the installation through poetry.
 
 The files corresponding to the current version are in [ooasp](ooasp).
 
