@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Siemens AG Oesterreich
+# SPDX-License-Identifier: MIT
 
 from importlib import resources
 
