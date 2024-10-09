@@ -3,6 +3,7 @@
 
 import time
 
+from typing import List
 from clingo import Control, Model, Function, Number, parse_term
 from clingo.symbol import Symbol
 from clingo.statistics import StatisticsMap
@@ -30,12 +31,12 @@ class SmartOOASPSolver:
 
     def __init__(
         self,
-        initial_objects=None,
-        smart_generation_functions=None,
-        verbose=False,
-        view=False,
-        ctl=None,
-        associations_with_priority=None,
+        initial_objects: List | None =None,
+        smart_generation_functions: List | None=None,
+        verbose: bool=False,
+        view: bool=False,
+        ctl: Control | None=None,
+        associations_with_priority: List|None=None,
     ):
         """
         Initialize the solver.
@@ -169,7 +170,7 @@ class SmartOOASPSolver:
             self.ctl.release_external(Function("active", [Number(self.next_id - 1)]))
         self.ctl.assign_external(Function("active", [Number(self.next_id)]), True)
 
-    def add_object(self, o: str, must_be_used=True) -> None:
+    def add_object(self, o: str, must_be_used: bool=True) -> None:
         """
         Adds a new object to the configuration. This addition includes the user predicate
         to know the class for the object that was added and distinguish it in the encodings.
@@ -449,7 +450,7 @@ class SmartOOASPSolver:
                 return True
         return False
 
-    def load_base(self):
+    def load_base(self) -> None:
         """
         Loads the base encodings to solve the configuration
         """
@@ -457,13 +458,13 @@ class SmartOOASPSolver:
         self.ctl.load(encodings_path)
         self.ctl.ground([("base", [])])
 
-    def on_model(self, m: Model):
+    def on_model(self, m: Model) -> None:
         """
         Callback when a model is found
         """
         self.model = [str(s) + "." for s in m.symbols(atoms=True)]
 
-    def on_statistics(self, step: StatisticsMap, accu: StatisticsMap):
+    def on_statistics(self, step: StatisticsMap, accu: StatisticsMap) -> None:
         """
         Callback when the statistics are updated
         """

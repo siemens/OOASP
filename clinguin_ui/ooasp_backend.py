@@ -43,18 +43,14 @@ class OOASPBackend(ClingraphBackend):
     def _assumption_list(self):
         return super()._assumption_list.union(self.smart_solver.assumption_list)
 
-    def _prepare(self):
-        # self.smart_solver.ctl.assign_external(Function("check_potential_cv"), False)
-        pass
-
-    def _add_assumption(self, symbol, value="true"):
+    def _add_assumption(self, symbol, value:bool="true") -> None:
         # Overwrites
         super()._add_assumption(symbol, value)
         self.smart_solver.assumptions.add(str(symbol))
 
     # ------ Operations
 
-    def add_object(self, name, amount=1):
+    def add_object(self, name:str, amount:int=1) -> None:
         must_be_used = name != "object"
         print(must_be_used)
         for obj in range(int(amount)):
@@ -63,12 +59,12 @@ class OOASPBackend(ClingraphBackend):
         self._outdate()
         self._set_external(Function("check_potential_cv"), "false")
 
-    def remove_assumption(self, atom):
+    def remove_assumption(self, atom) -> None:
         super().remove_assumption(atom)
         if atom in self.smart_solver.assumptions:
             self.smart_solver.assumptions.remove(atom)
 
-    def find_incrementally(self):
+    def find_incrementally(self) -> None:
         """
         Finds the next solution incrementally.
         """
@@ -77,7 +73,7 @@ class OOASPBackend(ClingraphBackend):
         self.smart_solver.smart_complete()
         self.next_solution()  # Called so that we start browsing automatically
 
-    def import_solution(self, f_path=SAVE_FILE):
+    def import_solution(self, f_path=SAVE_FILE) -> None:
         """
         Takes a file containing a configuration encoding and loads it into the editor.
         """
