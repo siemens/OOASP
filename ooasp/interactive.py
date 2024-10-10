@@ -2,21 +2,22 @@
 # SPDX-License-Identifier: MIT
 
 import time
-from clorm.clingo import Control
-from clingo import Number, Function
+from copy import deepcopy
+from typing import List
+
+from clingcon import ClingconTheory
+from clingo import Function, Number
 from clingo.ast import ProgramBuilder, parse_files
 from clorm import Predicate
-from ooasp.config import OOASPConfiguration
-from ooasp.kb import OOASPKnowledgeBase
-from typing import List
-from copy import deepcopy
-import ooasp.utils as utils
-from typing import List
-import ooasp.settings as settings
-from clingcon import ClingconTheory
+from clorm.clingo import Control
 from fclingo import THEORY, Translator
 from fclingo.parsing import HeadBodyTransformer
 from fclingo.translator import ConstraintAtom
+
+import ooasp.settings as settings
+import ooasp.utils as utils
+from ooasp.config import OOASPConfiguration
+from ooasp.kb import OOASPKnowledgeBase
 
 
 def log(x):
@@ -392,9 +393,9 @@ class InteractiveConfigurator:
                     objects_added.add(object2)
                     log(f"Added object {object2}")
                     if str(opt) == "1":
-                        self.config.add_association(assoc.name, object_id, object2)
+                        self.config.associate(assoc.name, object_id, object2)
                     else:
-                        self.config.add_association(assoc.name, object2, object_id)
+                        self.config.associate(assoc.name, object2, object_id)
                 create = True
                 break
 
@@ -887,7 +888,7 @@ class InteractiveConfigurator:
         self._new_state(
             f"Associated {object_id1}-{object_id2} via {assoc_name}", deep=True
         )
-        self.config.add_association(assoc_name, object_id1, object_id2)
+        self.config.associate(assoc_name, object_id1, object_id2)
 
     def select_value(self, object_id: int, attr_name: str, attr_value) -> None:
         """
