@@ -1,6 +1,17 @@
-% Copyright (c) 2022 Siemens AG Oesterreich
+% Copyright (c) 2024 Siemens AG Oesterreich
 % SPDX-License-Identifier: MIT
 
+#program include(new_object, cls).
+
+% Include for performance
+ooasp_isa(cls,new_object).
+
+% Fact used in the UI to identify objects that must be included
+ooasp_must_be_included(cls,new_object).
+
+% Has to have a leaf class assigned
+:- not ooasp_leafclass(LEAFCLASS):
+	ooasp_subclass_ref(LEAFCLASS,cls).
 
 #program domain(new_object, cls).
 
