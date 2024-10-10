@@ -75,7 +75,7 @@ elem(config_container, container,bottom_container).
 
                 domain_size(S):- #count{1,ID:ooasp_domain(_,ID)} = S.
                 elem(domain_size_txt,label,info_container).
-                attr(domain_size_txt,label,@format("Domain Size: {}",DS)) :- domain_size(DS). 
+                attr(domain_size_txt,label,@format("Domain Size: {}",DS)) :- domain_size(DS).
                 attr(domain_size_txt,class,("text-start";"fw-semibold";"fs-6")).
                 attr(domain_size_txt,order,1).
 
@@ -88,12 +88,12 @@ elem(config_container, container,bottom_container).
                 attr(config_size_txt,class,("text-start";"fw-semibold";"fs-6")).
                 attr(config_size_txt,order,2).
 
-                needed(global,C,N):-  _all(global_ub(C,N,_)), not _clinguin_browsing,
-                    #max{ N' : _all(global_ub(C,N',_))} = N.
-                needed(global,C,N):-  _all(global_lb(C,N,_)), not _clinguin_browsing,
-                    #max{ N' : _all(global_lb(C,N',_))} = N.
-                needed(local,C,N):-  _all(object_needed(ID,ASS,N,C,SIDE,_)), not _clinguin_browsing,
-                    #max{ N' : _all(object_needed(ID,ASS,N',C,SIDE,_))} = N.
+                needed(global,C,N):-  _all(global_ub_gap(C,N,_)), not _clinguin_browsing,
+                    #max{ N' : _all(global_ub_gap(C,N',_))} = N.
+                needed(global,C,N):-  _all(global_lb_gap(C,N,_)), not _clinguin_browsing,
+                    #max{ N' : _all(global_lb_gap(C,N',_))} = N.
+                needed(local,C,N):-  _all(assoc_needs_object(ID,ASS,N,C,SIDE,_)), not _clinguin_browsing,
+                    #max{ N' : _all(assoc_needs_object(ID,ASS,N',C,SIDE,_))} = N.
                 needed(C,N):-needed(_,C,N).
                 elem(global_cv(C),button,info_container):- needed(C,N).
                 attr(global_cv(C),label,@format("Needs {} more: {}",(N,@stringify(C,true)))):- needed(C,N).

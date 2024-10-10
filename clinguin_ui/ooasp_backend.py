@@ -51,7 +51,6 @@ class OOASPBackend(ClingraphBackend):
 
     def add_object(self, name, amount=1):
         must_be_used = name != "object"
-        print(must_be_used)
         for obj in range(int(amount)):
             # We force the use of the object to improve performance
             self.smart_solver.add_object(name, must_be_used=must_be_used)

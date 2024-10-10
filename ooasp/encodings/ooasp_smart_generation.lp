@@ -55,7 +55,7 @@ assoc_needs_object(ID1, ASSOC, 1..CMIN - N, C2, SIDE, new_object):-
 %   We can see the use of this predicate in an example with 9 frames and 1 rack.
 %   Here, an additional rack is needed since the global upperbound of frames for one rack is 8 but the actual
 %   number of frames is 9.
-global_ub_gap(C2,((NUM1 + MAX - 1) / MAX)-NUM2,new_object):-
+global_ub_gap(C2,1..((NUM1 + MAX - 1) / MAX)-NUM2,new_object):-
 
     % It is a target association: One side is 1..1 The other side is _..MAX
     is_target_assoc(ASSOC, SIDE),
@@ -84,7 +84,7 @@ global_ub_gap(C2,((NUM1 + MAX - 1) / MAX)-NUM2,new_object):-
 %   We can see the use of this predicate in an example with 2 frames and 2 racks
 %   where additional frames are needed to fill the lower bound of frames needed for the two racks.
 
-global_lb_gap(C1,(N2*MIN)-N1,new_object):-
+global_lb_gap(C1,1..(N2*MIN)-N1,new_object):-
     % It is a target association: One side is 1..1 The other side is MIN.._
     is_target_assoc_any(ASSOC, SIDE),
     SIDE2!=SIDE,

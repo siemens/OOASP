@@ -10,7 +10,6 @@ isa_smallest(SUPER,ID) :-
     ooasp_isa(SUPER,ID),
 	not ooasp_isa(SUB, ID): ooasp_subclass(SUB,SUPER).
 
-unused_node(object,ID) :- ooasp_domain(_,ID), _any(ooasp_unused(ID)).
 unused_node(Class,ID) :- ooasp_domain(Class,ID), _clinguin_browsing, not ooasp_isa(_,ID).
 
 

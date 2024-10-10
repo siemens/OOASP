@@ -34,6 +34,14 @@ In order to create a configuration using the command line use the file `app.py` 
 - For benchmarking add the options: `--stats=2 --outf=2 -q` to obtain a JSON. Then inspect the "OOASP" section.
 - For visualizing the configuration use: `--view`
 
+### UI Usage
+
+Run the clinguin UI with the following command:
+
+```bash
+clinguin client-server --ui-files clinguin_ui/ui.lp --backend=OOASPBackend --clingraph-files ooasp/encodings/viz_config.lp --default-graph=config --custom-classes clinguin_ui/ooasp_backend.py --domain-files examples/racks/kb.l
+```
+
 ### Documentation
 
 For the documentation of the protoype see [DOC.md](DOC.md)

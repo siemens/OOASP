@@ -150,7 +150,7 @@ class OOASPRacksApp(clingo.Application):
         smartOOASPSolver.smart_complete()
 
         if self._view:
-            smartOOASPSolver.save_png()
+            smartOOASPSolver.save_png(extra_prg="_clinguin_browsing.")
 
 
 # ========================== Main
