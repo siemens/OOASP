@@ -1,18 +1,31 @@
 # Copyright (c) 2022 Siemens AG Oesterreich
 # SPDX-License-Identifier: MIT
 
-from typing import List
-from types import SimpleNamespace
-from clingo import Model, parse_term, Function
-from clorm.clingo import Control
-from clorm import Symbol, Predicate, ConstantField, IntegerField, FactBase, RawField, Raw, StringField, unify
-from clingraph.orm import Factbase
-from clingraph.graphviz import compute_graphs, render
-from clingraph.clingo_utils import ClingraphContext
-from .kb import OOASPKnowledgeBase
 from copy import deepcopy
-import ooasp.utils as utils
+from types import SimpleNamespace
+from typing import List
+
+from clingo import Function, Model, parse_term
+from clingraph.clingo_utils import ClingraphContext
+from clingraph.graphviz import compute_graphs, render
+from clingraph.orm import Factbase
+from clorm import (
+    ConstantField,
+    FactBase,
+    IntegerField,
+    Predicate,
+    Raw,
+    RawField,
+    StringField,
+    Symbol,
+    unify,
+)
+from clorm.clingo import Control
+
 import ooasp.settings as settings
+import ooasp.utils as utils
+
+from .kb import OOASPKnowledgeBase
 
 
 class OOASPConfiguration:
@@ -64,24 +77,28 @@ class OOASPConfiguration:
         class Leaf(Predicate):
             class Meta:
                 name = "ooasp_isa_leaf"
+
             class_name = ConstantField
             object_id = IntegerField
 
         class ObjectSmallest(Predicate):
             class Meta:
                 name = "ooasp_isa_smallest"
+
             class_name = ConstantField
             object_id = IntegerField
 
         class Object(Predicate):
             class Meta:
                 name = "ooasp_isa"
+
             class_name = ConstantField
             object_id = IntegerField
 
         class AttributeValue(Predicate):
             class Meta:
                 name = "ooasp_attr_value"
+
             attr_name = ConstantField
             object_id = IntegerField
             attr_value = RawField
@@ -89,6 +106,7 @@ class OOASPConfiguration:
         class AttributeInt(Predicate):
             class Meta:
                 name = "ooasp_attr_int"
+
             object_id = IntegerField
             attr_name = ConstantField
             min = IntegerField
@@ -134,7 +152,8 @@ class OOASPConfiguration:
             Domain=Domain,
             CV=CV,
             User=User,
-            Object=Object)
+            Object=Object,
+        )
 
     @classmethod
     def from_model(cls, name: str, kb: OOASPKnowledgeBase, model: Model):
@@ -146,7 +165,9 @@ class OOASPConfiguration:
                 model: The clingo model
         """
         config = cls(name=name, kb=kb)
-        config.fb = model.facts(unifier=config.unifiers_list, atoms=True, shown=True, theory=True)
+        config.fb = model.facts(
+            unifier=config.unifiers_list, atoms=True, shown=True, theory=True
+        )
         return config
 
     @property
@@ -161,14 +182,22 @@ class OOASPConfiguration:
         """
         The domain size, it is computed by counting the number of objects in the fact base.
         """
-        return self.fb.query(self.UNIFIERS.Domain).select(self.UNIFIERS.Domain.object_id).count()
+        return (
+            self.fb.query(self.UNIFIERS.Domain)
+            .select(self.UNIFIERS.Domain.object_id)
+            .count()
+        )
 
     @property
     def size(self) -> int:
         """
         The number of instantiated objects via isa_leaf
         """
-        return self.fb.query(self.UNIFIERS.Leaf).select(self.UNIFIERS.Leaf.object_id).count()
+        return (
+            self.fb.query(self.UNIFIERS.Leaf)
+            .select(self.UNIFIERS.Leaf.object_id)
+            .count()
+        )
 
     @property
     def has_cv(self) -> bool:
@@ -182,7 +211,11 @@ class OOASPConfiguration:
         """
         List of all unifier classes that are editable: Object,AttributeValue,Association
         """
-        return [self.UNIFIERS.Object, self.UNIFIERS.AttributeValue, self.UNIFIERS.Association]
+        return [
+            self.UNIFIERS.Object,
+            self.UNIFIERS.AttributeValue,
+            self.UNIFIERS.Association,
+        ]
 
     @property
     def editable_facts(self) -> List[Predicate]:
@@ -236,7 +269,10 @@ class OOASPConfiguration:
         small_objects = {o.object_id: o.class_name for o in self.small_objects}
         objects = []
         for o in self.objects:
-            if o.object_id in small_objects and small_objects[o.object_id] != o.class_name:
+            if (
+                o.object_id in small_objects
+                and small_objects[o.object_id] != o.class_name
+            ):
                 continue
             objects.append(o)
 
@@ -254,7 +290,11 @@ class OOASPConfiguration:
         """
         The list of objects. (No specific class is defined)
         """
-        return list(self.fb.query(self.UNIFIERS.Object).where(self.UNIFIERS.Object.class_name == 'object').all())
+        return list(
+            self.fb.query(self.UNIFIERS.Object)
+            .where(self.UNIFIERS.Object.class_name == "object")
+            .all()
+        )
 
     @property
     def constraint_violations(self) -> List[Predicate]:
@@ -282,8 +322,13 @@ class OOASPConfiguration:
         """
         The of symbols inside a user predicate
         """
-        input_facts = list(self.fb.query(self.UNIFIERS.User).select(self.UNIFIERS.User.predicate).all())
-        user_fb = unify(self.editable_unifiers, [f.symbol if type(f) == Raw else f for f in input_facts])
+        input_facts = list(
+            self.fb.query(self.UNIFIERS.User).select(self.UNIFIERS.User.predicate).all()
+        )
+        user_fb = unify(
+            self.editable_unifiers,
+            [f.symbol if type(f) == Raw else f for f in input_facts],
+        )
 
         return user_fb
 
@@ -300,9 +345,13 @@ class OOASPConfiguration:
         """
         Association = self.UNIFIERS.Association
         q = self.fb.query(Association)
-        q1 = q.where(((Association.object_id1 == obj) & (Association.assoc_name == assoc_name)))
+        q1 = q.where(
+            ((Association.object_id1 == obj) & (Association.assoc_name == assoc_name))
+        )
         q1 = q1.select(Association.object_id2)
-        q2 = q.where(((Association.object_id2 == obj) & (Association.assoc_name == assoc_name)))
+        q2 = q.where(
+            ((Association.object_id2 == obj) & (Association.assoc_name == assoc_name))
+        )
         q2 = q2.select(Association.object_id1)
         return list(q1.all()) + list(q2.all())
 
@@ -379,14 +428,16 @@ class OOASPConfiguration:
             Returns:
                 The added fact
         """
-        fact = self.UNIFIERS.AttributeValue(attr_name=attr_name,
-                                            object_id=object_id,
-                                            attr_value=Raw(parse_term(str(attr_value))))
+        fact = self.UNIFIERS.AttributeValue(
+            attr_name=attr_name,
+            object_id=object_id,
+            attr_value=Raw(parse_term(str(attr_value))),
+        )
         self.fb.add(fact)
         self.consider_as_user([fact])
         return fact
 
-    def add_association(self, assoc_name: str, object_id1: int, object_id2: int) -> Predicate:
+    def associate(self, assoc_name: str, object_id1: int, object_id2: int) -> Predicate:
         """
         Adds a new association predicate to the factbase
             Parameters:
@@ -396,9 +447,9 @@ class OOASPConfiguration:
             Returns:
                 The added fact
         """
-        fact = self.UNIFIERS.Association(assoc_name=assoc_name,
-                                         object_id1=object_id1,
-                                         object_id2=object_id2)
+        fact = self.UNIFIERS.Association(
+            assoc_name=assoc_name, object_id1=object_id1, object_id2=object_id2
+        )
         self.fb.add(fact)
         self.consider_as_user([fact])
         return fact
@@ -428,12 +479,19 @@ class OOASPConfiguration:
         """
         AttributeValue = self.UNIFIERS.AttributeValue
         q = self.fb.query(AttributeValue)
-        q = q.where(((AttributeValue.object_id == object_id) & (AttributeValue.attr_name == attr_name)))
+        q = q.where(
+            (
+                (AttributeValue.object_id == object_id)
+                & (AttributeValue.attr_name == attr_name)
+            )
+        )
         values = list(q.all())
         self._remove_facts(values)
         return values
 
-    def remove_association(self, assoc_name: str, object_id1: int, object_id2: int) -> List[Predicate]:
+    def remove_association(
+        self, assoc_name: str, object_id1: int, object_id2: int
+    ) -> List[Predicate]:
         """
         Removes the association from the fact base
             Paramters:
@@ -445,9 +503,17 @@ class OOASPConfiguration:
         """
         Association = self.UNIFIERS.Association
         q = self.fb.query(Association)
-        q = q.where(((((Association.object_id1 == object_id1) &
-                       (Association.object_id2 == object_id2))) &
-                     (Association.assoc_name == assoc_name)))
+        q = q.where(
+            (
+                (
+                    (
+                        (Association.object_id1 == object_id1)
+                        & (Association.object_id2 == object_id2)
+                    )
+                )
+                & (Association.assoc_name == assoc_name)
+            )
+        )
         associations = list(q.all())
         self._remove_facts(associations)
         return associations
@@ -467,7 +533,7 @@ class OOASPConfiguration:
         """
         cvs = self.constraint_violations
         if len(cvs) == 0:
-            print(utils.green('All checks passed!'))
+            print(utils.green("All checks passed!"))
         else:
             for cv in cvs:
                 print(utils.red(self.format_cv(cv)))
@@ -501,7 +567,7 @@ class OOASPConfiguration:
         """
         Saves the configuration as a png using clingraph
         """
-        ctl = Control(['--warn=none'])
+        ctl = Control(["--warn=none"])
         fbs = []
         path = settings.encodings_path.joinpath("viz_config.lp")
         ctl.load(str(path))
@@ -511,7 +577,11 @@ class OOASPConfiguration:
         ctl.add("base", [], self.fb.asp_str())
         ctl.add("base", [], self.kb.fb.asp_str())
         ctl.ground([("base", [])], ClingraphContext())
-        ctl.solve(on_model=lambda m: fbs.append(Factbase.from_model(m, default_graph="config")))
+        ctl.solve(
+            on_model=lambda m: fbs.append(
+                Factbase.from_model(m, default_graph="config")
+            )
+        )
         graphs = compute_graphs(fbs[0])
         render(graphs, format="png", name_format=self.name, directory=directory)
 
@@ -521,6 +591,7 @@ class OOASPConfiguration:
         """
         self.save_png()
         from IPython.display import Image
+
         return Image(f"out/{self.name}.png")
 
     def __str__(self):
