@@ -1,3 +1,6 @@
+# Copyright (c) 2024 Siemens AG Oesterreich
+# SPDX-License-Identifier: MIT
+
 from clinguin.server.application.backends import ClingraphBackend
 from ooasp.smart_ooasp import SmartOOASPSolver
 from clingo import Function, Control, parse_term
@@ -33,16 +36,11 @@ class OOASPBackend(ClingraphBackend):
             ],
         )
         self.smart_solver.load_base()
-        # self.smart_solver.create_initial_objects()
         self._set_external(Function("check_potential_cv"), "false")
 
     @property
     def _assumption_list(self):
         return super()._assumption_list.union(self.smart_solver.assumption_list)
-
-    def _prepare(self):
-        # self.smart_solver.ctl.assign_external(Function("check_potential_cv"), False)
-        pass
 
     def _add_assumption(self, symbol, value="true"):
         # Overwrites

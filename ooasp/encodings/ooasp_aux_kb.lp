@@ -1,4 +1,4 @@
-% Copyright (c) 2022 Siemens AG Oesterreich
+% Copyright (c) 2024 Siemens AG Oesterreich
 % SPDX-License-Identifier: MIT
 
 #program base.
@@ -20,7 +20,7 @@ ooasp_attr_enum(C,N,"true") :-
 ooasp_attr_enum(C,N,"false") :-
     ooasp_attr(C,N,"boolean").
 
-% true, if attribute has dospecimain
+% true, if attribute has domain
 ooasp_attr_hasdomain(C,N) :-
     ooasp_attr_enum(C,N,D).
 

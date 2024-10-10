@@ -1,3 +1,6 @@
+% Copyright (c) 2024 Siemens AG Oesterreich
+% SPDX-License-Identifier: MIT
+
 
 % ==============================================================================
 % User input Values (General), when guessing values this should not be needed

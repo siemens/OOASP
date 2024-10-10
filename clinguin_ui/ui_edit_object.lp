@@ -1,3 +1,6 @@
+% Copyright (c) 2024 Siemens AG Oesterreich
+% SPDX-License-Identifier: MIT
+
 elem(edit_c, container,bottom_container).
     attr(edit_c,flex_direction,row).
     attr(edit_c,class,("justify-content-evenly";"p-2";"bg-info";"bg-opacity-10";"rounded";"border";"border-3";"m-2";"shadow")).

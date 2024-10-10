@@ -1,3 +1,6 @@
+% Copyright (c) 2024 Siemens AG Oesterreich
+% SPDX-License-Identifier: MIT
+
 elem(config_container, container,bottom_container).
         attr(config_container,flex_direction,column).
         attr(config_container,class,("p-3";"bg-info";"bg-opacity-10";"rounded";"border";"border-3";"m-2";"shadow")).
@@ -25,7 +28,6 @@ elem(config_container, container,bottom_container).
 
                         elem(addobject_dd,dropdown_menu,addobject_dd_c).
                         attr(addobject_dd,selected,"object").
-                        % attr(addobject_dd,class,("m-2";"p-2";"border";"border-1")).
                         attr(addobject_dd,class,("m-2";"p-2";"border";"border-1";"bg-primary";"bg-opacity-10")).
                         attr(addobject_dd,class,("disabled")):- _clinguin_browsing.
                         attr(addobject_dd,order,1).
@@ -73,7 +75,7 @@ elem(config_container, container,bottom_container).
 
                 domain_size(S):- #count{1,ID:ooasp_domain(_,ID)} = S.
                 elem(domain_size_txt,label,info_container).
-                attr(domain_size_txt,label,@format("Domain Size: {}",DS)) :- domain_size(DS). %TODO fix sizing
+                attr(domain_size_txt,label,@format("Domain Size: {}",DS)) :- domain_size(DS). 
                 attr(domain_size_txt,class,("text-start";"fw-semibold";"fs-6")).
                 attr(domain_size_txt,order,1).
 

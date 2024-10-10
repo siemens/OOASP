@@ -1,17 +1,20 @@
+% Copyright (c) 2024 Siemens AG Oesterreich
+% SPDX-License-Identifier: MIT
+
 #const help_message = @concat(
-    "<p><i>This UI allows to create a configuration</i></p>",
+    "<p><i>This UI allows to create a configuration in an interactive manner</i></p>",
     "<h5>Add objects</h5>",
-    "<p>In the add 'Add object' section one can add a new object to the system. Only leaf classes can be added as objects. Click on + to add the </p>",
+    "<p>In the 'Add object' section one can add a new object to the system. Only leaf classes can be added as objects. Click on + to add the object.</p>",
     "<h5>Edit objects</h5>",
-    "<p>Click on the node in the configuration graph to edit the object. The lower right pannel will show the selected node and posible changes. </p>",
+    "<p>Click on the node in the configuration graph to edit the object. The lower right panel will show the selected node and posible changes. </p>",
     "<h5>Partial and full configuration</h5>",
-    "<p>The yellow button on the menu can toggle between partial and full configuration. In partial configuration objects might not have values for attributes and lowebounds might not be filled. In full configuration the system will enforce the complete configuration. </p>",
+    "<p>The yellow button on the menu can toggle between a partial and a full configuration. In a partial configuration objects might not have values for attributes and lowebounds might not be filled. In full configuration the system will enforce the complete configuration. </p>",
     "<h5>Find incrementally</h5>",
-    "<p>Click on the 'Find incrementally' button to allow the system to create all the required objects to complete de configuration. </p>",
+    "<p>Click on the 'Find incrementally' button to allow the system to create all the required objects amd to complete the configuration. </p>",
     "<h5>Next solution</h5>",
     "<p>Browse the solutions for a complete configuration. The new information is highlighted in green.</p>",
     "<h5>Select a solution</h5>",
-    "<p>When browsing the solutions, select the one that you want to keep. </p>",
+    "<p>When browsing the solutions, selects the one that you want to keep. </p>",
     ""
 ).
 % ================= Menu bar
@@ -29,7 +32,7 @@ attr(menu_bar,icon,"fa-puzzle-piece").
         elem(help_modal,modal,w).
         attr(help_modal,title,"Help").
         attr(help_modal,size,"xl").
-        attr(help_modal,class,("justify-content-start")). %Check if this actually does anything.
+        attr(help_modal,class,("justify-content-start")).
 
             elem(help_text,label,help_modal).
             attr(help_text,label,help_message).
@@ -73,7 +76,6 @@ attr(menu_bar,icon,"fa-puzzle-piece").
 
                 elem(restart_msg,label,modal_content).
                 attr(restart_msg,label,"This action will remove everything and cannot be undone, are you sure you want to proceed?").
-                % attr(restart_msg,class,"text-danger").
                 attr(restart_msg,order,1).
 
 
@@ -97,7 +99,6 @@ attr(menu_bar,icon,"fa-puzzle-piece").
     attr(menu_bar_load,label, "Load").
     attr(menu_bar_load, icon, "fa-upload").
     attr(menu_bar_load, class, ("btn-outline-primary";"border-0")).
-    %when(menu_bar_load,click,call,import_solution).
     when(menu_bar_load,click,update,(load_modal,visibility,shown)).
 
         elem(load_modal,modal,w).
@@ -124,12 +125,8 @@ attr(menu_bar,icon,"fa-puzzle-piece").
     attr(menu_bar_save, class, ("btn-outline-primary";"border-0")).
     when(menu_bar_save,click,update,(save_modal,visibility,shown)).
 
-        %TODO on click show modal with entry option to select a file path
-
-
         elem(save_modal,modal,w).
         attr(save_modal,title,"Save file").
-        % attr(save_modal,size,"sm").
             elem(c_save, container, save_modal).
             attr(c_save, flex_direction, "column").
             attr(c_save, class, "align-items-end").
@@ -162,7 +159,6 @@ attr(menu_bar,icon,"fa-puzzle-piece").
     attr(suggest_btn,label,"Next Solution") :- _clinguin_external(check_potential_cv,true).
     attr(suggest_btn,icon,"fa-forward") :- _clinguin_external(check_potential_cv,true).
     attr(suggest_btn,class,("btn-outline-success")):- _clinguin_external(check_potential_cv,true).
-    % attr(suggest_btn,class,("btn-success")) :- _clinguin_external(check_potential_cv,true).
     when(suggest_btn,click,call, next_solution):- _clinguin_external(check_potential_cv,true).
 
     elem(select_btn,button,menu_bar) :- _clinguin_browsing.
@@ -176,8 +172,3 @@ elem(unsat_msg, message, w):-_clinguin_unsat.
 attr(unsat_msg, message, "No solution with the current objects"):-_clinguin_unsat.
 attr(unsat_msg, type, "error"):-_clinguin_unsat.
 attr(unsat_msg, title, "Unsatisfiable"):-_clinguin_unsat.
-
-    % elem(check_btn,button,menu_bar).
-    % attr(check_btn,label,"Check").
-    % attr(check_btn,icon,"fa-magnifying-glass").
-    % attr(check_btn,class,("btn-outline-danger")).

@@ -1,12 +1,12 @@
+% Copyright (c) 2024 Siemens AG Oesterreich
+% SPDX-License-Identifier: MIT
+
     elem(config_viz, canvas,window_flex).
-    % attr(config_viz,class,("vw-75";"vh-75")).
     attr(config_viz, image_type, clingraph__config).
             #include "ooasp/encodings/viz_config_nodes.lp".
 
             elem(n(X), svg_node, config_viz) :- node(X,config).
             attr(n(X), clingraph_id, X) :- node(X,config).
-            % when(n(ID), click, update, (edit_context(ID), visibility, shown)):- node(ID,config).
-            % when(n(ID), click, update, (edit_context(ID), visibility, shown)):- node(ID,config).
             when(n(X),click,update,(selected_object,label,@format("{} ({})",@stringify(Class,true),X))) :- node(X,config),label_isa(Class,X).
             when(n(X),click,update,(selected_object,label,@format("({})",X))) :- node(X,config),not label_isa(_,X).
             when(n(X),click,update,(selected_object_info,label,@stringify(C,true))) :- node(X,config),ooasp_domain(C, X).
