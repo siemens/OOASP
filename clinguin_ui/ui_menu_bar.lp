@@ -2,19 +2,19 @@
 % SPDX-License-Identifier: MIT
 
 #const help_message = @concat(
-    "<p><i>This UI allows to create a configuration in an interactive manner</i></p>",
+    "<p><i>This UI allows the user to create a configuration in an interactive manner.</i></p>",
     "<h5>Add objects</h5>",
-    "<p>In the 'Add object' section one can add a new object to the system. Only leaf classes can be added as objects. Click on + to add the object.</p>",
+    "<p>In the 'Add object' section, the user can add a new object to the system. Only leaf classes can be added as objects. Click on the [+] button to add the object.</p>",
     "<h5>Edit objects</h5>",
-    "<p>Click on the node in the configuration graph to edit the object. The lower right panel will show the selected node and posible changes. </p>",
+    "<p>Click on the node in the configuration graph to edit the object. The lower right panel will show the selected node and possible changes.</p>",
     "<h5>Partial and full configuration</h5>",
-    "<p>The yellow button on the menu can toggle between a partial and a full configuration. In a partial configuration objects might not have values for attributes and lowebounds might not be filled. In full configuration the system will enforce the complete configuration. </p>",
+    "<p>The yellow button on the menu can toggle between a partial and a full configuration. In a partial configuration, objects might not have values for attributes, and lower bounds might not be filled. In a full configuration, the system will enforce the complete configuration.</p>",
     "<h5>Find incrementally</h5>",
-    "<p>Click on the 'Find incrementally' button to allow the system to create all the required objects amd to complete the configuration. </p>",
+    "<p>Click on the 'Find incrementally' button to allow the system to create all the required objects and to complete the configuration.</p>",
     "<h5>Next solution</h5>",
     "<p>Browse the solutions for a complete configuration. The new information is highlighted in green.</p>",
     "<h5>Select a solution</h5>",
-    "<p>When browsing the solutions, selects the one that you want to keep. </p>",
+    "<p>When browsing the solutions, select the one that you want to keep.</p>",
     ""
 ).
 % ================= Menu bar
