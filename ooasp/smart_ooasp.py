@@ -415,7 +415,9 @@ class SmartOOASPSolver:
         We know that ID1 needs at least one object of class C1 and ID2 needs at least one object of class C2
         We know that the objects ID1 and ID2 can potentially be associated by ASSOC
         We also know that the classes of these objects was set by the user or the smart association.
-        This makes sure that the association added does not determine the classes of the objects if not previously given
+        This makes sure that the association added does not determine the classes of the objects if not previously given.
+
+        Associating objects this way restricts completeness of the solving approach by disregarding symmetric solutions.
 
         Returns:
             bool: True if associations were added, False otherwise
