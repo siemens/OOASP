@@ -201,7 +201,7 @@ class SmartOOASPSolver:
             f"ooasp_associated({association[0]},{association[1]},{association[2]})"
         )
         self.log(green(f"\t\Associating  {assoc_atom}"))
-        self.associations.add(assoc_atom)
+        self.assumptions.add(assoc_atom)
         self.cautious = None
         self.brave = None
 

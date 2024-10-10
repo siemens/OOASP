@@ -26,10 +26,10 @@ class OOASPBackend(ClingraphBackend):
             verbose=True,
             associations_with_priority=ASSOCIATION_SPECIALIZATIONS,
             smart_generation_functions=[
-                "object_needed",
-                "global_lb",
-                "global_ub",
-                "association_needed",
+                "assoc_needs_object",
+                "global_lb_gap",
+                "global_ub_gap",
+                "association_possible",
             ],
         )
         self.smart_solver.load_base()
