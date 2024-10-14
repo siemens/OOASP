@@ -33,7 +33,6 @@ Before running any of the programs, make sure the virtual environment has been a
 ```bash
 poetry shell
 ```
-for the poetry installation.
 
 The files corresponding to the current version are in [ooasp](ooasp).
 
