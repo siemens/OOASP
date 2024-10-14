@@ -470,7 +470,7 @@ class SmartOOASPSolver:
         """
         Loads the base encodings to solve the configuration
         """
-        encodings_path = os.path.join("ooasp", "encodings", "ooasp_simple.lp")
+        encodings_path = os.path.join("ooasp", "encodings", "ooasp.lp")
         self.ctl.load(encodings_path)
         self.ctl.ground([("base", [])])
 
