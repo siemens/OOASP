@@ -29,3 +29,8 @@ check_permanent_cv. % Checks for permanent constraints apply
 #show global_lb_gap/3.
 #show association_possible/4.
 #show .
+
+% Configuration information display
+#show ooasp_isa/2.
+#show ooasp_attr_value/3.
+#show ooasp_associated/3.
