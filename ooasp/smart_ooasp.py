@@ -50,7 +50,6 @@ class SmartOOASPSolver:
             associations_with_priority (list[str]): List of associations which will be associated with priority (eg. for performance reasons).
         """
         self.initial_objects = initial_objects if initial_objects is not None else []
-        print(self.initial_objects)
         self.smart_generation_functions = (
             smart_generation_functions if smart_generation_functions is not None else []
         )
@@ -89,7 +88,7 @@ class SmartOOASPSolver:
             self.ctl = Control(["--warn=none"])
 
     @property
-    def stats(self) -> None:
+    def stats(self) -> dict:
         """
         Returns the statistics of the run.
         """
@@ -127,7 +126,7 @@ class SmartOOASPSolver:
         return results
 
     @property
-    def assumption_list(self) -> None:
+    def assumption_list(self) -> list[Symbol]:
         """
         List of assumptions for the solver. All association instances are used as assumptions.
         """
@@ -172,7 +171,7 @@ class SmartOOASPSolver:
             self.ctl.release_external(Function("active", [Number(self.next_id - 1)]))
         self.ctl.assign_external(Function("active", [Number(self.next_id)]), True)
 
-    def add_object(self, o: str, must_be_used=True) -> None:
+    def add_object(self, o: str, must_be_used: bool = True) -> None:
         """
         Adds a new object to the configuration. This addition includes the user predicate
         to know the class for the object that was added and distinguish it in the encodings.
@@ -467,7 +466,7 @@ class SmartOOASPSolver:
                 return True
         return False
 
-    def load_base(self):
+    def load_base(self) -> None:
         """
         Loads the base encodings to solve the configuration
         """
@@ -475,13 +474,13 @@ class SmartOOASPSolver:
         self.ctl.load(encodings_path)
         self.ctl.ground([("base", [])])
 
-    def on_model(self, m: Model):
+    def on_model(self, m: Model) -> None:
         """
         Callback when a model is found
         """
         self.model = [str(s) + "." for s in m.symbols(atoms=True)]
 
-    def on_statistics(self, step: StatisticsMap, accu: StatisticsMap):
+    def on_statistics(self, step: StatisticsMap, accu: StatisticsMap) -> None:
         """
         Callback when the statistics are updated
         """
