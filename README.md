@@ -14,16 +14,26 @@ Prototype for interactive configuration using ASP initially developed by [Susana
 
 ### Installation
 
+#### Using `poetry` (Recommended)
+
 ```bash
 poetry install
+```
+#### Directly install requirements
+
+> This approach is recommended for users who prefer to set up their own virtual environment
+
+```bash
+pip install -r requirements.txt
 ```
 
 ### Usage
 
-Before running any of the programs, make sure the virtual environment has been activated. This can be done using the command:
-```
+Before running any of the programs, make sure the virtual environment has been activated. This can be done using the command (if the installation was done through `poetry`):
+```bash
 poetry shell
 ```
+for the poetry installation.
 
 The files corresponding to the current version are in [ooasp](ooasp).
 
@@ -39,7 +49,7 @@ In order to create a configuration using the command line use the file `app.py` 
 Run the clinguin UI with the following command:
 
 ```bash
-clinguin client-server --ui-files clinguin_ui/ui.lp --backend=OOASPBackend --clingraph-files ooasp/encodings/viz_config.lp --default-graph=config --custom-classes clinguin_ui/ooasp_backend.py --domain-files examples/racks/kb.l
+clinguin client-server --ui-files clinguin_ui/ui.lp --backend=OOASPBackend --clingraph-files ooasp/encodings/viz_config.lp --default-graph=config --custom-classes clinguin_ui/ooasp_backend.py --domain-files examples/racks/kb.lp
 ```
 
 ### Documentation
