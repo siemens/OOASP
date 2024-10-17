@@ -47,7 +47,7 @@ class OOASPRacksApp(clingo.Application):
     Application class for solving the racks problem using OOASP.
     """
 
-    def __init__(self, name):
+    def __init__(self, name: str) -> None:
         """
         Create application
         """
@@ -57,7 +57,7 @@ class OOASPRacksApp(clingo.Application):
         self._initial_objects = []
         self._smart_functions = []
 
-    def parse_log_level(self, log_level):
+    def parse_log_level(self, log_level: str) -> bool:
         """
         Parse log
         """
@@ -67,7 +67,7 @@ class OOASPRacksApp(clingo.Application):
 
         return True
 
-    def parse_scale(self, scale):
+    def parse_scale(self, scale: float | int | str) -> bool:
         """
         Parse scale
         """
@@ -76,7 +76,7 @@ class OOASPRacksApp(clingo.Application):
 
         return True
 
-    def parse_smart_functions(self, smart_functions):
+    def parse_smart_functions(self, smart_functions: str) -> bool:
         """
         Parse smart generation functions
         """
@@ -84,7 +84,7 @@ class OOASPRacksApp(clingo.Application):
 
         return True
 
-    def meta_parse_object(self, class_name):
+    def meta_parse_object(self, class_name: str):
         """
         Wrapper function to parse the number of objects of a class
         """
