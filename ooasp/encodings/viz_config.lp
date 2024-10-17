@@ -34,7 +34,7 @@ attr(graph, config, dpi, 65).
 
 % ------- All nodes
 attr(node, ID, label, @concat("<<TABLE BGCOLOR='{{bgcolor}}' BORDER='0' CELLBORDER='1' CELLSPACING='0' CELLPADDING='5'>",
-                                        "<TR><TD BORDER='1'><FONT COLOR='{{color}}' FACE='Helvetica Neue'><B>{{isa}} ({{id}})</B><BR/>{{class}}</FONT></TD></TR><TR><TD ALIGN='right'> ",
+                                        "<TR><TD BORDER='1'><FONT COLOR='{{color}}' FACE='Helvetica'><B>{{isa}} ({{id}})</B><BR/>{{class}}</FONT></TD></TR><TR><TD ALIGN='right'> ",
                                         "{% set attr = attr|default({}) %}{% for k, v in attr.items() %}{{v}} {% endfor %}",
                                         "{% set cv = cv|default({}) %}{% for k, v in cv.items() %}{{v}} {% endfor %}",
                                         "</TD></TR></TABLE>>")):- any_node(ID).
@@ -67,7 +67,7 @@ attr(node, ID, (label,attr,Attr_name), @argument_str(Attr_name,Value,@color(gree
     not _clinguin_assume(ooasp_attr_value(Attr_name,ID,Value),true).
 
 % inferred input
-attr(node, ID, (label,attr,Attr_name), @argument_str(Attr_name,Value,my_gray)):-
+attr(node, ID, (label,attr,Attr_name), @argument_str(Attr_name,Value,@color(my_gray))):-
     not _clinguin_browsing,
     not _clinguin_assume(ooasp_attr_value(Attr_name,ID,Value),true),
     _all(ooasp_attr_value(Attr_name,ID,Value)).
@@ -94,7 +94,7 @@ attr(node, ID, (label,cv,(ASSOC,CMIN,N,C,SIDE)), @cv_str(M,(ASSOC,CMIN,N,C,SIDE)
 
 edge((ID1,ID2),config) :-shown_association(_,Name,ID1,ID2).
 
-attr(edge,(ID1,ID2), xlabel, "<{{name}} <br/><FONT POINT-SIZE='10' FACE='Helvetica Neue'> {{super}}</FONT>>"):-shown_association(_,Name,ID1,ID2).
+attr(edge,(ID1,ID2), xlabel, "<{{name}} <br/><FONT POINT-SIZE='10' FACE='Helvetica'> {{super}}</FONT>>"):-shown_association(_,Name,ID1,ID2).
 % attr(edge,(ID1,ID2), (xlabel,name), Name):-shown_association(_,Name,ID1,ID2), not ooasp_assoc_specialization(_,Name).
 attr(edge,(ID1,ID2), (xlabel,super), Name):-shown_association(_,Name,ID1,ID2).
 
@@ -112,7 +112,7 @@ from clingo.symbol import String
 import textwrap
 
 def argument_str(name,type,color):
-    s = f"<FONT FACE='Helvetica Neue' COLOR='{color.string}'>" + str(name) + " = " + "<I> "+ str(type)  + "</I></FONT><br ALIGN='left'/> "
+    s = f"<FONT FACE='Helvetica' COLOR='{color.string}'>" + str(name) + " = " + "<I> "+ str(type)  + "</I></FONT><br ALIGN='left'/> "
     return String(s)
 
 def cv_str(message,args,color='red'):
@@ -121,7 +121,7 @@ def cv_str(message,args,color='red'):
     s_wrap_list = textwrap.wrap(formatted_message, 40)
     message_wrapped = "<br ALIGN='left'/>   ".join(s_wrap_list)
     color = (str(color)).strip('"')
-    s = f"<FONT FACE='Helvetica Neue' COLOR='{color}' POINT-SIZE='12'><I> "+ message_wrapped  + "</I> </FONT><br ALIGN='left'/> "
+    s = f"<FONT FACE='Helvetica' COLOR='{color}' POINT-SIZE='12'><I> "+ message_wrapped  + "</I> </FONT><br ALIGN='left'/> "
     return String(s)
 
 #end.
