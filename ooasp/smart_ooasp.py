@@ -266,7 +266,7 @@ class SmartOOASPSolver:
         return self.brave
 
     def save_png(
-        self, directory: str = "./out", suffix: str = "", extra_prg=""
+        self, directory: str = "./out", suffix: str = "", extra_prg="", name="config"
     ) -> None:
         """
         Saves the configuration as a png using clingraph
@@ -298,7 +298,7 @@ class SmartOOASPSolver:
         f = render(
             graphs,
             format="png",
-            name_format="config" + suffix,
+            name_format=name + suffix,
             directory=directory,
             view=True,
         )
