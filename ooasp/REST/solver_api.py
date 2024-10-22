@@ -81,7 +81,23 @@ def represent_as_graph():
     """
     Represents list of objects and associations a collection of nodes and edges.
     """
-    pass
+    data = {
+        "nodes": [],
+        "edges": []
+    }
+
+    global solver
+    known = list(solver.assumptions)
+    for assumption in known:
+        if "ooasp_isa(" in assumption:
+            data_list = assumption.replace(")","").replace("ooasp_isa(","").split(",")
+            node = {"object_id":data_list[1], "class":data_list[0]}
+            data["nodes"].append(node)
+        elif "ooasp_associated(" in assumption:
+            data_list = assumption.replace(")","").replace("ooasp_associated(","").split(",")
+            edge = {"assoc":data_list[0], "source":data_list[1], "target":data_list[2]}
+            data["edges"].append(edge)
+    return data
 
 class Response:
     def __init__(self, message, data) -> None:
@@ -104,6 +120,11 @@ class InitData(BaseModel):
     objects : str = ""
     prio_associations : str = ""
     domain : str = str(os.path.join("examples", "racks", "kb.lp"))
+
+@app.get("/graph/assumptions")
+async def known():
+    graph_repr = represent_as_graph()
+    return graph_repr
 
 @app.post("/knowledgebase/{path}")
 async def read_kb(path):
@@ -159,7 +180,7 @@ async def get_all_objects():
 @app.get("/assumptions")
 async def get_all_assumptions():
     global solver
-    return Response("Current assumptions.", data=str(solver.assumption_list)).build()
+    return Response("Current assumptions.", data=str(solver.assumptions)).build()
 
 @app.post("/associate/{id1}/{name}/{id2}")
 async def associate(id1, id2, name):
@@ -183,7 +204,7 @@ async def get_cautious():
     """
     global solver
     csq = str(solver.get_cautious()).split(",")
-    return Response("Brave consequences (must haves)", str(csq))
+    return Response("Cautious consequences (must haves)", str(csq))
 
 @app.get("/consequences/brave")
 async def get_brave():
@@ -194,7 +215,6 @@ async def get_brave():
     global solver
     csq = str(solver.get_brave()).split(",")
     return Response("Brave consequences (possibilities)", str(csq))
-
 
 @app.get("/solution/view/{name}")
 async def get_diagram(name):
