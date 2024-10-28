@@ -1,6 +1,7 @@
 from ooasp.smart_ooasp import SmartOOASPSolver
 from fastapi import FastAPI, status
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List
 
@@ -8,14 +9,24 @@ import os
 
 global solver, setup_flag, st, allowed_objects, allowed_associations
 
+FE_ORIGINS = ['http://localhost:5173']
+
 SMART_FUNCTIONS = ["association_possible", "assoc_needs_object", "global_lb_gap", "global_ub_gap"]
 
 solver = SmartOOASPSolver(smart_generation_functions=SMART_FUNCTIONS)
+# check brave cons. here not in Solver
 setup_flag = False
 st = ""
 allowed_objects = []
 allowed_associations = {}
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=FE_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 def load_known_names(kb_path):
     global allowed_objects
@@ -124,7 +135,7 @@ class InitData(BaseModel):
 @app.get("/graph/assumptions")
 async def known():
     graph_repr = represent_as_graph()
-    return graph_repr
+    return Response("Success",graph_repr).build()
 
 @app.post("/knowledgebase/{path}")
 async def read_kb(path):
