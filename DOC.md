@@ -3,48 +3,14 @@ SPDX-License-Identifier: MIT
 
 # Documentation of Interactive Configurator
 
-## API classes
+> Given the significant changes in the code and solving approach, this document will be divided into two sections, one explaining information that is still relevant and another, containing outdated information.
 
-### Knowledge Base
-
-The Knowledge Bases are handled using the `OOASPKnowledgeBase` class in [ooasp/kb.py](ooasp/kb.py). This class provides useful functionality to load, edit, and visualize Knowledge Bases. The string representation of the objects of this class are ASP facts.
-
-### Configuration
-
-The Configurations are handled using the `OOASPConfiguration` class in [ooasp/config.py](ooasp/config.py). This class provides useful functionality to load, edit, and visualize Configurations.
-Furthermore, it can serve as container for:
-- partial configurations
-- complete configurations
-- configuration checks (constraint violations)
-- available options (brave consequences)
-- forced inferences (cautious consequences)
-
-The string representation of the objects of this class are ASP facts.
-
-
-### Interactive Configurator
-
-The interactive Configurator API provides all functionality to create a configuration interactively. This is done by calling the methods provided by the `InteractiveConfigurator` class from [ooasp/interactive.py](ooasp/interactive.py). The process is done in a [multi-shot](#multi-shot-approach) way.
-
-
-#### Tasks
-
-The following tasks correspond to the only points of the interactive process where solving is performed. They are done for the current domain size and based on a (possibly empty) partial configuration `C`.
-
-1. *Complete:* Getting a complete configuration extending `C`.
-2. *Check:* Checking `C` for errors.
-3. *Options:* Obtaining all possible classes for the objects, values for the attributes, and associations to complete `C`.
-4. *Inferences:* Obtaining the inferences that are obtained from `C` optimized to minimize errors. This means that it is the intersection of all stable models, where the lower bound constraint violations are minimized so that as many objects are associated as possible.
-
-
-----
 ## Encodings
-
 All encodings are put together using a single file:
 
 - [ooasp/encodings/ooasp.lp](ooasp/encodings/ooasp.lp)
 
-This file also introduces **external atoms** to differentiate the task that will be performed without the need for re-grounding. The truth value of those atoms will be defined externally inside the [Interactive Configurator](#interactive-configurator).
+This file also introduces **external atoms** to differentiate the task that will be performed without the need for re-grounding. The truth value of those atoms will be defined externally.
 
 **Externals**
 
@@ -77,6 +43,7 @@ Although this might seem contra-intuitive, this external should be false for the
 	*Check*    |   `false`     |
 	*Options*    |   `false`     |
 
+----
 
 ### Auxiliary predicates
 
@@ -93,6 +60,7 @@ The guessing section contains all choices to decide the class of an object, the 
 
 - [ooasp/encodings/ooasp_guess.lp](ooasp/encodings/ooasp_guess.lp)
 
+----
 
 ### Constraints
 
@@ -108,8 +76,7 @@ Constraints are defined using the `ooasp_cv/4` predicate:
 - `STR`: A string describing the constraint. It can use place holders `{}`, which are filled with the arguments in `ARGS`.
 - `ARGS`: A tuple with the arguments to format `STR`. Note that tuples with a single element need to be written as `(ARG,)`.
 
-
-**Domain specific constraints** are defined by the user in a different file, which can be provided when the [Interactive Configurator](#interactive-configurator) is created. Note that these will also be **grounded incrementally** (see [multi-shot](#multi-shot-approach)).
+**Domain specific constraints** are defined by the user in a different file, which needs to be included in the knowledge base encoding or added additionally _(Using constraints that are not expressed using ooasp is not recommended, as they may harm performance of the smart functions in solving)_. Note that these will also be **grounded incrementally** (see [multi-shot](#multi-shot-approach)).
 
 When writing domain specific constraint violations, one must consider that the grounding is done for each new object, so there needs to be a rule to cover the case of this new object taking the position of any object playing a role in the constraint violation.
 
@@ -148,66 +115,12 @@ The user input corresponds to the current partial configuration `C` that is bein
 - **`user(ooasp_attribute_value(N,ID,VALUE))`**
   The user selected value `VALUE` for attribute `N` of object `ID`
 
+%%% ----THIS NEEDS RE-CHECKING----
 The truth value of these externals is defined by the [Interactive Configurator](#interactive-configurator) based on the current (partial) configuration that is being constructed using an object of class [OOASPConfiguration](#configuration).
 
 The user externals are generated restricted by the possible classes that an object can have. This is defined by the argument `cls` passed in the grounding (see [multi-shot](#multi-shot-approach)). This class is stored in the predicate `ooasp_domain(_,cls).`. Therefore, if the new object is grounded for a class `cls`, only valid attributes and associations for `cls` and its subclasses will be considered. This is summarized in the auxiliary predicate `counts_as(O,C)`, which states that object `O` can count as class `C`.
+%%%
 
-
-## Numerical attributes
-
-Numerical attributes are treated using the system `fclingo`. This systems adds a founded condition while using `clorm` in the background.
-Attributes whose type is `int`, such as `nr_passengers`, `standing_room`, and `nr_seats` in the Metro example, are treated as variables with this system as explained below. Note that numerical values can also be treated as an enumeration using the type `enumint` instead. This option will consider all values in the defined range for predicate `ooasp_attr_value`, such as `frame_position` in the racks example.
-
-### Usage
-
-When an attribute `ATTR` is of type `int`, their value is defined using an `fclingo` variable `ooasp_attr_fvalue(ATTR,O)`.  The value of such a variable will be associated to the value of attribute `ATTR` for object `O`.
-These values can be compared using the theory symbol `&fsum`. For instance, in the following rule we use `&fsum{ooasp_attr_fvalue(A,new_object)}<MIN` to state that the value of `A` being smaller than `MIN` will lead to a constraint violation. Notice that the variable `MIN` must be defined in a positive literal of the body.
-
-```
-ooasp_cv(value_outside_of_range,new_object,"Value for {} outside min range {}",(A,MIN)) :-
-	 ooasp_attr(C,A,int),
-	 ooasp_isa(C,new_object),
-	 &fsum{ooasp_attr_fvalue(A,new_object)}<MIN,
-	 ooasp_attr_minInclusive(C,A,MIN).
-```
-
-To check if a value is defined one can do so by checking if it is equal to itself. In the case of the next rule, if no value is defined, then the constraint violation is inferred.
-
-```
-ooasp_cv(no_value,new_object,"Missing value for {}",(A,)) :-
-	ooasp_attr(C,A,int),
-	ooasp_isa(C,new_object),
-	not &fsum{ooasp_attr_fvalue(A,new_object)}=ooasp_attr_fvalue(A,new_object).
-```
-
-This type of attributes must be treated differently to the rest, therefore they require rules like the ones above to handle each case. Below we show the difference of writing a constraint violation using `ooasp_attr_value/3` and `ooasp_attr_fvalue/2`. Notice that in the second case, we directly compare the values by summing them up.
-
-#### `ooasp_attr_value/3`
-```
-ooasp_cv(nrpassengers_neq_nrseats_plus_standingroom,new_object,"Number of passengers not adding up",(new_object,)):-
-    ooasp_isa(wagon,new_object),
-    ooasp_attr_value(nr_passengers,new_object,NRP),
-    ooasp_attr_value(nr_seats,new_object,NRS),
-    ooasp_attr_value(standing_room,new_object,S),
-    NRP!=NRS+S.
-```
-
-#### `ooasp_attr_fvalue/2`
-```
-ooasp_cv(nrpassengers_sum,new_object,"Number of passengers not adding up",(new_object,)):-
-    ooasp_isa(wagon,new_object),
-    &fsum{ooasp_attr_fvalue(nr_seats,new_object);
-          ooasp_attr_fvalue(standing_room,new_object)}!=
-        ooasp_attr_fvalue(nr_passengers,new_object).
-```
-
-### Interactivity
-
-The assigned values for these attributes are handled internally by the `fclingo `system and are only accessed after the models are found. Therefore, they are not considered in any brave or cautious consequences. This means that we do not know in advance the possible values an attribute can take for a partial configuration. Interactively, this can be solved in different ways, such as using a slider instead of a dropdown or some other numerical input. For convenience, we keep the usage in the jupyter notebooks with dropdowns and add all possible values for the attribute, even though they might create an invalid configuration. Invalid configurations can still be checked and fixed in the UI.
-
-In this version, externals are used for every possible value to allow user input. However, this is not efficient. Another version is proposed in branch `efficient-fclingo` where externals are added on demand. However, this option does not allow for the task `check`, since it requires the choices to be active.
-
-----
 
 ## Multi-shot approach
 
@@ -227,9 +140,9 @@ Take for instance the following rule:
 ```prolog
 #program domain(new_object, cls).
 ooasp_cv(no_instance_for_attribute,new_object,"Attribute {} not of selected class",(ATTR,)) :-
-	ooasp_attribute(C1,ATTR,T),
-	ooasp_attribute_value(ATTR,new_object,VALUE),
-	not ooasp_isa(C1,new_object).
+  ooasp_attribute(C1,ATTR,T),
+  ooasp_attribute_value(ATTR,new_object,VALUE),
+  not ooasp_isa(C1,new_object).
 ```
 
 This rule will be grounded for a `new_object`, since this value appears in the head we know it hasn't been grounded before.
@@ -240,14 +153,14 @@ In this example we want to generate the constraint violations when an associatio
 
 ```prolog
 ooasp_cv(wrongtypeinassoc,new_object,"Associated by {} but is not of class {}",(ASSOC,C1)) :-
-	ooasp_associated(ASSOC,new_object,_),
-	ooasp_assoc(ASSOC,C1,C1MIN,C1MAX,C2,C2MIN,C2MAX),
-	not ooasp_isa(C1,new_object).
+  ooasp_associated(ASSOC,new_object,_),
+  ooasp_assoc(ASSOC,C1,C1MIN,C1MAX,C2,C2MIN,C2MAX),
+  not ooasp_isa(C1,new_object).
 
 ooasp_cv(wrongtypeinassoc,new_object,"Associated by {} but is not of class {}",(ASSOC,C2)) :-
-	ooasp_associated(ASSOC,_,new_object),
-	ooasp_assoc(ASSOC,C1,C1MIN,C1MAX,C2,C2MIN,C2MAX),
-	not ooasp_isa(C2,new_object).
+  ooasp_associated(ASSOC,_,new_object),
+  ooasp_assoc(ASSOC,C1,C1MIN,C1MAX,C2,C2MIN,C2MAX),
+  not ooasp_isa(C2,new_object).
 ```
 
 
@@ -267,14 +180,14 @@ In order to fix this issue we calculate the arity as follows:
 
 ```prolog
 ooasp_arity( ASSOC, 1, new_object, ARITY, new_object) :-
-	ooasp_assoc(ASSOC,C1,C1MIN,C1MAX,C2,C2MIN,C2MAX),
-	ooasp_isa(C1,new_object),
-	ARITY = #count { ID2:ooasp_associated(ASSOC,new_object,ID2) }.
+  ooasp_assoc(ASSOC,C1,C1MIN,C1MAX,C2,C2MIN,C2MAX),
+  ooasp_isa(C1,new_object),
+  ARITY = #count { ID2:ooasp_associated(ASSOC,new_object,ID2) }.
 
 ooasp_arity( ASSOC, 2, new_object, ARITY, new_object) :-
-	ooasp_assoc(ASSOC,C1,C1MIN,C1MAX,C2,C2MIN,C2MAX),
-	ooasp_isa(C2,new_object),
-	ARITY = #count { ID1:ooasp_associated(ASSOC,ID1,new_object) }.
+  ooasp_assoc(ASSOC,C1,C1MIN,C1MAX,C2,C2MIN,C2MAX),
+  ooasp_isa(C2,new_object),
+  ARITY = #count { ID1:ooasp_associated(ASSOC,ID1,new_object) }.
 ```
 
 These rules compute the arity as shown before for the two possible positions of the new ID. The first one for position `1` and the second one for position `2`. Unlike in our previous rule, here, we also include the `new_object` as the last argument of `ooasp_arity`. We do so to identify that this value `ARITY` for the arity is only valid when `new_object` was grounded. This value can be seen as a step.
@@ -283,20 +196,20 @@ Next, we include any new associations that this `new_object` might have with pre
 
 ```prolog
 ooasp_arity( ASSOC, 1, ID1, ARITY+1, new_object) :-
-	ooasp_arity( ASSOC, 1, ID1, ARITY, new_object-1),
-	ooasp_associated(ASSOC, ID1, new_object).
+  ooasp_arity( ASSOC, 1, ID1, ARITY, new_object-1),
+  ooasp_associated(ASSOC, ID1, new_object).
 
 ooasp_arity( ASSOC, 2, ID2, ARITY+1, new_object) :-
-	ooasp_arity( ASSOC, 2, ID2, ARITY, new_object-1),
-	ooasp_associated(ASSOC, new_object, ID2).
+  ooasp_arity( ASSOC, 2, ID2, ARITY, new_object-1),
+  ooasp_associated(ASSOC, new_object, ID2).
 
 ooasp_arity( ASSOC, 1, ID1, ARITY, new_object) :-
-	ooasp_arity( ASSOC, 1, ID1, ARITY, new_object-1),
-	not ooasp_associated(ASSOC, ID1, new_object).
+  ooasp_arity( ASSOC, 1, ID1, ARITY, new_object-1),
+  not ooasp_associated(ASSOC, ID1, new_object).
 
 ooasp_arity( ASSOC, 2, ID2, ARITY, new_object) :-
-	ooasp_arity( ASSOC, 2, ID2, ARITY, new_object-1),
-	not ooasp_associated(ASSOC, new_object, ID2).
+  ooasp_arity( ASSOC, 2, ID2, ARITY, new_object-1),
+  not ooasp_associated(ASSOC, new_object, ID2).
 ```
 
 These rules update the values like a counter without using `#count`. Note that the last argument of the `ooasp_arity` is `new_object`, serving two purposes: first, to identify that this is a valid arity for that moment, and second to ensure that this is a new head that hasn't been grounded before.
@@ -312,42 +225,42 @@ Imagine the rule:
 
 ```prolog
 ooasp_cv(wrongass,ID,"Wrong for {}",(ID,)) :-
-    ooasp_arity(assoc1,1,ID,ARITY,STEP), ARITY!=4.
+	ooasp_arity(assoc1,1,ID,ARITY,STEP), ARITY!=4.
 ```
 
 This rule is saying that for association `assoc1` the object `ID` in position `1` should have exactly `4` objects associated. We first notice that this is not using the `new_object`. We can include this by doing:
 
 ```prolog
 ooasp_cv(wrongass,new_object,"Wrong for {}",(new_object,)) :-
-    ooasp_arity(assoc1,1,new_object,ARITY,STEP), ARITY!=4.
+	ooasp_arity(assoc1,1,new_object,ARITY,STEP), ARITY!=4.
 ```
 
 However, we also need to make sure that we consider the predicate `ooasp_arity` that is most up to date. Therefore we must know what the current step is. This is done using another external, in our case **`active(STEP)`**. When this external is true it means that we should consider the arity at step `STEP` as follows:
 
 ```prolog
 ooasp_cv(wrongass,new_object,"Wrong for {}",(new_object,)) :-
-    ooasp_arity(assoc1,1,new_object,ARITY,STEP), ARITY!=4, active(STEP).
+	ooasp_arity(assoc1,1,new_object,ARITY,STEP), ARITY!=4, active(STEP).
 ```
 
 Notice that we want to ground this rule for the `new_object` this means that `STEP` will be `new_object`.
 
 ```prolog
 ooasp_cv(wrongass,new_object,"Wrong for {}",(new_object,)) :-
-    ooasp_arity(assoc1,1,new_object,ARITY,new_object), ARITY!=4, active(new_object).
+	ooasp_arity(assoc1,1,new_object,ARITY,new_object), ARITY!=4, active(new_object).
 ```
 
 Since we updated the values of `ooasp_arity` of all previous IDs as well, we also need to ground the corresponding rules for those, yielding the rule:
 
 ```prolog
 ooasp_cv(wrongass,ID,"Wrong for {}",(ID,)) :-
-    ooasp_arity(assoc1,1,ID,ARITY,new_object), ARITY!=4, active(new_object).
+	ooasp_arity(assoc1,1,ID,ARITY,new_object), ARITY!=4, active(new_object).
 ```
 
 This rule however, remains with the issue of not having `new_object` in the head. We can fix this by just including it in the cv arguments, even if is never used:
 
 ```prolog
 ooasp_cv(wrongass,ID,"Wrong for {}",(ID,new_object)) :-
-    ooasp_arity(assoc1,1,ID,ARITY,new_object), ARITY!=4, active(new_object).
+	ooasp_arity(assoc1,1,ID,ARITY,new_object), ARITY!=4, active(new_object).
 ```
 
 Lastly, we might notice that this constraint is actually considering two different requirements: `ASSOC>=4` and `ASSOC<=4`. Where the first one is a [Potential Constraint](#potential-constraints) since having just `3` associations can still be completed into an accepting configuration, whereas `ASSOC<=4` is a [Permanent Constraint](#permanent-constraints) since having more than `4` values can not longer be complected into a valid configuration.
@@ -356,9 +269,9 @@ Therefore, we arrive at our final rules:
 
 ```prolog
 ooasp_cv(wrongass_lower,ID,"Wrong < for {}",(ID,new_object)) :-
-    ooasp_arity(assoc1,1,ID,ARITY,new_object), ARITY<4, active(new_object).
+	ooasp_arity(assoc1,1,ID,ARITY,new_object), ARITY<4, active(new_object).
 ooasp_cv(wrongass_upper,ID,"Wrong > for {}",(ID,new_object)) :-
-    ooasp_arity(assoc1,1,ID,ARITY,new_object), ARITY>4, active(new_object).
+	ooasp_arity(assoc1,1,ID,ARITY,new_object), ARITY>4, active(new_object).
 ```
 
 Where the following fact must also included:
@@ -373,10 +286,10 @@ Even though the explanation above corresponds to a correct solution, it is not e
 
 ```prolog
 ooasp_cv(upperbound,ID1,"Upperbound wrong",(new_object)):-
-	ooasp_assoc_limit(ASSOC,max,SIDE,C,CMAX),
-	ooasp_isa(C,ID1),
-	#count { ID2:ooasp_associated_general(ASSOC,SIDE,ID1,ID2) } > CMAX,
-	active(new_object).
+  ooasp_assoc_limit(ASSOC,max,SIDE,C,CMAX),
+  ooasp_isa(C,ID1),
+  #count { ID2:ooasp_associated_general(ASSOC,SIDE,ID1,ID2) } > CMAX,
+  active(new_object).
 ```
 
 Notice that, as before, this rule must consider the `active(new_object)` to define in which step the constraint is violated. The count, however, does not depend on the `new_object`.
@@ -386,7 +299,7 @@ We use here two auxiliary predicates to avoid having to repeat the rule:
 - **`ooasp_assoc_limit(ASSOC,max,POS,C,CMAX,C2)`**
   The association `ASSOC` has a maximum limit of `CMAX` for objects of class `C` at `POS`, where `POS` is `1` or `2` and refers to one end of the association (1: left end, 2: right end), where the other side of the associations are objects of class `C2`.
   *Example: `ooasp_assoc_limit(ass,min,1,racks,10)`:
-	In the association `ass`, each `racks` object must be associated to at least `10` elements*
+  In the association `ass`, each `racks` object must be associated to at least `10` elements*
 
 - **`ooasp_associated_general(ASSOC,POS,ID1,ID2)`**
   Object `ID1` appearing in position `POS` of association `ASSOC` is associated to object `ID2`
@@ -441,10 +354,6 @@ This is done using the create required task in three steps:
 - If this is UNSAT then call create required
 - If no object is added with the create required, then proceed as in normal incremental by adding one object of type `object``
 
-
-
-
-
 ## Advanced features to simplify writing domain specific constraint violations
 
 ### Association specialization
@@ -476,7 +385,63 @@ ooasp_special_cv(unique, (rack_frames, frame, frame_position)).
 
 The corresponding rules are defined in [ooasp/encodings/ooasp_check.lp](ooasp/encodings/ooasp_check.lp).
 
+----
 
+# Outdated Information
 
+## Numerical attributes
 
+> `fclingo` is no longer used in this project and `OOASPSmartSolver` cannot handle them properly.
+
+Numerical attributes are treated using the system `fclingo`. This systems adds a founded condition while using `clorm` in the background.
+Attributes whose type is `int`, such as `nr_passengers`, `standing_room`, and `nr_seats` in the Metro example, are treated as variables with this system as explained below. Note that numerical values can also be treated as an enumeration using the type `enumint` instead. This option will consider all values in the defined range for predicate `ooasp_attr_value`, such as `frame_position` in the racks example.
+
+### Usage
+
+When an attribute `ATTR` is of type `int`, their value is defined using an `fclingo` variable `ooasp_attr_fvalue(ATTR,O)`.  The value of such a variable will be associated to the value of attribute `ATTR` for object `O`.
+These values can be compared using the theory symbol `&fsum`. For instance, in the following rule we use `&fsum{ooasp_attr_fvalue(A,new_object)}<MIN` to state that the value of `A` being smaller than `MIN` will lead to a constraint violation. Notice that the variable `MIN` must be defined in a positive literal of the body.
+
+```
+ooasp_cv(value_outside_of_range,new_object,"Value for {} outside min range {}",(A,MIN)) :-
+	 ooasp_attr(C,A,int),
+	 ooasp_isa(C,new_object),
+	 &fsum{ooasp_attr_fvalue(A,new_object)}<MIN,
+	 ooasp_attr_minInclusive(C,A,MIN).
+```
+
+To check if a value is defined one can do so by checking if it is equal to itself. In the case of the next rule, if no value is defined, then the constraint violation is inferred.
+
+```
+ooasp_cv(no_value,new_object,"Missing value for {}",(A,)) :-
+	ooasp_attr(C,A,int),
+	ooasp_isa(C,new_object),
+	not &fsum{ooasp_attr_fvalue(A,new_object)}=ooasp_attr_fvalue(A,new_object).
+```
+
+This type of attributes must be treated differently to the rest, therefore they require rules like the ones above to handle each case. Below we show the difference of writing a constraint violation using `ooasp_attr_value/3` and `ooasp_attr_fvalue/2`. Notice that in the second case, we directly compare the values by summing them up.
+
+#### `ooasp_attr_value/3`
+```
+ooasp_cv(nrpassengers_neq_nrseats_plus_standingroom,new_object,"Number of passengers not adding up",(new_object,)):-
+	ooasp_isa(wagon,new_object),
+	ooasp_attr_value(nr_passengers,new_object,NRP),
+	ooasp_attr_value(nr_seats,new_object,NRS),
+	ooasp_attr_value(standing_room,new_object,S),
+	NRP!=NRS+S.
+```
+
+#### `ooasp_attr_fvalue/2`
+```
+ooasp_cv(nrpassengers_sum,new_object,"Number of passengers not adding up",(new_object,)):-
+	ooasp_isa(wagon,new_object),
+	&fsum{ooasp_attr_fvalue(nr_seats,new_object);
+		  ooasp_attr_fvalue(standing_room,new_object)}!=
+		ooasp_attr_fvalue(nr_passengers,new_object).
+```
+
+### Interactivity
+
+The assigned values for these attributes are handled internally by the `fclingo `system and are only accessed after the models are found. Therefore, they are not considered in any brave or cautious consequences. This means that we do not know in advance the possible values an attribute can take for a partial configuration. Interactively, this can be solved in different ways, such as using a slider instead of a dropdown or some other numerical input. For convenience, we keep the usage in the jupyter notebooks with dropdowns and add all possible values for the attribute, even though they might create an invalid configuration. Invalid configurations can still be checked and fixed in the UI.
+
+In this version, externals are used for every possible value to allow user input. However, this is not efficient. Another version is proposed in branch `efficient-fclingo` where externals are added on demand. However, this option does not allow for the task `check`, since it requires the choices to be active.
 
