@@ -1,4 +1,5 @@
 from ooasp.smart_ooasp import SmartOOASPSolver
+from ooasp.REST.file_manager.ProjectManagerInterface import *
 from fastapi import FastAPI, status
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -19,7 +20,7 @@ setup_flag = False
 st = ""
 allowed_objects = []
 allowed_associations = {}
-app = FastAPI()
+app = MyAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=FE_ORIGINS,
@@ -232,3 +233,179 @@ async def get_diagram(name):
     global solver
     solver.save_png(name=name, extra_prg="_clinguin_browsing.")
     return Response(f"File saved in ./out/{name}.png",data=None).build()
+
+
+# ---------- File management ----------
+
+@app.get("/")
+def get_default():
+    response = "Hello World!"
+    return JSONResponse(status_code=status.HTTP_200_OK, content=response)
+
+@app.get("/all/list")
+def get_datalist():
+    """
+    Returns a dictionary containing list of all domains and projects
+    """
+    return JSONResponse(status_code=status.HTTP_501_NOT_IMPLEMENTED, content="not implemented.")
+
+#----------DOMAIN----------
+
+#TODO explore stricter typing for description
+
+class DomainModel(BaseModel):
+    name: str
+
+class DomainUpdateModel(BaseModel):
+    version: str | None = None
+    ENCODING_FNAME: str | None = None
+    CONSTRAINTS_FNAME: str | None = None
+
+class DomainDescription(BaseModel):
+    description: str
+
+@app.get("/domain_files_location")
+def domain_files_path():
+    """
+    Returns the current default location of domain files
+    """
+    response = str(app.pfm.domain_path)
+    return JSONResponse(status_code=status.HTTP_200_OK, content=response)
+
+@app.get("/domain/check/{name}")
+def check_domain(name):
+    """
+    Returns True if a domain under the name exists, else returns False.
+    """
+    #TODO implement
+    return JSONResponse(status_code=status.HTTP_501_NOT_IMPLEMENTED, content="not implemented.")
+
+@app.post("/domain/new")
+def new_domain(domain: DomainModel):
+    """
+    Creates a new domain and responds with the data about it.
+    """
+    #TODO change path
+    response = app.pfm.new_domain(domain.name)
+    return JSONResponse(status_code=status.HTTP_200_OK, content=response)
+
+@app.get("/domain/{domain_name}")
+def get_domain(domain_name):
+    """
+    Returns domain metadata.
+    """
+    response = app.pfm.get_domain_metadata(domain_name)
+    return JSONResponse(status_code=status.HTTP_200_OK, content=response)
+
+@app.get("/domains")
+def all_domains():
+    """
+    Lists all available domains.
+    """
+    response = app.pfm.get_all_domains()
+    return JSONResponse(status_code=status.HTTP_200_OK, content=response)
+
+@app.put("/domain/{domain_name}")
+async def update_domain(domain_name, update_data: DomainUpdateModel):
+    """
+    Updates data on an existing domain.
+    """
+    response = app.pfm.update_domain(domain_name, update_data.__dict__)
+    return JSONResponse(status_code=status.HTTP_200_OK, content=response)
+
+@app.put("/domain/description/{domain_name}")
+def update_domain_description(domain_name, desc: DomainDescription):
+    response = app.pfm.update_domain_description(domain_name, desc.description)
+    return JSONResponse(status_code=status.HTTP_200_OK, content=response)
+
+@app.get("/domain/description/{domain_name}")
+def update_domain_description(domain_name):
+    response = app.pfm.get_domain_description(domain_name)
+    return JSONResponse(status_code=status.HTTP_200_OK, content=response)
+    
+
+@app.delete("/domain/{domain_name}")
+async def delete_domain(domain_name):
+    """
+    Deletes an existing domain.
+    """
+    response = app.pfm.delete_domain(domain_name)
+    return JSONResponse(status_code=status.HTTP_200_OK, content=response)
+
+#----------PROJECT----------
+
+class ProjectDataModel(BaseModel):
+    domain: str
+    description: str|None = None
+
+class ProjectUpdateModel(BaseModel):
+    domain: str|None = None
+    description: str|None = None
+
+class NewFile(BaseModel):
+    content: str|None =""
+    suffix: str|None = ".ooasp"
+
+@app.get("/projects")
+def get_projects():
+    """
+    Returns a list of all projects.
+    """
+    response = app.pfm.list_all_projects()
+    return JSONResponse(status_code=status.HTTP_200_OK, content=response)
+
+@app.get("/project/{project_name}")
+def get_project(project_name):
+    """
+    Returns metadata of an existing project.
+    """
+    response = app.pfm.get_project_metadata(project_name)
+    return JSONResponse(status_code=status.HTTP_200_OK, content=response)
+
+@app.post("/project/{project_name}") #TODo change routing here and in new domain as well
+def new_project(project_name, project_data: ProjectDataModel):
+    """
+    Creates a new project.
+    """
+    response = app.pfm.new_project(project_name, project_data.domain, project_data.description)
+    return JSONResponse(status_code=status.HTTP_200_OK, content=response)
+
+@app.put("/project/{project_name}")
+def update_project(project_name, project_data: ProjectUpdateModel):
+    """
+    Updates information about an existing project.
+    """
+    pass
+
+@app.get("/project/check/{name}")
+def check_project(name):
+    """
+    Checks if a project under a specified name exists.
+    """
+    #TODO implement
+    return JSONResponse(status_code=status.HTTP_501_NOT_IMPLEMENTED, content="not implemented.")
+
+@app.delete("/project/{project_name}")
+def delete_project(project_name):
+    """
+    Deletes an existing project.
+    """
+    response = app.pfm.delete_project(project_name)
+    return JSONResponse(status_code=status.HTTP_200_OK, content=response)
+
+@app.post("/project/{name}/new/{file}")
+def create_new_file(name, file, specifics: NewFile):
+    """
+    Creates a new file within the specified project.
+    """
+    response = app.pfm.new_file(pname=name, name=file, content=specifics.content,suffix=specifics.suffix)
+    return JSONResponse(status_code=status.HTTP_200_OK, content=response)
+
+@app.delete("/project/{pname}/{fname}")
+def delete_file(fname, pname):
+    response = app.pfm.delete_file(fname,pname)
+    return JSONResponse(status_code=status.HTTP_200_OK, content=response)
+
+@app.get("/instance_identifier")
+def get_instance_id():
+    return JSONResponse(app.pfm.run_id)
