@@ -8,7 +8,11 @@ from typing import List
 
 import os
 
-global solver, setup_flag, st, allowed_objects, allowed_associations
+global solver, setup_flag, st, allowed_objects, allowed_associations, allowed_attributes, selected_domain, action_history
+
+
+# TODO FIX BUG WHERE THE SOLVER CANNOT BE REINITIALISED -> full reset required
+# figure out how to deal with ID tracking, have a dictonary accessible by object IDs
 
 FE_ORIGINS = ['http://localhost:5173']
 
@@ -20,6 +24,8 @@ setup_flag = False
 st = ""
 allowed_objects = []
 allowed_associations = {}
+allowed_attributes = []
+selected_domain = None
 app = MyAPI()
 app.add_middleware(
     CORSMiddleware,
@@ -28,6 +34,28 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+def check_call_viability(call,type='class'):
+    """
+    Checks if a choice to add an object or an association can be done without breaking the system.
+    Note: attr is not needed here, as the intention is that it will be used just to generate the node display
+    """
+    global selected_domain
+    if type=="class":
+        global allowed_objects
+        if call in allowed_objects:
+            return (True, "Allowed.")
+        return (False, f"Object {call} is not defined within '{selected_domain}' domain.")
+    if type == "assoc":
+        global allowed_associations
+        if call[1] in list(allowed_associations.keys()):
+            # TODO IMPORTANT -> find a way to track ids to perform checks on particular objects
+            if allowed_associations[call[1]]["from"] == call[0] and allowed_associations[call[1]]["to"] == call[2]:
+                return (True, "Allowed")
+            # TODO in future and a check for reverse assoc (if there is a reverse assoc with some name allow it and return info + correct call)
+            return (False, f"{call[1]} is an allowed association, but not between '{call[0]}' and '{call[2]}'.")
+        #TODO in future check if there is an alternative assoc
+        return (False, f"Association '{call[1]}' is not defined within '{selected_domain}' domain.")
 
 def load_known_names(kb_path):
     global allowed_objects
@@ -66,6 +94,19 @@ def load_known_associations(kb_path):
                 })
     return Response("Allowed Associations.", data=allowed_associations)
 
+def load_known_attributes(kb_path):
+    global allowed_attributes #TODO reconsider naming, known attributes fits better
+    with open(kb_path, "r+") as f:
+        facts = f.read().strip().replace("\n","").replace("\r","").split(".")
+        for fact in facts:
+            if "%" in fact:
+                continue
+            if "ooasp_attr(" in fact:
+                stripped = fact.split("(")[1][0:-1]
+                class_name, attr, attr_type = stripped.split(",") 
+                allowed_attributes.append({"class":class_name, "attribute":attr, "type":attr_type})
+    return Response("Attributes.", data=allowed_objects)
+
 def initialise_solver(solver, data):
     object_list = data.objects.split(",") if data.objects != "" else []
     data.prio_associations = data.prio_associations.split(",")
@@ -81,6 +122,7 @@ def initialise_solver(solver, data):
 
     load_known_associations(data.domain)
     load_known_names(data.domain)
+    load_known_attributes(data.domain)
     return Response(message="Solver was initialised.", data=solver.__dict__).build()
 
 def filter_model():
@@ -133,6 +175,16 @@ class InitData(BaseModel):
     prio_associations : str = ""
     domain : str = str(os.path.join("examples", "racks", "kb.lp"))
 
+@app.get("/allowed/assoc/{id1}/{name}/{id2}")
+async def check_assoc(id1,name,id2):
+    stat, msg = check_call_viability((id1,name,id2), type='assoc')
+    return Response(msg,stat).build()
+
+@app.get("/allowed/object/{cls}")
+async def check_object(cls):
+    stat, msg = check_call_viability(cls, type='class')
+    return Response(msg,stat).build()
+
 @app.get("/graph/assumptions")
 async def known():
     graph_repr = represent_as_graph()
@@ -143,12 +195,13 @@ async def read_kb(path):
     path =  os.path.join(*path.split("-"))
     assoc = load_known_associations(path)
     cls = load_known_names(path)
-    return {"classes": assoc, "associations":cls}
+    attrs = load_known_attributes(path)
+    return {"classes": assoc, "associations":cls, "attributes": attrs}
 
 @app.get("/knowledgebase")
 async def show_loaded_kb():
-    global allowed_associations, allowed_objects
-    return Response("Known class names and associations.", {"classes": allowed_objects, "associations": allowed_associations})
+    global allowed_associations, allowed_objects, allowed_attributes
+    return Response("Known class names and associations.", {"classes": allowed_objects, "associations": allowed_associations, "attributes":allowed_attributes})
 
 @app.get("/test")
 async def add():
@@ -409,3 +462,35 @@ def delete_file(fname, pname):
 @app.get("/instance_identifier")
 def get_instance_id():
     return JSONResponse(app.pfm.run_id)
+
+
+# ---------- FORMAT SPECIFIC Fns for FE ----------
+
+"""
+# TODO 
+
+1.) improve domain/project interaction
+    - make pfm be able to directly choose initialisation domains
+    - (make loading in a solution possible --> clinguin backend inspired)
+2.) transform consequences into a usable format
+    - explore behaviour uppon addition (they should be removed upon action)
+    - decide wether to keep internal memory on possibilities
+    - decide how to provide choices
+
+3.) implement addition checking actions
+    - make sure nothing that is not allowed by the kb can be done
+    - integrate with consequence system
+
+4.) ??? Smart association (not to be confused with the solver)
+    - allow the system to to infer what is the name of the association if both objects are provided
+    - this could potentially save time and make sure that the FE does not need to decide on all information
+    ---> count number of known association and compare it the the one in the factbase (on violation disallow action)
+    ---> on new association check for possibilites of association for provided object and choose one
+5.) Figureout how to do positioning
+    - this includes overall node representation as a response from the API
+
+    1. create an imaginary matrix to place in nodes by default
+    2. alt. extract hierarchy and assign a row to class per level
+
+6.) Extract attribute options
+"""
