@@ -16,7 +16,7 @@ COLORS = {
 }
 
 
-def title(s):
+def title(s) -> str:
     return (
         "\n"
         + COLORS["BLUE"]
@@ -30,35 +30,35 @@ def title(s):
     )
 
 
-def subtitle(s, color="CYAN"):
+def subtitle(s, color="CYAN") -> str:
     return "\n" + COLORS[color] + "-" * 10 + " " + s + " " + "-" * 10 + COLORS["NORMAL"]
 
 
-def pretty_dict(d):
+def pretty_dict(d) -> str:
     s = json.dumps(d, indent=4)
     return s + "\n"
 
 
-def red(s):
+def red(s) -> str:
     return f"{COLORS['RED']}{s}{COLORS['NORMAL']}"
 
 
-def colored(color):
+def colored(color) -> str:
     return f"{COLORS[color]}{s}{COLORS['NORMAL']}"
 
 
-def green(s):
+def green(s) -> str:
     return f"{COLORS['GREEN']}{s}{COLORS['NORMAL']}"
 
 
-def opt(name: str, args):
+def opt(name: str, args) -> dict:
     """
-    Creates an options dic entry
+    Creates an options dictionary entry
     """
     return {"fun_name": name, "args": args, "str": f"{name}{args}".replace(",)", ")")}
 
 
-def editable_fact_as_select_action(fact, unifiers):
+def editable_fact_as_select_action(fact, unifiers) -> dict:
     """
     Gets the editable fact (Objects, AttrValue and Associations) as
     a select option.
@@ -79,7 +79,7 @@ def editable_fact_as_select_action(fact, unifiers):
         raise RuntimeError(f"Fact {fact} is not an editiable fact")
 
 
-def editable_fact_as_remove_action(fact, unifiers):
+def editable_fact_as_remove_action(fact, unifiers) -> dict:
     """
     Gets the editable facts (Objects, AttrValue and Associations) as
     a remove option.

@@ -9,8 +9,10 @@ global encodings_path
 encodings_path = resources.files(ooasp.encodings)
 global racks_example_kb
 racks_example_kb = "./examples/racks/kb.lp"
-global racks_example_constraints
-racks_example_constraints = "./examples/racks/constraints.lp"
+global racks_example_attr_constraints
+racks_example_attr_constraints = "./examples/racks/attribute_constraints.lp"
+global racks_example_obj_constraints
+racks_example_attr_obj_constraints = "./examples/racks/object_constraints.lp"
 global metro_example_kb
 metro_example_kb = "./examples/metro/kb.lp"
 global metro_example_constraints
