@@ -382,7 +382,9 @@ The corresponding rules are defined in [ooasp/encodings/ooasp_check.lp](ooasp/en
 
 ----
 
-# Previous Versions 
+# Previous Versions
+
+> This section refers to [code version before the development of Smart OOASP](https://github.com/siemens/OOASP/releases/tag/Pre-SmartExpansion) and its clinguin UI.
 
 ## Numerical attributes
 
@@ -445,6 +447,6 @@ In this version, externals are used for every possible value to allow user input
 
 ## Externals
 
-> user input handling is no longer done with the use of custom classes. This section refers to [code version before the development of Smart OOASP](https://github.com/siemens/OOASP/releases/tag/Pre-SmartExpansion) and its clinguin UI. Files have been removed, as their main usage was with the jupyter notebook UI, which has been removed.
+> user input handling is no longer done with the use of custom classes. Files have been removed, as their main usage was with the jupyter notebook UI, which has been removed.
 
 The truth value of [externals](#user-input) is defined by the [Interactive Configurator](https://github.com/siemens/OOASP/blob/c35421e9b6a1e3bfdf55dd1637b9f52040050108/asp_interactive_configuration/ooasp/interactive.py) based on the current (partial) configuration that is being constructed using an object of class [OOASPConfiguration](https://github.com/siemens/OOASP/blob/c35421e9b6a1e3bfdf55dd1637b9f52040050108/asp_interactive_configuration/ooasp/config.py).
