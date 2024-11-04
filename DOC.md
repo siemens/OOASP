@@ -1,9 +1,9 @@
-Copyright (c) 2022 Siemens AG Oesterreich
+Copyright (c) 2022-2024 Siemens AG Oesterreich
 SPDX-License-Identifier: MIT
 
 # Documentation of Interactive Configurator
 
-> Given the significant changes in the code and solving approach, this document will be divided into two sections, one explaining information that is still relevant and another, containing outdated information.
+> Given the significant changes in the code and solving approach, this file documents both the information relevant to the current version as well as the information on previous versions, which can be found in the last section of the document.
 
 ## Encodings
 All encodings are put together using a single file:
@@ -115,12 +115,7 @@ The user input corresponds to the current partial configuration `C` that is bein
 - **`user(ooasp_attribute_value(N,ID,VALUE))`**
   The user selected value `VALUE` for attribute `N` of object `ID`
 
-%%% ----THIS NEEDS RE-CHECKING----
-The truth value of these externals is defined by the [Interactive Configurator](#interactive-configurator) based on the current (partial) configuration that is being constructed using an object of class [OOASPConfiguration](#configuration).
-
 The user externals are generated restricted by the possible classes that an object can have. This is defined by the argument `cls` passed in the grounding (see [multi-shot](#multi-shot-approach)). This class is stored in the predicate `ooasp_domain(_,cls).`. Therefore, if the new object is grounded for a class `cls`, only valid attributes and associations for `cls` and its subclasses will be considered. This is summarized in the auxiliary predicate `counts_as(O,C)`, which states that object `O` can count as class `C`.
-%%%
-
 
 ## Multi-shot approach
 
@@ -387,11 +382,12 @@ The corresponding rules are defined in [ooasp/encodings/ooasp_check.lp](ooasp/en
 
 ----
 
-# Outdated Information
+# Previous Versions 
 
 ## Numerical attributes
 
 > `fclingo` is no longer used in this project and `OOASPSmartSolver` cannot handle them properly.
+> - _Previous [relevant version using fclingo](https://github.com/siemens/OOASP/releases/tag/fclingo) can be found in repository tags._
 
 Numerical attributes are treated using the system `fclingo`. This systems adds a founded condition while using `clorm` in the background.
 Attributes whose type is `int`, such as `nr_passengers`, `standing_room`, and `nr_seats` in the Metro example, are treated as variables with this system as explained below. Note that numerical values can also be treated as an enumeration using the type `enumint` instead. This option will consider all values in the defined range for predicate `ooasp_attr_value`, such as `frame_position` in the racks example.
@@ -445,3 +441,10 @@ The assigned values for these attributes are handled internally by the `fclingo 
 
 In this version, externals are used for every possible value to allow user input. However, this is not efficient. Another version is proposed in branch `efficient-fclingo` where externals are added on demand. However, this option does not allow for the task `check`, since it requires the choices to be active.
 
+----
+
+## Externals
+
+> user input handling is no longer done with the use of custom classes. This section refers to [code version before the development of Smart OOASP](https://github.com/siemens/OOASP/releases/tag/Pre-SmartExpansion) and its clinguin UI. Files have been removed, as their main usage was with the jupyter notebook UI, which has been removed.
+
+The truth value of [externals](#user-input) is defined by the [Interactive Configurator](https://github.com/siemens/OOASP/blob/c35421e9b6a1e3bfdf55dd1637b9f52040050108/asp_interactive_configuration/ooasp/interactive.py) based on the current (partial) configuration that is being constructed using an object of class [OOASPConfiguration](https://github.com/siemens/OOASP/blob/c35421e9b6a1e3bfdf55dd1637b9f52040050108/asp_interactive_configuration/ooasp/config.py).
