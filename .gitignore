@@ -178,3 +178,4 @@ benchmarks/out/*
 benchmarks/results/*/latest/*.txt
 benchmarks/latest/*.txt
 *.DS_Store
+interactive_configurator_files/*

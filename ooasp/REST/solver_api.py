@@ -1,3 +1,4 @@
+import random
 from ooasp.smart_ooasp import SmartOOASPSolver
 from ooasp.REST.file_manager.ProjectManagerInterface import *
 from fastapi import FastAPI, status
@@ -9,6 +10,7 @@ from typing import List
 import os
 
 global solver, setup_flag, st, allowed_objects, allowed_associations, allowed_attributes, selected_domain, action_history
+global user_additions
 
 
 # TODO FIX BUG WHERE THE SOLVER CANNOT BE REINITIALISED -> full reset required
@@ -26,6 +28,8 @@ allowed_objects = []
 allowed_associations = {}
 allowed_attributes = []
 selected_domain = None
+action_history = []
+user_additions = []
 app = MyAPI()
 app.add_middleware(
     CORSMiddleware,
@@ -34,6 +38,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+def validate_additions():
+    """
+    Checks wether IDs and objects in local memory correspond to the ones in current assumptions. 
+    """
+    pass
 
 def check_call_viability(call,type='class'):
     """
@@ -125,11 +135,7 @@ def initialise_solver(solver, data):
     load_known_attributes(data.domain)
     return Response(message="Solver was initialised.", data=solver.__dict__).build()
 
-def filter_model():
-    """
-    Takes a list of assumptions or a model formatted as list and filters only relevant atoms.
-    """
-    pass
+# TODO find a way to track positions
 
 def represent_as_graph():
     """
@@ -145,13 +151,57 @@ def represent_as_graph():
     for assumption in known:
         if "ooasp_isa(" in assumption:
             data_list = assumption.replace(")","").replace("ooasp_isa(","").split(",")
-            node = {"object_id":data_list[1], "class":data_list[0]}
+            node = {"id":data_list[1],
+                    "type": "cstNode",
+                    "position": {"x": random.randint(20,200), "y": random.randint(20,200)}, 
+                    "data":{"class":data_list[0], "object_id":data_list[1]}}
             data["nodes"].append(node)
         elif "ooasp_associated(" in assumption:
             data_list = assumption.replace(")","").replace("ooasp_associated(","").split(",")
-            edge = {"assoc":data_list[0], "source":data_list[1], "target":data_list[2]}
+            edge = {"id": str(data_list[0])+"-"+str(data_list[1])+"-"+str(data_list[2]),"assoc":data_list[0], "source":data_list[1], "target":data_list[2]}
             data["edges"].append(edge)
     return data
+
+def get_possibilities():
+    """
+    Returns all possible changes in a dictionary format
+    """
+    res = {"objects":[],"associations":[],"attrs":[], "smart_suggestions":[]} #smart-suggestions currently do not have a pracical use, but might be useful in future
+    global solver
+    brave = solver.get_brave()
+
+    for consq in brave:
+        consq = str(consq)
+        if 'ooasp_isa(' in consq:
+            stripped = consq.split('(')[1][:-1]
+            divided = stripped.split(',')
+            res["objects"].append(
+                {"id":divided[1], "class":divided[0]}
+            )
+        elif 'ooasp_associated(' in consq:
+            stripped = consq.split('(')[1][:-1]
+            divided = stripped.split(',')
+            res["associations"].append(
+                {"from":divided[1],
+                 "to": divided[2],
+                 "assoc_name": divided[0]}
+            )
+        elif 'ooasp_attr_value(' in consq:
+            stripped = consq.split('(')[1][:-1]
+            divided = stripped.split(',')
+            res["attrs"].append(
+                {"name":divided[0],
+                 "object_id": divided[1],
+                 "value": divided[2]}
+            )
+        else:
+            sf_name, data = consq.split("(")
+            data = tuple(data[:-1].split(","))
+            res["smart_suggestions"].append(
+                {"smart_function": sf_name,
+                 "data": data}
+            )
+    return res
 
 class Response:
     def __init__(self, message, data) -> None:
@@ -189,6 +239,11 @@ async def check_object(cls):
 async def known():
     graph_repr = represent_as_graph()
     return Response("Success",graph_repr).build()
+
+@app.get("/json/possibilities")
+async def get_possibilities_ep():
+    pos =  get_possibilities()
+    return Response("Possible acctions to be taken.",pos).build()
 
 @app.post("/knowledgebase/{path}")
 async def read_kb(path):
@@ -466,8 +521,45 @@ def get_instance_id():
 
 # ---------- FORMAT SPECIFIC Fns for FE ----------
 
+@app.get("/all")
+def all_information():
+
+    res = {
+        "state": represent_as_graph(),
+        "brave": get_possibilities()
+    }
+    return(res)
+
+@app.get("/possibilities/{id}")
+def pos_per_id(id):
+    res = {
+        "associations": [],
+        "attributes": [],
+        "classes": None,
+    }
+    all_brave = get_possibilities()
+    # check for associations
+    for assoc in all_brave["associations"]:
+        if assoc["from"] == str(id):
+            res["associations"].append(assoc)
+    # check for classes -> this can be fixed for now
+    # check for attrs
+    val_dict = {}
+    for attrs in all_brave["attrs"]:
+        # transform to format -> {attr_name, values}
+        if  attrs["object_id"] == str(id):
+            if attrs["name"] not in list(val_dict.keys()):
+                val_dict.update({attrs["name"]:set()})
+            val_dict[attrs["name"]].add(attrs["value"])
+    
+    for k in val_dict:
+        res["attributes"].append({"name":k, "values":val_dict[k]})
+    return res
+
 """
 # TODO 
+
+- per each node fetch its possibilities -> ep: /possibilities/id
 
 1.) improve domain/project interaction
     - make pfm be able to directly choose initialisation domains
