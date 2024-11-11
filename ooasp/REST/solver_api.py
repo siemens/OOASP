@@ -10,16 +10,17 @@ from typing import List
 import os
 
 global solver, setup_flag, st, allowed_objects, allowed_associations, allowed_attributes, selected_domain, action_history
-global user_additions
+global user_additions, solve_semaphore
 
 
 # TODO FIX BUG WHERE THE SOLVER CANNOT BE REINITIALISED -> full reset required
-# figure out how to deal with ID tracking, have a dictonary accessible by object IDs
 
 FE_ORIGINS = ['http://localhost:5173']
 
 SMART_FUNCTIONS = ["association_possible", "assoc_needs_object", "global_lb_gap", "global_ub_gap"]
 
+
+solve_semaphore = False
 solver = SmartOOASPSolver(smart_generation_functions=SMART_FUNCTIONS)
 # check brave cons. here not in Solver
 setup_flag = False
@@ -117,7 +118,11 @@ def load_known_attributes(kb_path):
                 allowed_attributes.append({"class":class_name, "attribute":attr, "type":attr_type})
     return Response("Attributes.", data=allowed_objects)
 
-def initialise_solver(solver, data):
+def initialise_solver(solver, data): #!
+    global selected_domain
+    selected_domain = os.path.split(data.domain)[0]
+
+
     object_list = data.objects.split(",") if data.objects != "" else []
     data.prio_associations = data.prio_associations.split(",")
     solver.ctl.load(data.domain)
@@ -141,6 +146,11 @@ def represent_as_graph():
     """
     Represents list of objects and associations a collection of nodes and edges.
     """
+    global solve_semaphore
+    if solve_semaphore:
+        return {"nodes":[{"id":"-1", "type":"wNode", "position":{"x":150, "y":150}, "data":{}}], "edges":[]}
+
+
     data = {
         "nodes": [],
         "edges": []
@@ -158,7 +168,16 @@ def represent_as_graph():
             data["nodes"].append(node)
         elif "ooasp_associated(" in assumption:
             data_list = assumption.replace(")","").replace("ooasp_associated(","").split(",")
-            edge = {"id": str(data_list[0])+"-"+str(data_list[1])+"-"+str(data_list[2]),"assoc":data_list[0], "source":data_list[1], "target":data_list[2]}
+            edge = {"id": str(data_list[0])+"-"+str(data_list[1])+"-"+str(data_list[2]),"assoc":data_list[0], "source":data_list[1], "target":data_list[2], "type":"smoothstep",
+                    "style":{
+                        "strokeWidth":2,
+                        "stroke": "#00557C"
+                    },
+                    "data":{
+                        "label": data_list[0]
+                    },
+                        "label": data_list[0]
+                    }
             data["edges"].append(edge)
     return data
 
@@ -270,7 +289,7 @@ async def activity():
 
 @app.post("/initialise")
 async def init_solver(values: InitData):
-    return initialise_solver(solver, values)
+    return initialise_solver(solver, values) #!
 
 @app.put("/add/{cls}")
 async def add_object(cls):
@@ -287,9 +306,11 @@ async def get_model():
     return Response(msg, data=str(m)).build()
 
 @app.post("/solve")
-async def call_solve():
-    global solver
+def call_solve():
+    global solver, solve_semaphore
+    solve_semaphore = True
     solver.smart_complete()
+    solve_semaphore = False
     return Response("Generated a solution.", data=str(solver.model)).build()
 
 @app.get("/objects")
@@ -522,7 +543,7 @@ def get_instance_id():
 # ---------- FORMAT SPECIFIC Fns for FE ----------
 
 @app.get("/all")
-def all_information():
+async def all_information():
 
     res = {
         "state": represent_as_graph(),
@@ -555,6 +576,12 @@ def pos_per_id(id):
     for k in val_dict:
         res["attributes"].append({"name":k, "values":val_dict[k]})
     return res
+
+@app.get("/active_domain")
+def get_active_domain():
+    global selected_domain
+    return {"res": selected_domain} if selected_domain is not None else {"res":"SOLVER IS NOT INITIALISED"}
+
 
 """
 # TODO 
