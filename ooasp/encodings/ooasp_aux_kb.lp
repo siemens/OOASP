@@ -15,10 +15,10 @@ ooasp_subclass_ref(C,C):-ooasp_class(C).
 
 
 % derive domain for boolean attributes
-ooasp_attr_enum(C,N,"true") :-
-    ooasp_attr(C,N,"boolean").
-ooasp_attr_enum(C,N,"false") :-
-    ooasp_attr(C,N,"boolean").
+ooasp_attr_enum(C,N,true) :-
+    ooasp_attr(C,N,boolean).
+ooasp_attr_enum(C,N,false) :-
+    ooasp_attr(C,N,boolean).
 
 % true, if attribute has domain
 ooasp_attr_hasdomain(C,N) :-
