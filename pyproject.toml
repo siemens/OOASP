@@ -11,7 +11,7 @@ graphviz = "^0.20"
 pytest = "^7.1.2"
 clingraph = ">=1.0.0"
 Clorm = "^1.4.0"
-clinguin = "^2.0.0"
+clinguin = "^2.1.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.2"
