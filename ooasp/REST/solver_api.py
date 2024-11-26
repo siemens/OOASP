@@ -144,9 +144,7 @@ def initialise_solver(solver, data): #!
 # TODO find a way to track positions
 
 def _new_attr(node,attr):
-    print("Node does not yet have the attribute.")
     vals = set()
-    print(f"New attribute set is {vals}")
     vals.add(attr["value"])
     node["data"]["attributes"].append({
         "name":attr["name"],
@@ -179,7 +177,7 @@ def represent_as_graph():
             node = {"id":data_list[1],
                     "type": "cstNode",
                     "position": {"x": random.randint(20,200), "y": random.randint(20,200)}, 
-                    "data":{"class":data_list[0], "object_id":data_list[1], "attributes":[]}
+                    "data":{"class":data_list[0], "object_id":data_list[1], "attributes":[], "assocs":[]}
                     }
             data["nodes"].append(node)
         elif "ooasp_associated(" in assumption:
@@ -196,27 +194,28 @@ def represent_as_graph():
                     }
             data["edges"].append(edge)
 
-        print(brave["attrs"])
         for attr in brave["attrs"]:
             #extremely inefficient, but i need a prototype
             if attr["object_id"] in active_objects:
-                print(f"looking for object {attr["object_id"]} in active")
                 for node in data["nodes"]:
                     if node["id"] == attr["object_id"]:
-                        print(f"found an active node {node}")
                         if len(node["data"]["attributes"]) <= 0:
                             _new_attr(node,attr)
                                 
-                            print(f"Node {node} should now have attributes {node["data"]["attributes"]}")
                         else:
                             for node_attribute in node["data"]["attributes"]:
                                 if attr["name"] == node_attribute["name"]:
-                                    print(f"Node already has the attribute. Value {attr["value"]} will be added.")
                                     node_attribute["values"].add(attr["value"])
-                                    print("Added")
-                                    print(f"Node is now: {node}")
+
                                 else:
                                     _new_attr(node,attr)
+        
+        for assoc in brave["associations"]:
+            if assoc["from"] in active_objects:
+                for node in data["nodes"]:
+                    if node["id"] == assoc["from"]:
+                        if assoc not in node["data"]["assocs"]:
+                            node["data"]["assocs"].append(assoc)
 
     return data
 
