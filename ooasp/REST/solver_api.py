@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List
+import threading
 
 import os
 
@@ -337,6 +338,10 @@ async def init_solver(values: InitData):
 
 @app.put("/add/{cls}")
 async def add_object(cls):
+    global solve_semaphore
+    if solve_semaphore:
+        return Response("Solver is currently busy.", data=[]).build(code=status.HTTP_503_SERVICE_UNAVAILABLE)
+    
     global solver
     solver.add_object(str(cls))
     return Response(f"Added object: {cls}.", data=str(solver.__dict__))
@@ -349,13 +354,21 @@ async def get_model():
     msg  = "No solution available." if m is None else "Current solution found."
     return Response(msg, data=str(m)).build()
 
-@app.post("/solve")
-def call_solve():
+def solve_threaded():
     global solver, solve_semaphore
     solve_semaphore = True
+    print("Started solving")
     solver.smart_complete()
     solve_semaphore = False
-    return Response("Generated a solution.", data=str(solver.model)).build()
+    print("Fisnished Solving")
+
+@app.post("/solve")
+async def call_solve():
+    global solve_semaphore
+    t1 = threading.Thread(target=solve_threaded)
+    t1.start()
+    print(solve_semaphore)
+    return Response("Generating a solution.", data=str(solver.model)).build()
 
 @app.get("/objects")
 async def get_all_objects():
@@ -372,6 +385,10 @@ async def associate(id1, id2, name):
     """
     Creates an association between two objects.
     """
+    global solve_semaphore,allowed_associations
+    if solve_semaphore:
+        return Response("Solver is currently busy.", data=[]).build(code=status.HTTP_503_SERVICE_UNAVAILABLE)
+    
     global allowed_associations
     if name not in allowed_associations.keys():
         return Response("This association is not defined in the domain's knowledgebase.", data=allowed_associations).build(code=status.HTTP_400_BAD_REQUEST)
@@ -615,12 +632,8 @@ def get_instance_id():
 
 @app.get("/all")
 async def all_information():
-
-    res = {
-        "state": represent_as_graph(),
-        "brave": get_possibilities()
-    }
-    return(res)
+    global solve_semaphore
+    return({"state":{"nodes":[{"id":"-1", "type":"wNode", "position":{"x":150, "y":150}, "data":{}}], "edges":[]},"brave":{}}if solve_semaphore else {"state": represent_as_graph(),"brave": get_possibilities()})
 
 @app.get("/possibilities/{id}")
 def pos_per_id(id):
@@ -649,7 +662,7 @@ def pos_per_id(id):
     return res
 
 @app.get("/active_domain")
-def get_active_domain():
+async def get_active_domain():
     global selected_domain
     return {"res": selected_domain} if selected_domain is not None else {"res":"SOLVER IS NOT INITIALISED"}
 
@@ -657,19 +670,12 @@ def get_active_domain():
 """
 # TODO 
 
-- per each node fetch its possibilities -> ep: /possibilities/id
 
-1.) improve domain/project interaction
-    - make pfm be able to directly choose initialisation domains
-    - (make loading in a solution possible --> clinguin backend inspired)
-2.) transform consequences into a usable format
-    - explore behaviour uppon addition (they should be removed upon action)
-    - decide wether to keep internal memory on possibilities
-    - decide how to provide choices
+1.) implement attribute selection functionality (solver,api,fe)
+2.) implement selected attribute value asa part of model
+3.) implement saving and loading of images and models
 
-3.) implement addition checking actions
-    - make sure nothing that is not allowed by the kb can be done
-    - integrate with consequence system
+x.) finalise domain and project selection
 
 4.) ??? Smart association (not to be confused with the solver)
     - allow the system to to infer what is the name of the association if both objects are provided
