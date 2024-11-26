@@ -12,7 +12,7 @@ import uuid
 
 DEFAULT_LOCATION = Path("./ooasp/REST/file_manager")
 
-SYS_FOLDER_NAME = 'ooasp_fm_files'
+SYS_FOLDER_NAME = 'interactive_configurator_files'
 DOMAIN_DIR = 'domains'
 PROJECT_DIR = 'projects'
 
@@ -167,21 +167,23 @@ class Project:
             return self.__dict__
 
         print(f"Project with this name ({self.name}) already exists.")
-        return {"message": "unsuccessful"}
+        return {"message": f"Project with this name ({self.name}) already exists."}
 
     def _validate(self):
         pass
         
 
     def add_file(self, name, content=""):
+        if name in self.files:
+            return "File already exists."
         try:
-            with open(os.path.join(DEFAULT_LOCATION,SYS_FOLDER_NAME,PROJECT_DIR,self.name, name), "w+") as f:
+            with open(os.path.join(SYS_FOLDER_NAME,PROJECT_DIR,self.name, name), "w+") as f:
                 f.write(content)
                 self.files.append(name)
                 self._save()
                 return self.files
         except:
-            return "Unsuccessful"
+            return "Unsuccessful. An internal error has occurred."
 
 
     def _save(self, other_file=None):
@@ -189,7 +191,7 @@ class Project:
             if other_file is not None:
                 with open(other_file, "w+") as f:
                     json.dump(self.__dict__, f, indent=4)
-            with open(os.path.join(self.path, self.METADATA)) as f:
+            with open(os.path.join(self.path, self.METADATA),"w") as f:
                 json.dump(self.__dict__, f, indent=4)
             return True
         except:
@@ -304,8 +306,6 @@ class RESTManager():
 
     def new_project(self, name, domain, description=None):
         available_domains = os.listdir(self.domain_path)
-        if domain not in available_domains:
-            return {"message": f"Domain '{domain}' does not exist"}
         return Project().generate_new(name, domain, self.project_path,description)
 
     def new_file(self, pname, name, content, suffix=".ooasp"):
@@ -346,6 +346,14 @@ class RESTManager():
 
     def validate_compatibility(self, project):
         pass
+
+    def list_files_standalone(self):
+        """
+        Returns a list of all known files -> how to deal with descriptions
+        """
+        res = list(os.walk(os.path.join(SYS_FOLDER_NAME,PROJECT_DIR)))
+        return res
+        
 
         
 class MyAPI(FastAPI):

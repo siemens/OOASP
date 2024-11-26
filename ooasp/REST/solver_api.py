@@ -10,7 +10,7 @@ from typing import List
 import os
 
 global solver, setup_flag, st, allowed_objects, allowed_associations, allowed_attributes, selected_domain, action_history
-global user_additions, solve_semaphore
+global user_additions, solve_semaphore, active_objects
 
 
 # TODO FIX BUG WHERE THE SOLVER CANNOT BE REINITIALISED -> full reset required
@@ -19,7 +19,7 @@ FE_ORIGINS = ['http://localhost:5173']
 
 SMART_FUNCTIONS = ["association_possible", "assoc_needs_object", "global_lb_gap", "global_ub_gap"]
 
-
+active_objects=[]
 solve_semaphore = False
 solver = SmartOOASPSolver(smart_generation_functions=SMART_FUNCTIONS)
 # check brave cons. here not in Solver
@@ -82,6 +82,7 @@ def load_known_names(kb_path):
     return Response("Allowed Names.", data=allowed_objects)
 
 def load_known_associations(kb_path):
+    # do this through the control
     global allowed_associations
     allowed_associations = {}
     with open(kb_path, "r+") as f:
@@ -142,6 +143,17 @@ def initialise_solver(solver, data): #!
 
 # TODO find a way to track positions
 
+def _new_attr(node,attr):
+    print("Node does not yet have the attribute.")
+    vals = set()
+    print(f"New attribute set is {vals}")
+    vals.add(attr["value"])
+    node["data"]["attributes"].append({
+        "name":attr["name"],
+        "values": vals
+    })
+    return
+
 def represent_as_graph():
     """
     Represents list of objects and associations a collection of nodes and edges.
@@ -150,21 +162,25 @@ def represent_as_graph():
     if solve_semaphore:
         return {"nodes":[{"id":"-1", "type":"wNode", "position":{"x":150, "y":150}, "data":{}}], "edges":[]}
 
+    brave = get_possibilities()
 
     data = {
         "nodes": [],
         "edges": []
     }
 
-    global solver
+    global solver, active_objects
+    active_objects = []
     known = list(solver.assumptions)
     for assumption in known:
         if "ooasp_isa(" in assumption:
             data_list = assumption.replace(")","").replace("ooasp_isa(","").split(",")
+            active_objects.append(data_list[1])
             node = {"id":data_list[1],
                     "type": "cstNode",
                     "position": {"x": random.randint(20,200), "y": random.randint(20,200)}, 
-                    "data":{"class":data_list[0], "object_id":data_list[1]}}
+                    "data":{"class":data_list[0], "object_id":data_list[1], "attributes":[]}
+                    }
             data["nodes"].append(node)
         elif "ooasp_associated(" in assumption:
             data_list = assumption.replace(")","").replace("ooasp_associated(","").split(",")
@@ -179,6 +195,29 @@ def represent_as_graph():
                         "label": data_list[0]
                     }
             data["edges"].append(edge)
+
+        print(brave["attrs"])
+        for attr in brave["attrs"]:
+            #extremely inefficient, but i need a prototype
+            if attr["object_id"] in active_objects:
+                print(f"looking for object {attr["object_id"]} in active")
+                for node in data["nodes"]:
+                    if node["id"] == attr["object_id"]:
+                        print(f"found an active node {node}")
+                        if len(node["data"]["attributes"]) <= 0:
+                            _new_attr(node,attr)
+                                
+                            print(f"Node {node} should now have attributes {node["data"]["attributes"]}")
+                        else:
+                            for node_attribute in node["data"]["attributes"]:
+                                if attr["name"] == node_attribute["name"]:
+                                    print(f"Node already has the attribute. Value {attr["value"]} will be added.")
+                                    node_attribute["values"].add(attr["value"])
+                                    print("Added")
+                                    print(f"Node is now: {node}")
+                                else:
+                                    _new_attr(node,attr)
+
     return data
 
 def get_possibilities():
@@ -244,6 +283,11 @@ class InitData(BaseModel):
     prio_associations : str = ""
     domain : str = str(os.path.join("examples", "racks", "kb.lp"))
 
+@app.get("/active_ids")
+async def get_active_objects():
+    global active_objects
+    return Response("Active ids", active_objects).build()
+
 @app.get("/allowed/assoc/{id1}/{name}/{id2}")
 async def check_assoc(id1,name,id2):
     stat, msg = check_call_viability((id1,name,id2), type='assoc')
@@ -265,6 +309,7 @@ async def get_possibilities_ep():
     return Response("Possible acctions to be taken.",pos).build()
 
 @app.post("/knowledgebase/{path}")
+#loads in knowledgebase but does not initialise the solver
 async def read_kb(path):
     path =  os.path.join(*path.split("-"))
     assoc = load_known_associations(path)
@@ -338,6 +383,7 @@ async def associate(id1, id2, name):
     return Response("Succesfully added." if succ else "Error while adding.",data=solver.assumption_list).build(code=status.HTTP_200_OK if succ else status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @app.get("/consequences/cautious")
+#NOT USED
 async def get_cautious():
     """
     Returns cautions consequences.
@@ -348,6 +394,7 @@ async def get_cautious():
     return Response("Cautious consequences (must haves)", str(csq))
 
 @app.get("/consequences/brave")
+#NOT USED
 async def get_brave():
     """
     Returns brave consequences.
@@ -367,11 +414,13 @@ async def get_diagram(name):
 # ---------- File management ----------
 
 @app.get("/")
+#NOT USED
 def get_default():
     response = "Hello World!"
     return JSONResponse(status_code=status.HTTP_200_OK, content=response)
 
 @app.get("/all/list")
+#NOT USED
 def get_datalist():
     """
     Returns a dictionary containing list of all domains and projects
@@ -379,6 +428,13 @@ def get_datalist():
     return JSONResponse(status_code=status.HTTP_501_NOT_IMPLEMENTED, content="not implemented.")
 
 #----------DOMAIN----------
+
+EXAMPLE_FOLDER_OBJECT = {
+    "name": "myFolder",
+    "path": "whatever/whatever",
+    "contents": ["list of all the available configs."]
+}
+
 
 #TODO explore stricter typing for description
 
@@ -464,7 +520,7 @@ async def delete_domain(domain_name):
 #----------PROJECT----------
 
 class ProjectDataModel(BaseModel):
-    domain: str
+    domain: str|None = None
     description: str|None = None
 
 class ProjectUpdateModel(BaseModel):
@@ -475,12 +531,28 @@ class NewFile(BaseModel):
     content: str|None =""
     suffix: str|None = ".ooasp"
 
+@app.get("/all_configs")
+def all_configs():
+    response = app.pfm.list_files_standalone()
+    return JSONResponse(status_code=status.HTTP_200_OK, content=response)
+
+@app.get("/project_files_location")
+def get_project_location():
+    response = str(app.pfm.project_path)
+    return JSONResponse(status_code=status.HTTP_200_OK, content=response)
+
 @app.get("/projects")
 def get_projects():
     """
     Returns a list of all projects.
     """
-    response = app.pfm.list_all_projects()
+    response = []
+    all_projects =  app.pfm.list_all_projects()
+    for p in all_projects:
+        metadata = app.pfm.get_project_metadata(p)
+        metadata.update({"files":[]})
+        response.append(metadata)
+
     return JSONResponse(status_code=status.HTTP_200_OK, content=response)
 
 @app.get("/project/{project_name}")
