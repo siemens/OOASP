@@ -283,6 +283,14 @@ class InitData(BaseModel):
     prio_associations : str = ""
     domain : str = str(os.path.join("examples", "racks", "kb.lp"))
 
+@app.post("/reset_solver")
+def reset_solver():
+    global solver, selected_domain
+    solver = SmartOOASPSolver(smart_generation_functions=SMART_FUNCTIONS)
+    print(selected_domain)
+    initialise_solver(solver, InitData(objects="",prio_associations="",domain=selected_domain+"/kb.lp"))
+    Response("Current Solver state.", solver.__dict__).build()
+
 @app.get("/active_ids")
 async def get_active_objects():
     global active_objects
@@ -504,7 +512,11 @@ def all_domains():
     Lists all available domains.
     """
     response = app.pfm.get_all_domains()
-    return JSONResponse(status_code=status.HTTP_200_OK, content=response)
+    res_obj = []
+    for item in response:
+        res_obj.append({"name":item})
+        
+    return JSONResponse(status_code=status.HTTP_200_OK, content=res_obj)
 
 @app.put("/domain/{domain_name}")
 async def update_domain(domain_name, update_data: DomainUpdateModel):
