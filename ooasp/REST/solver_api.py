@@ -12,7 +12,7 @@ import threading
 import os
 
 global solver, setup_flag, st, allowed_objects, allowed_associations, allowed_attributes, selected_domain, action_history
-global user_additions, solve_semaphore, active_objects, specializations
+global user_additions, solve_semaphore, active_objects, specializations, open_configuration_file
 
 
 # TODO FIX BUG WHERE THE SOLVER CANNOT BE REINITIALISED -> full reset required
@@ -23,6 +23,7 @@ SMART_FUNCTIONS = ["association_possible", "assoc_needs_object", "global_lb_gap"
 
 specializations={}
 active_objects=[]
+open_configuration_file = None
 solve_semaphore = False
 solver = SmartOOASPSolver(smart_generation_functions=SMART_FUNCTIONS)
 # check brave cons. here not in Solver
@@ -45,8 +46,15 @@ app.add_middleware(
 
 @app.put("/upload/{path}")
 async def test_load(path):
-    res = import_solution(path)
-    return res
+    global open_configuration_file
+    try:
+        res = import_solution(path)
+        open_configuration_file = path
+        return res
+    except:
+        reset_solver()
+        return "Error while loading, solver will be reset."
+
 
 def import_solution(f_path: str = "fe_model.lp") -> None:
         global solver
@@ -413,25 +421,11 @@ async def get_possibilities_ep():
     pos =  get_possibilities()
     return Response("Possible acctions to be taken.",pos).build()
 
-@app.post("/knowledgebase/{path}")
-#loads in knowledgebase but does not initialise the solver
-async def read_kb(path):
-    path =  os.path.join(*path.split("-"))
-    assoc = load_known_associations(path)
-    cls = load_known_names(path)
-    attrs = load_known_attributes(path)
-    return {"classes": assoc, "associations":cls, "attributes": attrs}
-
 @app.get("/knowledgebase")
 async def show_loaded_kb():
     global allowed_associations, allowed_objects, allowed_attributes
     return Response("Known class names and associations.", {"classes": allowed_objects, "associations": allowed_associations, "attributes":allowed_attributes, "specializations":specializations})
 
-@app.get("/test")
-async def add():
-    global st
-    st = st + "+"
-    return st
 
 @app.get("/")
 async def activity():
@@ -683,12 +677,14 @@ def get_projects():
     """
     Returns a list of all projects.
     """
-    response = []
+    response = {"projects": [],
+                "all_files": []}
     all_projects =  app.pfm.list_all_projects()
     for p in all_projects:
         metadata = app.pfm.get_project_metadata(p)
-        metadata.update({"files":[]})
-        response.append(metadata)
+        response["projects"].append(metadata)
+        for file in metadata["files"]:
+            response["all_files"].append({"name":file,"project":p})
 
     return JSONResponse(status_code=status.HTTP_200_OK, content=response)
 
@@ -697,7 +693,7 @@ def get_project(project_name):
     """
     Returns metadata of an existing project.
     """
-    response = app.pfm.get_project_metadata(project_name)
+    response = {"projects": app.pfm.get_project_metadata(project_name)}
     return JSONResponse(status_code=status.HTTP_200_OK, content=response)
 
 @app.post("/project/{project_name}") #TODo change routing here and in new domain as well
@@ -784,8 +780,9 @@ def pos_per_id(id):
 
 @app.get("/active_domain")
 async def get_active_domain():
-    global selected_domain
-    return {"res": selected_domain} if selected_domain is not None else {"res":"SOLVER IS NOT INITIALISED"}
+    global selected_domain, open_configuration_file
+
+    return {"domain": selected_domain, "file":open_configuration_file}
 
 
 """
