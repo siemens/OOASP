@@ -172,12 +172,27 @@ def initialise_solver(solver, data): #!
 # TODO find a way to track positions
 
 def _new_attr(node,attr):
+    global solver
+
+    found_val = None 
+    for fact in solver.assumptions:
+        if "ooasp_attr_value" in fact:
+            val_info = fact.split("(")[-1].replace(")","")
+            attr_name, target, value = val_info.split(",")
+            print(fact)
+            if (str(node["id"]) == str(target)) and (attr["name"] == attr_name):
+                found_val = value
+                break
+            
     vals = set()
     vals.add(attr["value"])
     node["data"]["attributes"].append({
         "name":attr["name"],
-        "values": vals
+        "values": vals,
+        "active_value": found_val
     })
+
+
     return
 
 def represent_as_graph():
@@ -426,6 +441,14 @@ async def get_all_objects():
 async def get_all_assumptions():
     global solver
     return Response("Current assumptions.", data=str(solver.assumptions)).build()
+
+@app.post("/attr_val/{name}/{target_id}/{value}")
+def assign_value(name, target_id, value):
+    global solver, solve_semaphore
+    if solve_semaphore:
+        return Response("Solver is currently busy.", data=[]).build(code=status.HTTP_503_SERVICE_UNAVAILABLE)
+    solver.choose_attribute_value((str(name),target_id,value))
+    return Response("Succesfully added.",data=solver.assumption_list).build(code=status.HTTP_200_OK)
 
 @app.post("/associate/{id1}/{name}/{id2}")
 async def associate(id1, id2, name):
@@ -733,11 +756,6 @@ x.) finalise domain and project selection
     - this could potentially save time and make sure that the FE does not need to decide on all information
     ---> count number of known association and compare it the the one in the factbase (on violation disallow action)
     ---> on new association check for possibilites of association for provided object and choose one
-5.) Figureout how to do positioning
-    - this includes overall node representation as a response from the API
-
-    1. create an imaginary matrix to place in nodes by default
-    2. alt. extract hierarchy and assign a row to class per level
 
 6.) Extract attribute options
 """

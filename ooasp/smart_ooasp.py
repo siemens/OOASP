@@ -207,6 +207,15 @@ class SmartOOASPSolver:
         self.cautious = None
         self.brave = None
 
+    def choose_attribute_value(self, attr_data) -> None:
+        """
+        Adds value to an object attribute.
+        """
+        attr_atom = (f"ooasp_attr_value({attr_data[0]},{attr_data[1]},{attr_data[2]})")
+        self.assumptions.add(attr_atom)
+        self.cautious = None
+        self.brave = None
+
     def get_cautious(self) -> list[Symbol]:
         """
         Obtains and stores the cautious consequences of the current configuration.
