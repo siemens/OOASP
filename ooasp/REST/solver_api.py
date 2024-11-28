@@ -11,7 +11,7 @@ import threading
 import os
 
 global solver, setup_flag, st, allowed_objects, allowed_associations, allowed_attributes, selected_domain, action_history
-global user_additions, solve_semaphore, active_objects
+global user_additions, solve_semaphore, active_objects, specializations
 
 
 # TODO FIX BUG WHERE THE SOLVER CANNOT BE REINITIALISED -> full reset required
@@ -20,6 +20,7 @@ FE_ORIGINS = ['http://localhost:5173']
 
 SMART_FUNCTIONS = ["association_possible", "assoc_needs_object", "global_lb_gap", "global_ub_gap"]
 
+specializations={}
 active_objects=[]
 solve_semaphore = False
 solver = SmartOOASPSolver(smart_generation_functions=SMART_FUNCTIONS)
@@ -41,11 +42,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-def validate_additions():
-    """
-    Checks wether IDs and objects in local memory correspond to the ones in current assumptions. 
-    """
-    pass
+
 
 def check_call_viability(call,type='class'):
     """
@@ -69,56 +66,80 @@ def check_call_viability(call,type='class'):
         #TODO in future check if there is an alternative assoc
         return (False, f"Association '{call[1]}' is not defined within '{selected_domain}' domain.")
 
-def load_known_names(kb_path):
-    global allowed_objects
+def load_known_names():
+    global allowed_objects, solver
     allowed_objects = []
-    with open(kb_path, "r+") as f:
-        facts = f.read().strip().replace("\n","").replace("\r","").split(".")
-        for fact in facts:
-            if "%" in fact:
-                continue
-            if "ooasp_class" in fact:
-                class_name = fact.split("(")[1][0:-1] 
-                allowed_objects.append(class_name)
+    for fact in solver.model:
+        try:
+            f, v = fact.split("(")
+            if f == "ooasp_leafclass":
+                allowed_objects.append(v[0:-2])
+        except:
+            continue
     return Response("Allowed Names.", data=allowed_objects)
 
-def load_known_associations(kb_path):
+def load_specializations():
+    global specializations, solver
+    for fact in solver.model:
+        if "ooasp_assoc_specialization" in fact:
+            print(fact)
+            sub,sup = fact.split("(")[1].split(",")
+            print(sub,sup)
+            if sup[0:-2] in specializations.keys():
+                specializations[sup[0:-2]].append(sub)
+            else:
+                specializations.update({sup[0:-2]:[sub]})
+    return specializations
+
+
+def load_known_associations():
     # do this through the control
-    global allowed_associations
+    global allowed_associations, solver
     allowed_associations = {}
-    with open(kb_path, "r+") as f:
-        facts = f.read().strip().replace("\n","").replace("\r","").split(".")
-        for fact in facts:
-            if "%" in fact:
-                continue
-            if "ooasp_assoc(" in fact:
-                contents = fact.split("(")
-                assoc_info = contents[1].replace(")","").split(",")
-                print(assoc_info)
-                allowed_associations.update({
-                    assoc_info[0]: {
-                        "from": assoc_info[1],
-                        "fromMin": assoc_info[2],
-                        "fromMax": assoc_info[3],
-                        "to": assoc_info[4],
-                        "toMin": assoc_info[5],
-                        "toMax": assoc_info[6]
-                    }
-                })
+    for fact in solver.model:
+        if "%" in fact:
+            continue
+        if "ooasp_assoc(" in fact:
+            contents = fact.split("(")
+            assoc_info = contents[1].replace(")","").replace(".","").split(",")
+            allowed_associations.update({
+                assoc_info[0]: {
+                    "from": assoc_info[1],
+                    "fromMin": assoc_info[2],
+                    "fromMax": assoc_info[3],
+                    "to": assoc_info[4],
+                    "toMin": assoc_info[5],
+                    "toMax": assoc_info[6]
+                }
+            })
     return Response("Allowed Associations.", data=allowed_associations)
 
-def load_known_attributes(kb_path):
-    global allowed_attributes #TODO reconsider naming, known attributes fits better
-    with open(kb_path, "r+") as f:
-        facts = f.read().strip().replace("\n","").replace("\r","").split(".")
-        for fact in facts:
-            if "%" in fact:
-                continue
-            if "ooasp_attr(" in fact:
-                stripped = fact.split("(")[1][0:-1]
-                class_name, attr, attr_type = stripped.split(",") 
-                allowed_attributes.append({"class":class_name, "attribute":attr, "type":attr_type})
+def load_known_attributes():
+    global allowed_attributes, solver
+    for fact in solver.model:
+        if "ooasp_attr(" in fact:
+            stripped = fact.split("(")[1][0:-2]
+            class_name, attr, attr_type = stripped.split(",") 
+            allowed_attributes.append({"class":class_name, "attribute":attr, "type":attr_type})
     return Response("Attributes.", data=allowed_objects)
+
+def parse_model(m):
+    """
+    parses the model and only returns load-relevant facts.
+    """
+    res = []
+    for fact in m:
+        if "ooasp_isa_leaf" in fact:
+            new_fact = "ooasp_isa("+fact.split("(")[1]
+            res.append(new_fact)
+        if "ooasp_attr_value" in fact:
+            res.append(fact)
+        if "ooasp_associated" in fact:
+            assoc_data = fact.split("(")
+            name,t1,t2 = assoc_data[-1].split(",")
+            if name not in specializations.keys(): #if there does not exist a specialisation it is the leaf
+                res.append(fact)
+    return res
 
 def initialise_solver(solver, data): #!
     global selected_domain
@@ -128,18 +149,24 @@ def initialise_solver(solver, data): #!
     object_list = data.objects.split(",") if data.objects != "" else []
     data.prio_associations = data.prio_associations.split(",")
     solver.ctl.load(data.domain)
+    solver.load_base()
+    solver.smart_complete()
+    # check if a model with domain info was created
+    if solver.model is None:
+        return Response(message="Initial domain solve failed.", data=None).build()
+    
     solver.initial_objects =  object_list
     solver.associations_with_priority = data.prio_associations
 
-    solver.load_base()
     solver.create_initial_objects()
 
     global setup_flag
     setup_flag = True
 
-    load_known_associations(data.domain)
-    load_known_names(data.domain)
-    load_known_attributes(data.domain)
+    load_known_associations()
+    load_known_names()
+    load_known_attributes()
+    load_specializations()
     return Response(message="Solver was initialised.", data=solver.__dict__).build()
 
 # TODO find a way to track positions
@@ -283,6 +310,14 @@ class InitData(BaseModel):
     prio_associations : str = ""
     domain : str = str(os.path.join("examples", "racks", "kb.lp"))
 
+@app.get("/save/model")
+def save_model_data():
+    global solver, solve_semaphore
+    if not solve_semaphore:
+        res =  parse_model(solver.model)
+        return Response("Current model facts:", res).build()
+    return Response("Solver busy.", None).build()
+    
 @app.post("/reset_solver")
 def reset_solver():
     global solver, selected_domain
@@ -328,7 +363,7 @@ async def read_kb(path):
 @app.get("/knowledgebase")
 async def show_loaded_kb():
     global allowed_associations, allowed_objects, allowed_attributes
-    return Response("Known class names and associations.", {"classes": allowed_objects, "associations": allowed_associations, "attributes":allowed_attributes})
+    return Response("Known class names and associations.", {"classes": allowed_objects, "associations": allowed_associations, "attributes":allowed_attributes, "specializations":specializations})
 
 @app.get("/test")
 async def add():
@@ -367,12 +402,16 @@ def solve_threaded():
     solve_semaphore = True
     print("Started solving")
     solver.smart_complete()
+    new_assumptions = parse_model(solver.model)
+    solver.assumptions = set()
+    for fact in new_assumptions:
+        solver.assumptions.add(fact[0:-1])
     solve_semaphore = False
     print("Fisnished Solving")
 
 @app.post("/solve")
 async def call_solve():
-    global solve_semaphore
+    global solve_semaphore, solver
     t1 = threading.Thread(target=solve_threaded)
     t1.start()
     print(solve_semaphore)
