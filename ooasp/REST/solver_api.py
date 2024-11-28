@@ -10,6 +10,7 @@ from clingo import Control, Function, parse_term
 import threading
 
 import os
+import copy
 
 global solver, setup_flag, st, allowed_objects, allowed_associations, allowed_attributes, selected_domain, action_history
 global user_additions, solve_semaphore, active_objects, specializations, open_configuration_file
@@ -87,28 +88,6 @@ def import_solution(f_path: str = "fe_model.lp") -> None:
         for a in assumptions:
             solver.assumptions.add(str(parse_term(a)))
 
-def check_call_viability(call,type='class'):
-    """
-    Checks if a choice to add an object or an association can be done without breaking the system.
-    Note: attr is not needed here, as the intention is that it will be used just to generate the node display
-    """
-    global selected_domain
-    if type=="class":
-        global allowed_objects
-        if call in allowed_objects:
-            return (True, "Allowed.")
-        return (False, f"Object {call} is not defined within '{selected_domain}' domain.")
-    if type == "assoc":
-        global allowed_associations
-        if call[1] in list(allowed_associations.keys()):
-            # TODO IMPORTANT -> find a way to track ids to perform checks on particular objects
-            if allowed_associations[call[1]]["from"] == call[0] and allowed_associations[call[1]]["to"] == call[2]:
-                return (True, "Allowed")
-            # TODO in future and a check for reverse assoc (if there is a reverse assoc with some name allow it and return info + correct call)
-            return (False, f"{call[1]} is an allowed association, but not between '{call[0]}' and '{call[2]}'.")
-        #TODO in future check if there is an alternative assoc
-        return (False, f"Association '{call[1]}' is not defined within '{selected_domain}' domain.")
-
 def load_known_names():
     global allowed_objects, solver
     allowed_objects = []
@@ -182,6 +161,23 @@ def parse_model(m):
             name,t1,t2 = assoc_data[-1].split(",")
             if name not in specializations.keys(): #if there does not exist a specialisation it is the leaf
                 res.append(fact)
+    return res
+
+def parse_assumptions(a):
+    """
+    parses the model and only returns load-relevant facts.
+    """
+    res = []
+    for fact in a:
+        if "ooasp_isa" in fact:
+            res.append(f"{fact}.")
+        if "ooasp_attr_value" in fact:
+            res.append(f"{fact}.")
+        if "ooasp_associated" in fact:
+            assoc_data = fact.split("(")
+            name,t1,t2 = assoc_data[-1].split(",")
+            if name not in specializations.keys(): #if there does not exist a specialisation it is the leaf
+                res.append(f"{fact}.")
     return res
 
 def initialise_solver(solver, data): #!
@@ -777,6 +773,26 @@ def pos_per_id(id):
     for k in val_dict:
         res["attributes"].append({"name":k, "values":val_dict[k]})
     return res
+
+@app.post("/request/save")
+async def force_save():
+    global solver, open_configuration_file, solve_semaphore
+    if open_configuration_file is None:
+        return Response("Cannot save. No file is opened.")
+    else:
+        if solve_semaphore:
+            return Response("Solver is busy. State cannot be saved at this moment.")
+        assumptions_copy =  copy.deepcopy(solver.assumptions)
+        
+        def _threaded_save():
+            new_assumptions = parse_assumptions(assumptions_copy)
+            with open(open_configuration_file, "w+") as f:
+                for a in new_assumptions:
+                    f.write(a+"\n")
+            return
+        t1 = threading.Thread(target=_threaded_save)
+        t1.start()
+    return Response("Requested a save.", assumptions_copy)
 
 @app.get("/active_domain")
 async def get_active_domain():
