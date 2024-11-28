@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List
+from clingo import Control, Function, parse_term
 import threading
 
 import os
@@ -42,7 +43,41 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/testload")
+def test_load():
+    res = import_solution()
+    return res
 
+def import_solution(f_path: str = "fe_model.lp") -> None:
+        global solver
+        """
+        Takes a file containing a configuration encoding and loads it into the editor.
+        """
+        f_path = f_path.strip(
+            '"'
+        )  # It seems that passing the argument from the clinguin adds extra quotes which need to be removed
+        reset_solver()
+        ctl = Control(["1"])
+        ctl.load(f_path)
+        ctl.ground([("base", [])])
+        model = None
+        objects = {}
+        assumptions = []
+        with ctl.solve(yield_=True) as handle:
+            for model in handle:
+                for atom in model.symbols(atoms=True):
+                    assumptions.append(str(atom))
+                    if atom.match("ooasp_isa", 2):
+                        atom.arguments
+                        objects[atom.arguments[1].number] = atom.arguments[0].name
+                model = model.symbols(atoms=True)
+        objects = dict(sorted(objects.items(), key=lambda x: x[0]))
+        for expected_next_id, c in objects.items():
+            while expected_next_id > solver.next_id:
+                solver.add_object("object", must_be_used=False)
+            solver.add_object(c, must_be_used=True)
+        for a in assumptions:
+            solver.assumptions.add(str(parse_term(a)))
 
 def check_call_viability(call,type='class'):
     """
@@ -189,11 +224,18 @@ def _new_attr(node,attr):
     node["data"]["attributes"].append({
         "name":attr["name"],
         "values": vals,
-        "active_value": found_val
+        "active_value": found_val,
+        "object_id": node["id"]
     })
 
 
     return
+
+def export_as_file(path):
+    global solver
+    with open(path, "w+") as f:
+        for assumption in solver.assumptions:
+            f.write(f"{assumption}.\n")
 
 def represent_as_graph():
     """
@@ -332,7 +374,12 @@ def save_model_data():
         res =  parse_model(solver.model)
         return Response("Current model facts:", res).build()
     return Response("Solver busy.", None).build()
-    
+
+@app.get("/export/ooasp/{path}")
+def export_to_file(path):
+    export_as_file(path)
+    return path
+
 @app.post("/reset_solver")
 def reset_solver():
     global solver, selected_domain
