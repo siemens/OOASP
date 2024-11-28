@@ -43,9 +43,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/testload")
-def test_load():
-    res = import_solution()
+@app.put("/upload/{path}")
+async def test_load(path):
+    res = import_solution(path)
     return res
 
 def import_solution(f_path: str = "fe_model.lp") -> None:
