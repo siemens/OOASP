@@ -286,8 +286,8 @@ class RESTManager():
             return False
 
     def _save_mapping(self):
-        with open(self.MAPPING_FILE, "r+") as f:
-            json.dump(self.map_memo, indent=4)
+        with open(self.MAPPING_FILE, "w") as f:
+            json.dump(self.map_memo, f, indent=4)
             return True
 
     def get_all_domains(self):
@@ -348,7 +348,7 @@ class RESTManager():
     #==========CONFIGURATIONS============
     def get_configuration_by_name(self, name):
         res = list(filter(lambda d: d["name"]== name ,self.map_memo))
-        return (res[0] if len(res)> 0 else None, self.map_memo[self.map_memo.index(res)])
+        return (res[0] if len(res)> 0 else None, self.map_memo[self.map_memo.index(res[0])])
     
     def list_all_configuration_names(self):
         res = []
@@ -362,7 +362,7 @@ class RESTManager():
             return (False, "File with this name exists already.")
         known_domains = self.get_all_domains()
         if domain not in known_domains:
-            return (False, "Assign domain does not exist.")
+            return (False, "Assigned domain does not exist.")
         
         with open(file_path, "w+") as f:
             f.write(content)
@@ -374,8 +374,8 @@ class RESTManager():
         log, config = self.get_configuration_by_name(name)
         if log is None:
             return (False, "Configuration does not exist.")
-        c_path = os.join(self.configuration_path, name)
-        new_path = os.join(self.configuration_path, new_name)
+        c_path = os.path.join(self.configuration_path, name)
+        new_path = os.path.join(self.configuration_path, new_name)
         os.rename(c_path, new_path)
 
         if os.path.isfile(c_path):

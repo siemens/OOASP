@@ -84,6 +84,10 @@ EXAMPLE_FOLDER_OBJECT = {
 class DomainModel(BaseModel):
     name: str
 
+class ConfigurationModel(BaseModel):
+    name: str
+    domain: str
+
 class DomainUpdateModel(BaseModel):
     version: str | None = None
     ENCODING_FNAME: str | None = None
@@ -433,6 +437,7 @@ async def init_solver(values: InitData):
     return initialise_solver(solver, values) 
 
 #-----------PG: File Management----------("/files")
+
 #----------->DOMAINS<---------- ("/files/domains")
 @app.get("/files/domains")
 def all_domains():
@@ -469,8 +474,26 @@ def get_domain(domain_name):
     """
     response = app.pfm.get_domain_metadata(domain_name)
     return JSONResponse(status_code=status.HTTP_200_OK, content=response)
+#----------->CONFIGURATIONS<---------- ("/files/configurations")
+@app.get("/files/configurations")
+def all_configurations():
+    response = app.pfm.map_memo
+    return JSONResponse(status_code=status.HTTP_200_OK, content=response)
 
+@app.post("/files/configurations/new")
+def new_configuration(config: ConfigurationModel):
+    response = app.pfm.new_configuration(name=config.name, domain=config.domain)
+    return JSONResponse(status_code=status.HTTP_200_OK, content=response)
 
+@app.delete("/files/configurations/{name}")
+def delete_configuration(name):
+    response = app.pfm.delete_configuration(name)
+    return JSONResponse(status_code=status.HTTP_200_OK, content=response)
+
+@app.put("/files/configurations/{name}/rename/{new_name}")
+def rename_configuration(name, new_name):
+    response = app.pfm.rename_configuration(name, new_name)
+    return JSONResponse(status_code=status.HTTP_200_OK, content=response)
 
 #-----------PG: Configurator-----------("/configurator")
 #----------->Configurator: actions<---------- 
