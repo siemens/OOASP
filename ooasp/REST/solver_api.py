@@ -1,10 +1,10 @@
 import random
 from ooasp.smart_ooasp import SmartOOASPSolver
+from interfaces import *
 from ooasp.REST.file_manager.ProjectManagerInterface import *
 from fastapi import FastAPI, status
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
 from typing import List
 from clingo import Control, Function, parse_term
 import threading
@@ -40,61 +40,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-#==========DATA MODELS========
-class ProjectDataModel(BaseModel):
-    domain: str|None = None
-    description: str|None = None
-
-class ProjectUpdateModel(BaseModel):
-    domain: str|None = None
-    description: str|None = None
-
-class NewFile(BaseModel):
-    content: str|None =""
-    suffix: str|None = ".ooasp"
-class Response:
-    def __init__(self, message, data) -> None:
-        self.message = message
-        self.data = data
-    
-    def __repr__(self):
-        return str(self.__dict__)
-    
-    def build(self, additional=None,code=status.HTTP_200_OK):
-        content = {
-            "message": self.message,
-            "data": self.data
-        }
-        if additional is not None:
-            content.update(additional)
-        return JSONResponse(content=str(content), status_code=code)
-
-class InitData(BaseModel):
-    objects : str = ""
-    prio_associations : str = ""
-    domain : str = str(os.path.join("examples", "racks", "kb.lp"))
-
-EXAMPLE_FOLDER_OBJECT = {
-    "name": "myFolder",
-    "path": "whatever/whatever",
-    "contents": ["list of all the available configs."]
-}
-
-class DomainModel(BaseModel):
-    name: str
-
-class ConfigurationModel(BaseModel):
-    name: str
-    domain: str
-
-class DomainUpdateModel(BaseModel):
-    version: str | None = None
-    ENCODING_FNAME: str | None = None
-    CONSTRAINTS_FNAME: str | None = None
-
-class DomainDescription(BaseModel):
-    description: str
 
 #==========FUNCTIONS===========
 def import_solution(f_path: str = "fe_model.lp") -> None:
@@ -437,6 +382,19 @@ async def init_solver(values: InitData):
     return initialise_solver(solver, values) 
 
 #-----------PG: File Management----------("/files")
+@app.post("/files/select/domain/{name}")
+def select_domain(name):
+    """
+    Select an domain and initialises a solver with it.
+    """
+    
+
+@app.post("/files/select/configuration/{name}")
+def select_configuration(name):
+    """
+    Selects a file and considers it open.
+    """
+    pass
 
 #----------->DOMAINS<---------- ("/files/domains")
 @app.get("/files/domains")
@@ -447,12 +405,9 @@ def all_domains_json():
     response = app.pfm.get_full_domain_response()
     return JSONResponse(status_code=status.HTTP_200_OK, content=response)
 
-@app.get("/files/domains/list")
-def all_domains():
-    """
-    Lists all available domains as list of names.
-    """
-    response = app.pfm.get_all_domains()        
+@app.delete("/files/domains/{name}")
+def delete_domain(name):
+    response = app.pfm.delete_domain(name)
     return JSONResponse(status_code=status.HTTP_200_OK, content=response)
 
 @app.get("/files/domains/location")
@@ -500,6 +455,7 @@ def rename_configuration(name, new_name):
     return JSONResponse(status_code=status.HTTP_200_OK, content=response)
 
 #-----------PG: Configurator-----------("/configurator")
+
 #----------->Configurator: actions<---------- 
 @app.put("/configurator/add/{cls}")
 async def add_object(cls):

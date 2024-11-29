@@ -277,13 +277,16 @@ class RESTManager():
         res = []
         domains = self.get_all_domains()
         for domain_name in domains:
-            domain = Domain(domain_name)._load(os.path.join(self.domain_path, domain_name, "domain_conf.json"))
-            obj = {"name": domain_name,
-                   "description": domain.description,
-                   "icon": domain.icon,
-                   "configurations": list(filter(lambda d: d["domain"]== domain_name ,self.map_memo))
-                   }
-            res.append(obj)
+            try:
+                domain = Domain(domain_name)._load(os.path.join(self.domain_path, domain_name, "domain_conf.json"))
+                obj = {"name": domain_name,
+                    "description": domain.description,
+                    "icon": domain.icon,
+                    "configurations": list(filter(lambda d: d["domain"]== domain_name ,self.map_memo))
+                    }
+                res.append(obj)
+            except:
+                continue
         return res
 
     def _load_mapping(self):
@@ -304,6 +307,7 @@ class RESTManager():
             return True
 
     def get_all_domains(self):
+        
         return os.listdir(self.domain_path)
     
     def new_domain(self, name):
@@ -332,6 +336,10 @@ class RESTManager():
             return "Domain does not exist."
         dom = Domain()._load(str(os.path.join(DEFAULT_LOCATION,SYS_FOLDER_NAME, DOMAIN_DIR,name,Domain.METADATA)))
         if dom._delete():
+            for conf in self.map_memo:
+                if conf["domain"] == name:
+                    conf["domain"] == None
+            self._save_mapping()
             return "Domain deleted successfully."
         return "There was a problem removing the domain."
     
