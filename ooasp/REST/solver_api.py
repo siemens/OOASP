@@ -440,16 +440,20 @@ async def init_solver(values: InitData):
 
 #----------->DOMAINS<---------- ("/files/domains")
 @app.get("/files/domains")
+def all_domains_json():
+    """
+    Gives all known information on all domains
+    """
+    response = app.pfm.get_full_domain_response()
+    return JSONResponse(status_code=status.HTTP_200_OK, content=response)
+
+@app.get("/files/domains/list")
 def all_domains():
     """
-    Lists all available domains.
+    Lists all available domains as list of names.
     """
-    response = app.pfm.get_all_domains()
-    res_obj = []
-    for item in response:
-        res_obj.append({"name":item})
-        
-    return JSONResponse(status_code=status.HTTP_200_OK, content=res_obj)
+    response = app.pfm.get_all_domains()        
+    return JSONResponse(status_code=status.HTTP_200_OK, content=response)
 
 @app.get("/files/domains/location")
 def domain_files_path():
@@ -619,7 +623,6 @@ async def get_diagram(name):
     global solver
     solver.save_png(name=name, extra_prg="_clinguin_browsing.")
     return Response(f"File saved in ./out/{name}.png",data=None).build()
-
 
 # ---------- File management ----------
 

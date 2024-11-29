@@ -273,6 +273,19 @@ class RESTManager():
     
     #==========DOMAIN==========
 
+    def get_full_domain_response(self):
+        res = []
+        domains = self.get_all_domains()
+        for domain_name in domains:
+            domain = Domain(domain_name)._load(os.path.join(self.domain_path, domain_name, "domain_conf.json"))
+            obj = {"name": domain_name,
+                   "description": domain.description,
+                   "icon": domain.icon,
+                   "configurations": list(filter(lambda d: d["domain"]== domain_name ,self.map_memo))
+                   }
+            res.append(obj)
+        return res
+
     def _load_mapping(self):
         try:
             with open(self.MAPPING_FILE, "r+") as f:
