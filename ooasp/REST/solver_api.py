@@ -657,17 +657,12 @@ async def delete_domain(domain_name):
 
 #----------PROJECT----------
 
-@app.get("/all_configs")
+#@app.get("/all_configs")
 def all_configs():
     response = app.pfm.list_files_standalone()
     return JSONResponse(status_code=status.HTTP_200_OK, content=response)
 
-@app.get("/project_files_location")
-def get_project_location():
-    response = str(app.pfm.project_path)
-    return JSONResponse(status_code=status.HTTP_200_OK, content=response)
-
-@app.get("/projects")
+#@app.get("/projects")
 def get_projects():
     """
     Returns a list of all projects.
@@ -683,7 +678,7 @@ def get_projects():
 
     return JSONResponse(status_code=status.HTTP_200_OK, content=response)
 
-@app.get("/project/{project_name}")
+#@app.get("/project/{project_name}")
 def get_project(project_name):
     """
     Returns metadata of an existing project.
@@ -691,7 +686,7 @@ def get_project(project_name):
     response = {"projects": app.pfm.get_project_metadata(project_name)}
     return JSONResponse(status_code=status.HTTP_200_OK, content=response)
 
-@app.post("/project/{project_name}") #TODo change routing here and in new domain as well
+#@app.post("/project/{project_name}") #TODo change routing here and in new domain as well
 def new_project(project_name, project_data: ProjectDataModel):
     """
     Creates a new project.
@@ -699,15 +694,7 @@ def new_project(project_name, project_data: ProjectDataModel):
     response = app.pfm.new_project(project_name, project_data.domain, project_data.description)
     return JSONResponse(status_code=status.HTTP_200_OK, content=response)
 
-@app.get("/project/check/{name}")
-def check_project(name):
-    """
-    Checks if a project under a specified name exists.
-    """
-    #TODO implement
-    return JSONResponse(status_code=status.HTTP_501_NOT_IMPLEMENTED, content="not implemented.")
-
-@app.delete("/project/{project_name}")
+#@app.delete("/project/{project_name}")
 def delete_project(project_name):
     """
     Deletes an existing project.
@@ -715,7 +702,7 @@ def delete_project(project_name):
     response = app.pfm.delete_project(project_name)
     return JSONResponse(status_code=status.HTTP_200_OK, content=response)
 
-@app.post("/project/{name}/new/{file}")
+#@app.post("/project/{name}/new/{file}")
 def create_new_file(name, file, specifics: NewFile):
     """
     Creates a new file within the specified project.
@@ -723,7 +710,7 @@ def create_new_file(name, file, specifics: NewFile):
     response = app.pfm.new_file(pname=name, name=file, content=specifics.content,suffix=specifics.suffix)
     return JSONResponse(status_code=status.HTTP_200_OK, content=response)
 
-@app.delete("/project/{pname}/{fname}")
+#@app.delete("/project/{pname}/{fname}")
 def delete_file(fname, pname):
     response = app.pfm.delete_file(fname,pname)
     return JSONResponse(status_code=status.HTTP_200_OK, content=response)
