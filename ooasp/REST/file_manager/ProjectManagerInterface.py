@@ -10,24 +10,22 @@ import uuid
 #TODO implement renaming functionality for everything
 
 
-DEFAULT_LOCATION = Path("./ooasp/REST/file_manager")
+DEFAULT_LOCATION = Path("")
 
 SYS_FOLDER_NAME = 'interactive_configurator_files'
 DOMAIN_DIR = 'domains'
-PROJECT_DIR = 'projects'
+CONFIG_DIR = 'configuration_files'
 
 def make_file_structure(location):
     location = Path(location)
     os.makedirs(os.path.join(location,SYS_FOLDER_NAME), exist_ok=True)
     os.makedirs(os.path.join(location,SYS_FOLDER_NAME,DOMAIN_DIR), exist_ok=True)
-    os.makedirs(os.path.join(location,SYS_FOLDER_NAME,PROJECT_DIR), exist_ok=True)
+    os.makedirs(os.path.join(location,SYS_FOLDER_NAME,CONFIG_DIR), exist_ok=True)
     return os.path.join(location,SYS_FOLDER_NAME)
 
 class Domain:
 
-    #TODO think about additional metadata functionality
-
-    ENCODING_FNAME='encoding.lp'
+    ENCODING_FNAME='kb.lp'
     CONSTRAINTS_FNAME='constraints.lp'
     METADATA='domain_conf.json'
 
@@ -36,6 +34,8 @@ class Domain:
         self.directory = None
         self.version = '0.0.0'
         self.description = None
+        self.configurations = []
+        self.icon = ''
 
     def __repr__(self):
         return str(self.__dict__)
@@ -44,7 +44,7 @@ class Domain:
         if alternative is None:
             self.directory = os.path.join(DEFAULT_LOCATION,SYS_FOLDER_NAME,DOMAIN_DIR,self.name)
 
-    def generate_new(self, create_req_files=True):
+    def generate_new(self, content="", create_req_files=True):
         estimated_dir = os.path.join(DEFAULT_LOCATION,SYS_FOLDER_NAME,DOMAIN_DIR,self.name)
 
         if not os.path.exists(estimated_dir):
@@ -55,7 +55,8 @@ class Domain:
             if create_req_files:
                 print(f"        Creating Template files: '{self.ENCODING_FNAME}','{self.CONSTRAINTS_FNAME}' ")
                 with open(os.path.join(estimated_dir, self.ENCODING_FNAME),"w") as enc_file:
-                    enc_file.write(f"% ===== '{self.name}' problem encoding ===== ")
+                    enc_file.write(f"% ===== '{self.name}' domain encoding ===== ")
+                    enc_file.write(content)
                 with open(os.path.join(estimated_dir, self.CONSTRAINTS_FNAME),"w") as enc_file:
                     enc_file.write(f"% ===== '{self.name}' constraint encoding ===== ")
             print("    2. Generating Domain metadata")
@@ -64,7 +65,9 @@ class Domain:
                         'version': '0.0.1',
                         'ENCODING_FNAME':self.ENCODING_FNAME,
                         'CONSTRAINTS_FNAME':self.CONSTRAINTS_FNAME,
-                        'description': self.description
+                        'description': self.description,
+                        'configurations': self.configurations,
+                        'icon': self.icon
                         }
             print("    3. Writing metadata")
             with open(os.path.join(estimated_dir, self.METADATA),"w") as mf:
@@ -87,7 +90,9 @@ class Domain:
                         'version': self.version,
                         'ENCODING_FNAME':self.ENCODING_FNAME,
                         'CONSTRAINTS_FNAME':self.CONSTRAINTS_FNAME,
-                        'description': self.description
+                        'description': self.description,
+                        'configurations': self.configurations,
+                        'icon':self.icon
                         }
             metadata.update(additional_metadata)
             json.dump(metadata,f,indent=4)
@@ -100,6 +105,8 @@ class Domain:
             self.directory = content['directory']
             self.version = content['version']
             self.description = content["description"]
+            self.configurations = content["configurations"]
+            self.icon = content['icon']
 
             if rewrite_fnames:
                 self.CONSTRAINTS_FNAME = content['CONSTRAINTS_FNAME']
@@ -121,12 +128,21 @@ class Domain:
                 return False
         return True
     
-    def _update(self, version=None, directory=None, ENCODING_FNAME=None, CONSTRAINTS_FNAME=None, METADATA=None) -> dict:
+    def _update(self, version=None, directory=None, ENCODING_FNAME=None, CONSTRAINTS_FNAME=None, METADATA=None, configurations=None, icon=None) -> dict:
         self.version = version if version is not None else self.version
         self.directory = directory if directory is not None else self.directory
         self.ENCODING_FNAME = ENCODING_FNAME if ENCODING_FNAME is not None else self.ENCODING_FNAME
         self.CONSTRAINTS_FNAME =  CONSTRAINTS_FNAME if CONSTRAINTS_FNAME is not None else self.CONSTRAINTS_FNAME
         self.METADATA = METADATA if METADATA is not None else self.METADATA
+        self.configurations = configurations if configurations else self.configurations
+        self.icon = icon if icon else self.icon
+
+    def _add_configuration(self, configuration):
+        new =  self.configurations
+        new.append(configuration)
+        self._update(CONFIGURATIONS=new)
+        self._dump_metadata()
+        return self
 
     def _delete(self):
         print(self._check_exists())
@@ -142,6 +158,7 @@ class Domain:
                 os.rmdir(self.directory)
         return not self._check_exists()
 
+'''
 class Project:
 
     METADATA = "project_conf.json"
@@ -177,7 +194,7 @@ class Project:
         if name in self.files:
             return "File already exists."
         try:
-            with open(os.path.join(SYS_FOLDER_NAME,PROJECT_DIR,self.name, name), "w+") as f:
+            with open(os.path.join(SYS_FOLDER_NAME,CONFIG_DIR,self.name, name), "w+") as f:
                 f.write(content)
                 self.files.append(name)
                 self._save()
@@ -242,15 +259,36 @@ class Project:
     def _change_description(self, desc):
         self.description = str(desc)
         self._save()
+'''
 
 class RESTManager():
-    def __init__(self, domain_path, project_path) -> None:
-        #TODO consider loading projects and domains into memory
+    def __init__(self, domain_path, configuration_path, path) -> None:
+       
+        self.MAPPING_FILE =os.path.join(path,"domain-config-map.json")
+        self.map_memo = None
         self.domain_path = domain_path
-        self.project_path = project_path
+        self.configuration_path = configuration_path
         self.run_id = str(uuid.uuid1())
+        self._load_mapping()
     
     #==========DOMAIN==========
+
+    def _load_mapping(self):
+        try:
+            with open(self.MAPPING_FILE, "r+") as f:
+                content = json.load(f)
+                self.map_memo = content
+                return True
+        except:
+            with open(self.MAPPING_FILE, "w+") as f:
+                json.dump([],f,indent=4)
+                self.map_memo = []
+            return False
+
+    def _save_mapping(self):
+        with open(self.MAPPING_FILE, "r+") as f:
+            json.dump(self.map_memo, indent=4)
+            return True
 
     def get_all_domains(self):
         return os.listdir(self.domain_path)
@@ -258,6 +296,11 @@ class RESTManager():
     def new_domain(self, name):
         dom = Domain(name)
         dom.generate_new()
+        return str(dom.__dict__)
+    
+    def new_domain_with_content(self, name, content):
+        dom = Domain(name)
+        dom.generate_new(content=content)
         return str(dom.__dict__)
     
     def get_domain_metadata(self, name):
@@ -269,7 +312,9 @@ class RESTManager():
         return content
     
     def delete_domain(self, name):
+        pass
         available = os.listdir(self.domain_path)
+        #TODO find all corresponding files and orphan them
         if name not in available:
             return "Domain does not exist."
         dom = Domain()._load(str(os.path.join(DEFAULT_LOCATION,SYS_FOLDER_NAME, DOMAIN_DIR,name,Domain.METADATA)))
@@ -282,6 +327,7 @@ class RESTManager():
             with open(str(os.path.join(DEFAULT_LOCATION,SYS_FOLDER_NAME, DOMAIN_DIR,name,Domain.METADATA)), "r")as f:
                 return str(json.load(f))
 
+        #TODO rework this to include icons etc
         dom = Domain()._load(str(os.path.join(DEFAULT_LOCATION,SYS_FOLDER_NAME, DOMAIN_DIR,name,Domain.METADATA)))
         dom._update(version=update_data['version'], 
                     ENCODING_FNAME=update_data["ENCODING_FNAME"],
@@ -299,8 +345,63 @@ class RESTManager():
         dom._change_description(desc)
         return dom.description
     
-    #==========PROJECT==========
+    #==========CONFIGURATIONS============
+    def get_configuration_by_name(self, name):
+        res = list(filter(lambda d: d["name"]== name ,self.map_memo))
+        return (res[0] if len(res)> 0 else None, self.map_memo[self.map_memo.index(res)])
+    
+    def list_all_configuration_names(self):
+        res = []
+        for log in self.map_memo:
+            res.append(log["name"])
+        return res
 
+    def new_configuration(self, name, domain, content=""):
+        file_path = os.path.join(self.configuration_path, name)
+        if os.path.isfile(file_path):
+            return (False, "File with this name exists already.")
+        known_domains = self.get_all_domains()
+        if domain not in known_domains:
+            return (False, "Assign domain does not exist.")
+        
+        with open(file_path, "w+") as f:
+            f.write(content)
+        self.map_memo.append({"name": name, "domain":domain})
+        self._save_mapping()
+        return(True, "File created.")
+    
+    def rename_configuration(self, name, new_name):
+        log, config = self.get_configuration_by_name(name)
+        if log is None:
+            return (False, "Configuration does not exist.")
+        c_path = os.join(self.configuration_path, name)
+        new_path = os.join(self.configuration_path, new_name)
+        os.rename(c_path, new_path)
+
+        if os.path.isfile(c_path):
+            return (False, "There was a problem renaming the configuration.")
+        if not os.path.isfile(new_path):
+            return (False, "There was a problem renaming the configuration.")
+        
+        self.map_memo[self.map_memo.index(log)]["name"] = new_name
+        self._save_mapping()        
+
+    def delete_configuration(self, name):
+        log, config = self.get_configuration_by_name(name)
+        if log is None:
+            return (False, "Configuration does not exist.")
+        f_path = os.path.join(self.configuration_path, name)
+        os.remove(f_path)
+        if not os.path.isfile(f_path):
+            self.map_memo.remove(config)
+            self._save_mapping()
+            return (True, "File was removed.")
+        self._save_mapping()
+        return (False, "There was a problem removing the file.")
+        
+
+    #==========PROJECT==========
+'''
     def list_all_projects(self):
         return os.listdir(self.project_path)
 
@@ -317,13 +418,13 @@ class RESTManager():
         available = os.listdir(self.project_path)
         if name not in available:
             return "Project does not exist."
-        p = Project()._load(str(os.path.join(DEFAULT_LOCATION,SYS_FOLDER_NAME, PROJECT_DIR,name,Project.METADATA)))
+        p = Project()._load(str(os.path.join(DEFAULT_LOCATION,SYS_FOLDER_NAME, CONFIG_DIR,name,Project.METADATA)))
         if p._delete_project():
             return "Project deleted successfully."
         return "There was a problem removing the project."
 
     def delete_file(self, filename, projectname):
-        p = Project()._load(str(os.path.join(DEFAULT_LOCATION,SYS_FOLDER_NAME, PROJECT_DIR,projectname,Project.METADATA)))
+        p = Project()._load(str(os.path.join(DEFAULT_LOCATION,SYS_FOLDER_NAME, CONFIG_DIR,projectname,Project.METADATA)))
         if p._delete_file(filename):
             return {"message": "File removed successfully."}
         return {"message": "File does not exists."}
@@ -351,15 +452,15 @@ class RESTManager():
         """
         Returns a list of all known files -> how to deal with descriptions
         """
-        res = list(os.walk(os.path.join(SYS_FOLDER_NAME,PROJECT_DIR)))
+        res = list(os.walk(os.path.join(SYS_FOLDER_NAME,CONFIG_DIR)))
         return res
         
-
+'''
         
 class MyAPI(FastAPI):
     def __init__(self):
         super().__init__()
-        self.pfm = RESTManager(domain_path=Path("./interactive_configurator_files/domains"),project_path=Path("./interactive_configurator_files/projects"))
+        self.pfm = RESTManager(domain_path=Path("./interactive_configurator_files/domains"),configuration_path=Path("./interactive_configurator_files/configuration_files"),path=Path("./interactive_configurator_files"))
         os.makedirs(Path("./interactive_configurator_files/domains"), exist_ok=True)
-        os.makedirs(Path("./interactive_configurator_files/projects"), exist_ok=True)
+        os.makedirs(Path("./interactive_configurator_files/configuration_files"), exist_ok=True)
 

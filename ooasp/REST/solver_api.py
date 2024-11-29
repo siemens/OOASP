@@ -12,8 +12,8 @@ import threading
 import os
 import copy
 
-global solver, setup_flag, st, allowed_objects, allowed_associations, allowed_attributes, selected_domain, action_history
-global user_additions, solve_semaphore, active_objects, specializations, open_configuration_file
+global solver, setup_flag, st, allowed_objects, allowed_associations, allowed_attributes, selected_domain
+global solve_semaphore, active_objects, specializations, open_configuration_file
 
 
 # TODO FIX BUG WHERE THE SOLVER CANNOT BE REINITIALISED -> full reset required
@@ -27,15 +27,11 @@ active_objects=[]
 open_configuration_file = None
 solve_semaphore = False
 solver = SmartOOASPSolver(smart_generation_functions=SMART_FUNCTIONS)
-# check brave cons. here not in Solver
 setup_flag = False
-st = ""
 allowed_objects = []
 allowed_associations = {}
 allowed_attributes = []
 selected_domain = None
-action_history = []
-user_additions = []
 app = MyAPI()
 app.add_middleware(
     CORSMiddleware,
@@ -45,18 +41,58 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.put("/upload/{path}")
-async def test_load(path):
-    global open_configuration_file
-    try:
-        res = import_solution(path)
-        open_configuration_file = path
-        return res
-    except:
-        reset_solver()
-        return "Error while loading, solver will be reset."
+#==========DATA MODELS========
+class ProjectDataModel(BaseModel):
+    domain: str|None = None
+    description: str|None = None
 
+class ProjectUpdateModel(BaseModel):
+    domain: str|None = None
+    description: str|None = None
 
+class NewFile(BaseModel):
+    content: str|None =""
+    suffix: str|None = ".ooasp"
+class Response:
+    def __init__(self, message, data) -> None:
+        self.message = message
+        self.data = data
+    
+    def __repr__(self):
+        return str(self.__dict__)
+    
+    def build(self, additional=None,code=status.HTTP_200_OK):
+        content = {
+            "message": self.message,
+            "data": self.data
+        }
+        if additional is not None:
+            content.update(additional)
+        return JSONResponse(content=str(content), status_code=code)
+
+class InitData(BaseModel):
+    objects : str = ""
+    prio_associations : str = ""
+    domain : str = str(os.path.join("examples", "racks", "kb.lp"))
+
+EXAMPLE_FOLDER_OBJECT = {
+    "name": "myFolder",
+    "path": "whatever/whatever",
+    "contents": ["list of all the available configs."]
+}
+
+class DomainModel(BaseModel):
+    name: str
+
+class DomainUpdateModel(BaseModel):
+    version: str | None = None
+    ENCODING_FNAME: str | None = None
+    CONSTRAINTS_FNAME: str | None = None
+
+class DomainDescription(BaseModel):
+    description: str
+
+#==========FUNCTIONS===========
 def import_solution(f_path: str = "fe_model.lp") -> None:
         global solver
         """
@@ -206,9 +242,9 @@ def initialise_solver(solver, data): #!
     load_known_names()
     load_known_attributes()
     load_specializations()
-    return Response(message="Solver was initialised.", data=solver.__dict__).build()
+    #TODO consolidate above functions for efficiency
 
-# TODO find a way to track positions
+    return Response(message="Solver was initialised.", data=solver.__dict__).build()
 
 def _new_attr(node,attr):
     global solver
@@ -231,8 +267,6 @@ def _new_attr(node,attr):
         "active_value": found_val,
         "object_id": node["id"]
     })
-
-
     return
 
 def export_as_file(path):
@@ -308,6 +342,19 @@ def represent_as_graph():
 
     return data
 
+def solve_threaded():
+    global solver, solve_semaphore
+    solve_semaphore = True
+    print("Started solving")
+    solver.smart_complete()
+    new_assumptions = parse_model(solver.model)
+    solver.assumptions = set()
+    for fact in new_assumptions:
+        solver.assumptions.add(fact[0:-1])
+    solve_semaphore = False
+    print("Fisnished Solving")
+
+
 def get_possibilities():
     """
     Returns all possible changes in a dictionary format
@@ -349,42 +396,31 @@ def get_possibilities():
             )
     return res
 
-class Response:
-    def __init__(self, message, data) -> None:
-        self.message = message
-        self.data = data
-    
-    def __repr__(self):
-        return str(self.__dict__)
-    
-    def build(self, additional=None,code=status.HTTP_200_OK):
-        content = {
-            "message": self.message,
-            "data": self.data
-        }
-        if additional is not None:
-            content.update(additional)
-        return JSONResponse(content=str(content), status_code=code)
+#===========SYSTEM============("/system")
+#-----------System Checks------------("system/flags")
 
-class InitData(BaseModel):
-    objects : str = ""
-    prio_associations : str = ""
-    domain : str = str(os.path.join("examples", "racks", "kb.lp"))
+@app.get("/system/flags/heartbeat")
+async def activity():
+    return Response(setup_flag, None).build()
 
-@app.get("/save/model")
-def save_model_data():
-    global solver, solve_semaphore
-    if not solve_semaphore:
-        res =  parse_model(solver.model)
-        return Response("Current model facts:", res).build()
-    return Response("Solver busy.", None).build()
+@app.get("/system/flags/pfm/instance_id")
+def get_instance_id():
+    return JSONResponse(app.pfm.run_id)
 
-@app.get("/export/ooasp/{path}")
-def export_to_file(path):
-    export_as_file(path)
-    return path
+#-----------System Data-----------("/system/data")
+@app.get("/system/data/active_ids")
+async def get_active_objects():
+    global active_objects
+    return Response("Active ids", active_objects).build()
 
-@app.post("/reset_solver")
+@app.get("/system/data/knowledgebase")
+async def show_loaded_kb():
+    global allowed_associations, allowed_objects, allowed_attributes
+    return Response("Known class names and associations.", {"classes": allowed_objects, "associations": allowed_associations, "attributes":allowed_attributes, "specializations":specializations})
+
+
+#-----------System Actions-----------("/system/actions")
+@app.post("/system/actions/reset_solver")
 def reset_solver():
     global solver, selected_domain
     solver = SmartOOASPSolver(smart_generation_functions=SMART_FUNCTIONS)
@@ -392,46 +428,53 @@ def reset_solver():
     initialise_solver(solver, InitData(objects="",prio_associations="",domain=selected_domain+"/kb.lp"))
     Response("Current Solver state.", solver.__dict__).build()
 
-@app.get("/active_ids")
-async def get_active_objects():
-    global active_objects
-    return Response("Active ids", active_objects).build()
-
-@app.get("/allowed/assoc/{id1}/{name}/{id2}")
-async def check_assoc(id1,name,id2):
-    stat, msg = check_call_viability((id1,name,id2), type='assoc')
-    return Response(msg,stat).build()
-
-@app.get("/allowed/object/{cls}")
-async def check_object(cls):
-    stat, msg = check_call_viability(cls, type='class')
-    return Response(msg,stat).build()
-
-@app.get("/graph/assumptions")
-async def known():
-    graph_repr = represent_as_graph()
-    return Response("Success",graph_repr).build()
-
-@app.get("/json/possibilities")
-async def get_possibilities_ep():
-    pos =  get_possibilities()
-    return Response("Possible acctions to be taken.",pos).build()
-
-@app.get("/knowledgebase")
-async def show_loaded_kb():
-    global allowed_associations, allowed_objects, allowed_attributes
-    return Response("Known class names and associations.", {"classes": allowed_objects, "associations": allowed_associations, "attributes":allowed_attributes, "specializations":specializations})
-
-
-@app.get("/")
-async def activity():
-    return Response(setup_flag, None).build()
-
-@app.post("/initialise")
+@app.post("/system/actions/initialise")
 async def init_solver(values: InitData):
-    return initialise_solver(solver, values) #!
+    return initialise_solver(solver, values) 
 
-@app.put("/add/{cls}")
+#-----------PG: File Management----------("/files")
+#----------->DOMAINS<---------- ("/files/domains")
+@app.get("/files/domains")
+def all_domains():
+    """
+    Lists all available domains.
+    """
+    response = app.pfm.get_all_domains()
+    res_obj = []
+    for item in response:
+        res_obj.append({"name":item})
+        
+    return JSONResponse(status_code=status.HTTP_200_OK, content=res_obj)
+
+@app.get("/files/domains/location")
+def domain_files_path():
+    """
+    Returns the current default location of domain files
+    """
+    response = str(app.pfm.domain_path)
+    return JSONResponse(status_code=status.HTTP_200_OK, content=response)
+
+@app.post("/files/domains/new")
+def new_domain(domain: DomainModel):
+    """
+    Creates a new domain and responds with the data about it.
+    """
+    response = app.pfm.new_domain(domain.name)
+    return JSONResponse(status_code=status.HTTP_200_OK, content=response)
+
+@app.get("/files/domains/{domain_name}")
+def get_domain(domain_name):
+    """
+    Returns domain metadata.
+    """
+    response = app.pfm.get_domain_metadata(domain_name)
+    return JSONResponse(status_code=status.HTTP_200_OK, content=response)
+
+
+
+#-----------PG: Configurator-----------("/configurator")
+#----------->Configurator: actions<---------- 
+@app.put("/configurator/add/{cls}")
 async def add_object(cls):
     global solve_semaphore
     if solve_semaphore:
@@ -441,45 +484,7 @@ async def add_object(cls):
     solver.add_object(str(cls))
     return Response(f"Added object: {cls}.", data=str(solver.__dict__))
 
-
-@app.get("/model")
-async def get_model():
-    global solver
-    m = solver.model
-    msg  = "No solution available." if m is None else "Current solution found."
-    return Response(msg, data=str(m)).build()
-
-def solve_threaded():
-    global solver, solve_semaphore
-    solve_semaphore = True
-    print("Started solving")
-    solver.smart_complete()
-    new_assumptions = parse_model(solver.model)
-    solver.assumptions = set()
-    for fact in new_assumptions:
-        solver.assumptions.add(fact[0:-1])
-    solve_semaphore = False
-    print("Fisnished Solving")
-
-@app.post("/solve")
-async def call_solve():
-    global solve_semaphore, solver
-    t1 = threading.Thread(target=solve_threaded)
-    t1.start()
-    print(solve_semaphore)
-    return Response("Generating a solution.", data=str(solver.model)).build()
-
-@app.get("/objects")
-async def get_all_objects():
-    global solver
-    return Response("Current objects.", data=str(solver.objects)).build()
-
-@app.get("/assumptions")
-async def get_all_assumptions():
-    global solver
-    return Response("Current assumptions.", data=str(solver.assumptions)).build()
-
-@app.post("/attr_val/{name}/{target_id}/{value}")
+@app.post("/configurator/attribute/{name}/{target_id}/{value}")
 def assign_value(name, target_id, value):
     global solver, solve_semaphore
     if solve_semaphore:
@@ -487,7 +492,7 @@ def assign_value(name, target_id, value):
     solver.choose_attribute_value((str(name),target_id,value))
     return Response("Succesfully added.",data=solver.assumption_list).build(code=status.HTTP_200_OK)
 
-@app.post("/associate/{id1}/{name}/{id2}")
+@app.post("/configurator/associate/{id1}/{name}/{id2}")
 async def associate(id1, id2, name):
     """
     Creates an association between two objects.
@@ -505,7 +510,40 @@ async def associate(id1, id2, name):
     succ =  f"ooasp_associated({name},{id1},{id2})" in solver.assumptions
     return Response("Succesfully added." if succ else "Error while adding.",data=solver.assumption_list).build(code=status.HTTP_200_OK if succ else status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-@app.get("/consequences/cautious")
+
+#----------->Configurator: data<---------- 
+@app.get("/configurator/model")
+async def get_model():
+    global solver
+    m = solver.model
+    msg  = "No solution available." if m is None else "Current solution found."
+    return Response(msg, data=str(m)).build()
+
+@app.get("/configurator/brave/json")
+async def get_possibilities_ep():
+    pos =  get_possibilities()
+    return Response("Possible actions to be taken.",pos).build()
+
+#----------->Solver<---------- ("/configurator/solver")
+@app.post("/configurator/solver/solve")
+async def call_solve():
+    global solve_semaphore, solver
+    t1 = threading.Thread(target=solve_threaded)
+    t1.start()
+    print(solve_semaphore)
+    return Response("Generating a solution.", data=str(solver.model)).build()
+
+@app.get("/configurator/solver/objects")
+async def get_all_objects():
+    global solver
+    return Response("Current objects.", data=str(solver.objects)).build()
+
+@app.get("/configurator/solver/assumptions")
+async def get_all_assumptions():
+    global solver
+    return Response("Current assumptions.", data=str(solver.assumptions)).build()
+
+@app.get("/configurator/solver/consequences/cautious")
 #NOT USED
 async def get_cautious():
     """
@@ -516,7 +554,7 @@ async def get_cautious():
     csq = str(solver.get_cautious()).split(",")
     return Response("Cautious consequences (must haves)", str(csq))
 
-@app.get("/consequences/brave")
+@app.get("/configurator/solver/consequences/brave")
 #NOT USED
 async def get_brave():
     """
@@ -527,6 +565,32 @@ async def get_brave():
     csq = str(solver.get_brave()).split(",")
     return Response("Brave consequences (possibilities)", str(csq))
 
+
+#------------------------------------------------------------------------------------
+@app.put("/upload/{path}")
+async def test_load(path):
+    global open_configuration_file
+    try:
+        res = import_solution(path)
+        open_configuration_file = path
+        return res
+    except:
+        reset_solver()
+        return "Error while loading, solver will be reset."
+
+@app.get("/save/model")
+def save_model_data():
+    global solver, solve_semaphore
+    if not solve_semaphore:
+        res =  parse_model(solver.model)
+        return Response("Current model facts:", res).build()
+    return Response("Solver busy.", None).build()
+
+@app.get("/export/ooasp/{path}")
+def export_to_file(path):
+    export_as_file(path)
+    return path
+
 @app.get("/solution/view/{name}")
 async def get_diagram(name):
     global solver
@@ -536,87 +600,8 @@ async def get_diagram(name):
 
 # ---------- File management ----------
 
-@app.get("/")
-#NOT USED
-def get_default():
-    response = "Hello World!"
-    return JSONResponse(status_code=status.HTTP_200_OK, content=response)
-
-@app.get("/all/list")
-#NOT USED
-def get_datalist():
-    """
-    Returns a dictionary containing list of all domains and projects
-    """
-    return JSONResponse(status_code=status.HTTP_501_NOT_IMPLEMENTED, content="not implemented.")
 
 #----------DOMAIN----------
-
-EXAMPLE_FOLDER_OBJECT = {
-    "name": "myFolder",
-    "path": "whatever/whatever",
-    "contents": ["list of all the available configs."]
-}
-
-
-#TODO explore stricter typing for description
-
-class DomainModel(BaseModel):
-    name: str
-
-class DomainUpdateModel(BaseModel):
-    version: str | None = None
-    ENCODING_FNAME: str | None = None
-    CONSTRAINTS_FNAME: str | None = None
-
-class DomainDescription(BaseModel):
-    description: str
-
-@app.get("/domain_files_location")
-def domain_files_path():
-    """
-    Returns the current default location of domain files
-    """
-    response = str(app.pfm.domain_path)
-    return JSONResponse(status_code=status.HTTP_200_OK, content=response)
-
-@app.get("/domain/check/{name}")
-def check_domain(name):
-    """
-    Returns True if a domain under the name exists, else returns False.
-    """
-    #TODO implement
-    return JSONResponse(status_code=status.HTTP_501_NOT_IMPLEMENTED, content="not implemented.")
-
-@app.post("/domain/new")
-def new_domain(domain: DomainModel):
-    """
-    Creates a new domain and responds with the data about it.
-    """
-    #TODO change path
-    response = app.pfm.new_domain(domain.name)
-    return JSONResponse(status_code=status.HTTP_200_OK, content=response)
-
-@app.get("/domain/{domain_name}")
-def get_domain(domain_name):
-    """
-    Returns domain metadata.
-    """
-    response = app.pfm.get_domain_metadata(domain_name)
-    return JSONResponse(status_code=status.HTTP_200_OK, content=response)
-
-@app.get("/domains")
-def all_domains():
-    """
-    Lists all available domains.
-    """
-    response = app.pfm.get_all_domains()
-    res_obj = []
-    for item in response:
-        res_obj.append({"name":item})
-        
-    return JSONResponse(status_code=status.HTTP_200_OK, content=res_obj)
-
 @app.put("/domain/{domain_name}")
 async def update_domain(domain_name, update_data: DomainUpdateModel):
     """
@@ -645,18 +630,6 @@ async def delete_domain(domain_name):
     return JSONResponse(status_code=status.HTTP_200_OK, content=response)
 
 #----------PROJECT----------
-
-class ProjectDataModel(BaseModel):
-    domain: str|None = None
-    description: str|None = None
-
-class ProjectUpdateModel(BaseModel):
-    domain: str|None = None
-    description: str|None = None
-
-class NewFile(BaseModel):
-    content: str|None =""
-    suffix: str|None = ".ooasp"
 
 @app.get("/all_configs")
 def all_configs():
@@ -700,13 +673,6 @@ def new_project(project_name, project_data: ProjectDataModel):
     response = app.pfm.new_project(project_name, project_data.domain, project_data.description)
     return JSONResponse(status_code=status.HTTP_200_OK, content=response)
 
-@app.put("/project/{project_name}")
-def update_project(project_name, project_data: ProjectUpdateModel):
-    """
-    Updates information about an existing project.
-    """
-    pass
-
 @app.get("/project/check/{name}")
 def check_project(name):
     """
@@ -736,20 +702,19 @@ def delete_file(fname, pname):
     response = app.pfm.delete_file(fname,pname)
     return JSONResponse(status_code=status.HTTP_200_OK, content=response)
 
-@app.get("/instance_identifier")
-def get_instance_id():
-    return JSONResponse(app.pfm.run_id)
-
-
 # ---------- FORMAT SPECIFIC Fns for FE ----------
 
 @app.get("/all")
 async def all_information():
     global solve_semaphore
-    return({"state":{"nodes":[{"id":"-1", "type":"wNode", "position":{"x":150, "y":150}, "data":{}}], "edges":[]},"brave":{}}if solve_semaphore else {"state": represent_as_graph(),"brave": get_possibilities()})
+    return({"state":{
+                "nodes":[{"id":"-1", "type":"wNode", "position":{"x":150, "y":150}, "data":{}}],
+                "edges":[]
+                },
+            "brave":{}}if solve_semaphore else {"state": represent_as_graph(),"brave": get_possibilities()})
 
-@app.get("/possibilities/{id}")
-def pos_per_id(id):
+#@app.get("/consequences/brave/{id}/json")
+def brave_as_json_by_id(id):
     res = {
         "associations": [],
         "attributes": [],
@@ -799,23 +764,3 @@ async def get_active_domain():
     global selected_domain, open_configuration_file
 
     return {"domain": selected_domain, "file":open_configuration_file}
-
-
-"""
-# TODO 
-
-
-1.) implement attribute selection functionality (solver,api,fe)
-2.) implement selected attribute value asa part of model
-3.) implement saving and loading of images and models
-
-x.) finalise domain and project selection
-
-4.) ??? Smart association (not to be confused with the solver)
-    - allow the system to to infer what is the name of the association if both objects are provided
-    - this could potentially save time and make sure that the FE does not need to decide on all information
-    ---> count number of known association and compare it the the one in the factbase (on violation disallow action)
-    ---> on new association check for possibilites of association for provided object and choose one
-
-6.) Extract attribute options
-"""
