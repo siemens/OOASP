@@ -211,6 +211,9 @@ class SmartOOASPSolver:
         """
         Adds value to an object attribute.
         """
+        for assumption in self.assumptions:
+            if f"ooasp_attr_value({attr_data[0]},{attr_data[1]}" in assumption:
+                self.assumptions.remove(assumption)
         attr_atom = (f"ooasp_attr_value({attr_data[0]},{attr_data[1]},{attr_data[2]})")
         self.assumptions.add(attr_atom)
         self.cautious = None

@@ -419,65 +419,7 @@ class RESTManager():
             return (True, "File was removed.")
         self._save_mapping()
         return (False, "There was a problem removing the file.")
-        
-
-    #==========PROJECT==========
-'''
-    def list_all_projects(self):
-        return os.listdir(self.project_path)
-
-    def new_project(self, name, domain, description=None):
-        available_domains = os.listdir(self.domain_path)
-        return Project().generate_new(name, domain, self.project_path,description)
-
-    def new_file(self, pname, name, content, suffix=".ooasp"):
-        fname = name+suffix if suffix is not None else name
-        project = Project()._load(os.path.join(self.project_path,pname,Project.METADATA))
-        return project.add_file(fname,content)
-
-    def delete_project(self, name):
-        available = os.listdir(self.project_path)
-        if name not in available:
-            return "Project does not exist."
-        p = Project()._load(str(os.path.join(DEFAULT_LOCATION,SYS_FOLDER_NAME, CONFIG_DIR,name,Project.METADATA)))
-        if p._delete_project():
-            return "Project deleted successfully."
-        return "There was a problem removing the project."
-
-    def delete_file(self, filename, projectname):
-        p = Project()._load(str(os.path.join(DEFAULT_LOCATION,SYS_FOLDER_NAME, CONFIG_DIR,projectname,Project.METADATA)))
-        if p._delete_file(filename):
-            return {"message": "File removed successfully."}
-        return {"message": "File does not exists."}
-
-    def list_all_files(self, name):
-        #TODO check intersection of listed and real, return warnings for the ones that do not match
-        project = Project()._load(os.path.join(self.project_path,name,Project.METADATA))
-        if project is None:
-            return {"message": "Project could not be loaded."}
-        return project.__dict__
-
-    def project_description(self, name):
-        pass
-
-    def get_project_metadata(self, name):
-        project = Project()._load(os.path.join(self.project_path,name,Project.METADATA))
-        if project is None:
-            return {"message": "Project could not be loaded."}
-        return project.__dict__
-
-    def validate_compatibility(self, project):
-        pass
-
-    def list_files_standalone(self):
-        """
-        Returns a list of all known files -> how to deal with descriptions
-        """
-        res = list(os.walk(os.path.join(SYS_FOLDER_NAME,CONFIG_DIR)))
-        return res
-        
-'''
-        
+                
 class MyAPI(FastAPI):
     def __init__(self):
         super().__init__()

@@ -13,7 +13,7 @@ import os
 import copy
 
 global solver, setup_flag, st, allowed_objects, allowed_associations, allowed_attributes, selected_domain
-global solve_semaphore, active_objects, specializations, open_configuration_file, save_status
+global solve_semaphore, active_objects, specializations, open_configuration_file, save_status, selected_domain_name
 
 
 # TODO FIX BUG WHERE THE SOLVER CANNOT BE REINITIALISED -> full reset required
@@ -32,6 +32,8 @@ allowed_objects = []
 allowed_associations = {}
 allowed_attributes = []
 selected_domain = None
+selected_domain_name = None
+open_configuration_file_name = None
 
 save_status = False
 
@@ -317,7 +319,6 @@ def solve_threaded():
         solver.assumptions.add(fact[0:-1])
     solve_semaphore = False
     print("Fisnished Solving")
-    save()
 
 
 def get_possibilities():
@@ -364,8 +365,10 @@ def get_possibilities():
 #===========SYSTEM============("/system")
 @app.get("/system/selected_files")
 async def get_active_domain():
-    global selected_domain, open_configuration_file, save_status
-    return {"domain": selected_domain, "file":open_configuration_file, "save_status": save_status}
+    global selected_domain, open_configuration_file, save_status, selected_domain_name
+    return {"domain": selected_domain_name if selected_domain_name is not None else selected_domain,
+            "file":open_configuration_file_name if open_configuration_file_name is not None else open_configuration_file,
+            "save_status": save_status}
 
 #-----------System Checks------------("system/flags")
 
@@ -409,7 +412,12 @@ def select_domain(name):
     """
     Select an domain and initialises a solver with it.
     """
-    pass
+    global solver, selected_domain_name
+    path = os.path.join(app.pfm.domain_path, name, "kb.lp")
+    solver = SmartOOASPSolver(smart_generation_functions=SMART_FUNCTIONS)
+    initialise_solver(solver, InitData(objects="", prio_associations="", domain=path))
+    selected_domain_name = name
+    Response("Current Solver state.", solver.__dict__).build()
     
 
 @app.post("/files/select/configuration/{name}")
@@ -417,7 +425,16 @@ def select_configuration(name):
     """
     Selects a file and considers it open.
     """
-    pass
+    global selected_domain_name, save_status, open_configuration_file, open_configuration_file_name
+    map_log  = app.pfm.get_configuration_by_name(name)[0]
+    if map_log["domain"] != selected_domain_name:
+        select_domain(map_log["domain"])
+    
+    path = os.path.join(app.pfm.configuration_path,name)
+    load_from_file(path)
+    save_status=True
+    open_configuration_file_name = name
+    return open_configuration_file
 
 #----------->DOMAINS<---------- ("/files/domains")
 @app.get("/files/domains")
@@ -479,11 +496,19 @@ def delete_configuration(name):
 @app.put("/files/configurations/{name}/rename/{new_name}")
 def rename_configuration(name, new_name):
     response = app.pfm.rename_configuration(name, new_name)
+    # make sure the name changes in the system as well (loaded name and path)
     return JSONResponse(status_code=status.HTTP_200_OK, content=response)
 
 #-----------PG: Configurator-----------("/configurator")
 
 #----------->Configurator: actions<---------- 
+@app.post("/configurator/save")
+async def request_save():
+    global solve_semaphore
+    if solve_semaphore:
+        return Response("Solver is currently busy.", data=[]).build(code=status.HTTP_503_SERVICE_UNAVAILABLE)
+    save()
+
 @app.put("/configurator/add/{cls}")
 async def add_object(cls):
     global solve_semaphore, save_status
@@ -596,7 +621,7 @@ async def get_brave():
     return Response("Brave consequences (possibilities)", str(csq))
 
 @app.put("/configurator/solver/load/{path}")
-async def test_load(path):
+def load_from_file(path):
     global open_configuration_file
     try:
         res = import_solution(path)
