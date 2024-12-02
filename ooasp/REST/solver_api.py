@@ -13,7 +13,7 @@ import os
 import copy
 
 global solver, setup_flag, st, allowed_objects, allowed_associations, allowed_attributes, selected_domain
-global solve_semaphore, active_objects, specializations, open_configuration_file
+global solve_semaphore, active_objects, specializations, open_configuration_file, save_status
 
 
 # TODO FIX BUG WHERE THE SOLVER CANNOT BE REINITIALISED -> full reset required
@@ -32,6 +32,9 @@ allowed_objects = []
 allowed_associations = {}
 allowed_attributes = []
 selected_domain = None
+
+save_status = False
+
 app = MyAPI()
 app.add_middleware(
     CORSMiddleware,
@@ -42,6 +45,18 @@ app.add_middleware(
 )
 
 #==========FUNCTIONS===========
+
+def save():
+    global solver, solve_semaphore, save_status, open_configuration_file
+    if solve_semaphore:
+        return "Solver is busy."
+    if open_configuration_file is None:
+        save_status = False
+        return "No file is opened."
+    
+    export_as_file(open_configuration_file)
+    save_status = True
+
 def import_solution(f_path: str = "fe_model.lp") -> None:
         global solver
         """
@@ -49,7 +64,7 @@ def import_solution(f_path: str = "fe_model.lp") -> None:
         """
         f_path = f_path.strip(
             '"'
-        )  # It seems that passing the argument from the clinguin adds extra quotes which need to be removed
+        )
         reset_solver()
         ctl = Control(["1"])
         ctl.load(f_path)
@@ -100,7 +115,6 @@ def load_specializations():
 
 
 def load_known_associations():
-    # do this through the control
     global allowed_associations, solver
     allowed_associations = {}
     for fact in solver.model:
@@ -292,7 +306,8 @@ def represent_as_graph():
     return data
 
 def solve_threaded():
-    global solver, solve_semaphore
+    global solver, solve_semaphore, save_status
+    save_status=False
     solve_semaphore = True
     print("Started solving")
     solver.smart_complete()
@@ -302,6 +317,7 @@ def solve_threaded():
         solver.assumptions.add(fact[0:-1])
     solve_semaphore = False
     print("Fisnished Solving")
+    save()
 
 
 def get_possibilities():
@@ -348,8 +364,8 @@ def get_possibilities():
 #===========SYSTEM============("/system")
 @app.get("/system/selected_files")
 async def get_active_domain():
-    global selected_domain, open_configuration_file
-    return {"domain": selected_domain, "file":open_configuration_file}
+    global selected_domain, open_configuration_file, save_status
+    return {"domain": selected_domain, "file":open_configuration_file, "save_status": save_status}
 
 #-----------System Checks------------("system/flags")
 
@@ -376,7 +392,8 @@ async def show_loaded_kb():
 #-----------System Actions-----------("/system/actions")
 @app.post("/system/actions/reset_solver")
 def reset_solver():
-    global solver, selected_domain
+    global solver, selected_domain, save_status
+    save_status=False
     solver = SmartOOASPSolver(smart_generation_functions=SMART_FUNCTIONS)
     print(selected_domain)
     initialise_solver(solver, InitData(objects="",prio_associations="",domain=selected_domain+"/kb.lp"))
@@ -439,6 +456,10 @@ def get_domain(domain_name):
     """
     response = app.pfm.get_domain_metadata(domain_name)
     return JSONResponse(status_code=status.HTTP_200_OK, content=response)
+
+@app.put("/files/domains/{name}/rename/{new_name}")
+def rename_domain(name, new_name):
+    pass
 #----------->CONFIGURATIONS<---------- ("/files/configurations")
 @app.get("/files/configurations")
 def all_configurations():
@@ -465,20 +486,24 @@ def rename_configuration(name, new_name):
 #----------->Configurator: actions<---------- 
 @app.put("/configurator/add/{cls}")
 async def add_object(cls):
-    global solve_semaphore
+    global solve_semaphore, save_status
+    save_status = False
     if solve_semaphore:
         return Response("Solver is currently busy.", data=[]).build(code=status.HTTP_503_SERVICE_UNAVAILABLE)
     
     global solver
     solver.add_object(str(cls))
+    save()
     return Response(f"Added object: {cls}.", data=str(solver.__dict__))
 
 @app.post("/configurator/attribute/{name}/{target_id}/{value}")
 def assign_value(name, target_id, value):
-    global solver, solve_semaphore
+    global solver, solve_semaphore, save_status
+    save_status = False
     if solve_semaphore:
         return Response("Solver is currently busy.", data=[]).build(code=status.HTTP_503_SERVICE_UNAVAILABLE)
     solver.choose_attribute_value((str(name),target_id,value))
+    save()
     return Response("Succesfully added.",data=solver.assumption_list).build(code=status.HTTP_200_OK)
 
 @app.post("/configurator/associate/{id1}/{name}/{id2}")
@@ -486,17 +511,20 @@ async def associate(id1, id2, name):
     """
     Creates an association between two objects.
     """
-    global solve_semaphore,allowed_associations
+    global solve_semaphore,allowed_associations, save_status
+    save_status=False
     if solve_semaphore:
         return Response("Solver is currently busy.", data=[]).build(code=status.HTTP_503_SERVICE_UNAVAILABLE)
     
     global allowed_associations
     if name not in allowed_associations.keys():
+        save()
         return Response("This association is not defined in the domain's knowledgebase.", data=allowed_associations).build(code=status.HTTP_400_BAD_REQUEST)
 
     global solver
     solver.associate((name,int(id1), int(id2)))
     succ =  f"ooasp_associated({name},{id1},{id2})" in solver.assumptions
+    save()
     return Response("Succesfully added." if succ else "Error while adding.",data=solver.assumption_list).build(code=status.HTTP_200_OK if succ else status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
