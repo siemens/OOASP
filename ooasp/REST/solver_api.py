@@ -346,6 +346,11 @@ def get_possibilities():
     return res
 
 #===========SYSTEM============("/system")
+@app.get("/system/selected_files")
+async def get_active_domain():
+    global selected_domain, open_configuration_file
+    return {"domain": selected_domain, "file":open_configuration_file}
+
 #-----------System Checks------------("system/flags")
 
 @app.get("/system/flags/heartbeat")
@@ -387,6 +392,7 @@ def select_domain(name):
     """
     Select an domain and initialises a solver with it.
     """
+    pass
     
 
 @app.post("/files/select/configuration/{name}")
@@ -495,6 +501,19 @@ async def associate(id1, id2, name):
 
 
 #----------->Configurator: data<---------- 
+@app.get("/configurator/state")
+async def all_information():
+    global solve_semaphore
+    res = {"state":{
+                "nodes":[{"id":"-1", "type":"wNode", "position":{"x":150, "y":150}, "data":{}}],
+                "edges":[]
+                },
+            "brave":{}}if solve_semaphore else {"state": represent_as_graph(),"brave": get_possibilities()}
+    
+    if len(res["state"]["nodes"]) == 0:
+        res["state"]["nodes"].append({"id":"-2", "type":"startNode", "position":{"x":150, "y":150},"data":{}})    
+    return(res)
+
 @app.get("/configurator/model")
 async def get_model():
     global solver
@@ -548,9 +567,7 @@ async def get_brave():
     csq = str(solver.get_brave()).split(",")
     return Response("Brave consequences (possibilities)", str(csq))
 
-
-#------------------------------------------------------------------------------------
-@app.put("/upload/{path}")
+@app.put("/configurator/solver/load/{path}")
 async def test_load(path):
     global open_configuration_file
     try:
@@ -561,7 +578,7 @@ async def test_load(path):
         reset_solver()
         return "Error while loading, solver will be reset."
 
-@app.get("/save/model")
+@app.get("/configurator/solver/model")
 def save_model_data():
     global solver, solve_semaphore
     if not solve_semaphore:
@@ -569,16 +586,27 @@ def save_model_data():
         return Response("Current model facts:", res).build()
     return Response("Solver busy.", None).build()
 
-@app.get("/export/ooasp/{path}")
+@app.get("/configurator/solver/save/ooasp/{path}")
 def export_to_file(path):
     export_as_file(path)
     return path
 
-@app.get("/solution/view/{name}")
+@app.get("/configurator/solver/save/image/{name}")
 async def get_diagram(name):
     global solver
+    #TODO suffix logic
     solver.save_png(name=name, extra_prg="_clinguin_browsing.")
     return Response(f"File saved in ./out/{name}.png",data=None).build()
+
+@app.get("/configurator/solver/export/ooasp")
+def export_assumptions():
+    pass
+
+@app.get("/configurator/solver/export/solution/diagram")
+def export_solution_diagram():
+    pass
+
+#------------------------------------------------------------------------------------
 
 # ---------- File management ----------
 
@@ -673,15 +701,6 @@ def delete_file(fname, pname):
 
 # ---------- FORMAT SPECIFIC Fns for FE ----------
 
-@app.get("/all")
-async def all_information():
-    global solve_semaphore
-    return({"state":{
-                "nodes":[{"id":"-1", "type":"wNode", "position":{"x":150, "y":150}, "data":{}}],
-                "edges":[]
-                },
-            "brave":{}}if solve_semaphore else {"state": represent_as_graph(),"brave": get_possibilities()})
-
 #@app.get("/consequences/brave/{id}/json")
 def brave_as_json_by_id(id):
     res = {
@@ -727,9 +746,3 @@ async def force_save():
         t1 = threading.Thread(target=_threaded_save)
         t1.start()
     return Response("Requested a save.", assumptions_copy)
-
-@app.get("/active_domain")
-async def get_active_domain():
-    global selected_domain, open_configuration_file
-
-    return {"domain": selected_domain, "file":open_configuration_file}
