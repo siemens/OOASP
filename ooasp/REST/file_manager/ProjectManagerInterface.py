@@ -137,6 +137,22 @@ class Domain:
         self.configurations = configurations if configurations else self.configurations
         self.icon = icon if icon else self.icon
 
+    def _update_kb_content(self,content):
+        with open(os.path.join(self.directory, self.ENCODING_FNAME), "w+") as f:
+            f.write(content)
+
+    def _update_constraint_content(self,content):
+        with open(os.path.join(self.directory, self.CONSTRAINTS_FNAME), "w+") as f:
+            f.write(content)
+
+    def _update_name(self, name, new_path):
+        try:
+            os.rename(self.directory, new_path)
+            self.name = name
+            self.directory = new_path
+        except:
+            pass
+
     def _add_configuration(self, configuration):
         new =  self.configurations
         new.append(configuration)
@@ -157,109 +173,6 @@ class Domain:
                     os.remove(fpath)
                 os.rmdir(self.directory)
         return not self._check_exists()
-
-'''
-class Project:
-
-    METADATA = "project_conf.json"
-
-    def __init__(self) -> None:
-        self.path = None
-        self.domain = None
-        self.name = None
-        self.description = None
-        self.files = []
-
-    def generate_new(self, name, domain, projects_path, description=None):
-        self.name = name
-        self.domain = domain
-        self.description = description
-        self.path = os.path.join(projects_path,name)
-
-        if not os.path.exists(self.path):
-
-            os.makedirs(self.path)
-            with open(os.path.join(self.path,self.METADATA), "w") as f:
-                json.dump(self.__dict__, f, indent=4)
-            return self.__dict__
-
-        print(f"Project with this name ({self.name}) already exists.")
-        return {"message": f"Project with this name ({self.name}) already exists."}
-
-    def _validate(self):
-        pass
-        
-
-    def add_file(self, name, content=""):
-        if name in self.files:
-            return "File already exists."
-        try:
-            with open(os.path.join(SYS_FOLDER_NAME,CONFIG_DIR,self.name, name), "w+") as f:
-                f.write(content)
-                self.files.append(name)
-                self._save()
-                return self.files
-        except:
-            return "Unsuccessful. An internal error has occurred."
-
-
-    def _save(self, other_file=None):
-        try:
-            if other_file is not None:
-                with open(other_file, "w+") as f:
-                    json.dump(self.__dict__, f, indent=4)
-            with open(os.path.join(self.path, self.METADATA),"w") as f:
-                json.dump(self.__dict__, f, indent=4)
-            return True
-        except:
-            return False
-
-    def _load(self, path):
-        try:
-            with open(path, "r+") as f:
-                content = json.load(f)
-                self.name = content["name"]
-                self.domain = content["domain"]
-                self.description = content["description"]
-                self.path = content["path"]
-                self.files = content["files"]
-                return self
-        except:
-            return None
-
-#TODO modularise this part (this is repeated in domain)-------------------------------------------------------
-
-    def _check_exists(self):
-        if not os.path.exists(self.path):
-            return False
-        return True
-
-    def _delete_project(self):
-        print(self._check_exists())
-        if self._check_exists():
-            try:
-                os.rmdir(self.path)
-            except:
-                files = os.listdir(self.path)
-                for file in files:
-                    fpath = os.path.join(self.path, file)
-                    print(f"Removing project file: '{fpath}' ")
-                    os.remove(fpath)
-                os.rmdir(self.path)
-        return not self._check_exists()
-    
-    def _delete_file(self, fname):
-        fpath = os.path.join(self.path,fname)
-        if not os.path.exists(fpath):
-            return False
-        os.remove(fpath)
-        return True
-        
-
-    def _change_description(self, desc):
-        self.description = str(desc)
-        self._save()
-'''
 
 class RESTManager():
     def __init__(self, domain_path, configuration_path, path) -> None:
@@ -350,10 +263,16 @@ class RESTManager():
 
         #TODO rework this to include icons etc
         dom = Domain()._load(str(os.path.join(DEFAULT_LOCATION,SYS_FOLDER_NAME, DOMAIN_DIR,name,Domain.METADATA)))
-        dom._update(version=update_data['version'], 
-                    ENCODING_FNAME=update_data["ENCODING_FNAME"],
-                    CONSTRAINTS_FNAME=update_data["CONSTRAINTS_FNAME"]
-                    )
+        if update_data.name is not None:
+            dom._update_name(update_data.name, os.path.join(self.domain_path, update_data.name))
+        if update_data.description is not None:
+            dom._change_description(update_data.description)
+        if update_data.kb is not None:
+            with open(update_data.kb, "r+") as f:
+                dom._update_kb_content(f.read())
+        if update_data.constraints is not None:
+            with open(update_data.constraints, "r+") as f:
+                dom._update_constraint_content(f.read())
         dom._dump_metadata()
         return _read_metadata()
 

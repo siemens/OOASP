@@ -748,7 +748,7 @@ async def update_domain(domain_name, update_data: DomainUpdateModel):
     """
     Updates data on an existing domain.
     """
-    response = app.pfm.update_domain(domain_name, update_data.__dict__)
+    response = app.pfm.update_domain(domain_name, update_data)
     return JSONResponse(status_code=status.HTTP_200_OK, content=response)
 
 @app.put("/domain/description/{domain_name}")

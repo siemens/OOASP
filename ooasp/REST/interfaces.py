@@ -36,12 +36,6 @@ class InitData(BaseModel):
     prio_associations : str = ""
     domain : str = str(os.path.join("examples", "racks", "kb.lp"))
 
-EXAMPLE_FOLDER_OBJECT = {
-    "name": "myFolder",
-    "path": "whatever/whatever",
-    "contents": ["list of all the available configs."]
-}
-
 class DomainModel(BaseModel):
     name: str
 
@@ -50,9 +44,10 @@ class ConfigurationModel(BaseModel):
     domain: str
 
 class DomainUpdateModel(BaseModel):
-    version: str | None = None
-    ENCODING_FNAME: str | None = None
-    CONSTRAINTS_FNAME: str | None = None
+    name: str | None = None
+    description: str | None = None
+    kb: str | None = None
+    constraints: str | None = None
 
 class DomainDescription(BaseModel):
     description: str
