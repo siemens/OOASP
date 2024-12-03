@@ -1,8 +1,9 @@
 import random
+import shutil
 from ooasp.smart_ooasp import SmartOOASPSolver
 from interfaces import *
 from ooasp.REST.file_manager.ProjectManagerInterface import *
-from fastapi import FastAPI, status
+from fastapi import FastAPI, UploadFile, File, Form,status
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
@@ -325,41 +326,46 @@ def get_possibilities():
     """
     Returns all possible changes in a dictionary format
     """
-    res = {"objects":[],"associations":[],"attrs":[], "smart_suggestions":[]} #smart-suggestions currently do not have a pracical use, but might be useful in future
+    res = {"objects":[],"associations":[],"attrs":[], "smart_suggestions":[], "violations": []} #smart-suggestions currently do not have a pracical use, but might be useful in future
     global solver
     brave = solver.get_brave()
 
     for consq in brave:
-        consq = str(consq)
-        if 'ooasp_isa(' in consq:
-            stripped = consq.split('(')[1][:-1]
-            divided = stripped.split(',')
-            res["objects"].append(
-                {"id":divided[1], "class":divided[0]}
-            )
-        elif 'ooasp_associated(' in consq:
-            stripped = consq.split('(')[1][:-1]
-            divided = stripped.split(',')
-            res["associations"].append(
-                {"from":divided[1],
-                 "to": divided[2],
-                 "assoc_name": divided[0]}
-            )
-        elif 'ooasp_attr_value(' in consq:
-            stripped = consq.split('(')[1][:-1]
-            divided = stripped.split(',')
-            res["attrs"].append(
-                {"name":divided[0],
-                 "object_id": divided[1],
-                 "value": divided[2]}
-            )
-        else:
-            sf_name, data = consq.split("(")
-            data = tuple(data[:-1].split(","))
-            res["smart_suggestions"].append(
-                {"smart_function": sf_name,
-                 "data": data}
-            )
+        try:
+            consq = str(consq)
+            if 'ooasp_isa(' in consq:
+                stripped = consq.split('(')[1][:-1]
+                divided = stripped.split(',')
+                res["objects"].append(
+                    {"id":divided[1], "class":divided[0]}
+                )
+            elif 'ooasp_associated(' in consq:
+                stripped = consq.split('(')[1][:-1]
+                divided = stripped.split(',')
+                res["associations"].append(
+                    {"from":divided[1],
+                    "to": divided[2],
+                    "assoc_name": divided[0]}
+                )
+            elif 'ooasp_attr_value(' in consq:
+                stripped = consq.split('(')[1][:-1]
+                divided = stripped.split(',')
+                res["attrs"].append(
+                    {"name":divided[0],
+                    "object_id": divided[1],
+                    "value": divided[2]}
+                )
+            else:
+                sf_name, data = consq.split("(")
+                data = tuple(data[:-1].split(","))
+                res["smart_suggestions"].append(
+                    {"smart_function": sf_name,
+                    "data": data}
+                )
+        except:
+            divided = consq.split("(")
+            print(divided)
+            # if divided
     return res
 
 #===========SYSTEM============("/system")
@@ -403,7 +409,7 @@ def reset_solver():
     Response("Current Solver state.", solver.__dict__).build()
 
 @app.post("/system/actions/initialise")
-async def init_solver(values: InitData):
+def init_solver(values: InitData):
     return initialise_solver(solver, values) 
 
 #-----------PG: File Management----------("/files")
@@ -459,12 +465,33 @@ def domain_files_path():
     return JSONResponse(status_code=status.HTTP_200_OK, content=response)
 
 @app.post("/files/domains/new")
-def new_domain(domain: DomainModel):
-    """
-    Creates a new domain and responds with the data about it.
-    """
-    response = app.pfm.new_domain(domain.name)
-    return JSONResponse(status_code=status.HTTP_200_OK, content=response)
+async def create_domain(
+    name: str = Form(...),
+    description: str = Form(...),
+    constraintsFile: UploadFile = File(None),
+    encodingFile: UploadFile = File(None)
+):
+    # Create the directory based on the domain name
+
+    domain_data = {
+        "name": name,
+        "description": description,
+    }
+ 
+    app.pfm.new_domain(name)
+ 
+    if constraintsFile:
+        constraints_file_path = os.path.join(app.pfm.domain_path, name, "constraints.lp")
+        with open(constraints_file_path, "wb") as buffer:
+            shutil.copyfileobj(constraintsFile.file, buffer)
+ 
+    if encodingFile:
+        encoding_file_path = os.path.join(app.pfm.domain_path, name, "kb.lp")
+        with open(encoding_file_path, "wb") as buffer:
+            shutil.copyfileobj(encodingFile.file, buffer) 
+    # Here you can save the domain data to a database or perform other actions
+ 
+    return JSONResponse(content=domain_data)
 
 @app.get("/files/domains/{domain_name}")
 def get_domain(domain_name):
