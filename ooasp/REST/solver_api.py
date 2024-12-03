@@ -35,6 +35,8 @@ allowed_attributes = []
 selected_domain = None
 selected_domain_name = None
 open_configuration_file_name = None
+validity_check = False
+cv_check = False
 
 save_status = False
 
@@ -245,7 +247,7 @@ def represent_as_graph():
     """
     Represents list of objects and associations a collection of nodes and edges.
     """
-    global solve_semaphore
+    global solve_semaphore, cv_check
     if solve_semaphore:
         return {"nodes":[{"id":"-1", "type":"wNode", "position":{"x":150, "y":150}, "data":{}}], "edges":[]}
 
@@ -305,21 +307,28 @@ def represent_as_graph():
                     if node["id"] == assoc["from"]:
                         if assoc not in node["data"]["assocs"]:
                             node["data"]["assocs"].append(assoc)
-        
+        violation_count = 0
         for vio in brave["violations"]:
             if vio["object_id"] in active_objects:
                 for node in data["nodes"]:
                     if node["id"] == vio["object_id"]:
                         if "violations" not in node["data"].keys():
                             node["data"].update({"violations":[vio]})
+                            violation_count+=1
                         else:
                             if vio not in node["data"]["violations"]:
                                 node["data"]["violations"].append(vio)
+                                violation_count+=1
+        if violation_count == 0:
+            cv_check = True
+        else:
+            cv_check = False
+        
 
     return data
 
 def solve_threaded():
-    global solver, solve_semaphore, save_status
+    global solver, solve_semaphore, save_status, validity_check
     save_status=False
     solve_semaphore = True
     print("Started solving")
@@ -331,6 +340,7 @@ def solve_threaded():
     # this needs to be reset because we forcefully change assumptions
     solver.brave=None
     solver.cautious=None
+    validity_check = True
     solve_semaphore = False
     print("Fisnished Solving")
 
@@ -340,7 +350,7 @@ def get_possibilities():
     Returns all possible changes in a dictionary format
     """
     res = {"objects":[],"associations":[],"attrs":[], "smart_suggestions":[], "violations": []} #smart-suggestions currently do not have a pracical use, but might be useful in future
-    global solver, specializations
+    global solver, specializations, cv_check
     brave = solver.get_brave()
 
     for consq in brave:
@@ -395,15 +405,22 @@ def get_possibilities():
                         res["violations"].append(violation)
             except:
                 continue
+            if len(res["violations"]) == 0:
+                cv_check = True
+            else:
+                cv_check = False
+                
     return res
 
 #===========SYSTEM============("/system")
-@app.get("/system/selected_files")
+@app.get("/system/status")
 async def get_active_domain():
-    global selected_domain, open_configuration_file, save_status, selected_domain_name
+    global selected_domain, open_configuration_file, save_status, selected_domain_name, validity_check, cv_check
     return {"domain": selected_domain_name if selected_domain_name is not None else selected_domain,
             "file":open_configuration_file_name if open_configuration_file_name is not None else open_configuration_file,
-            "save_status": save_status}
+            "save_status": save_status,
+            "validity_status": validity_check,
+            "constraints_status": cv_check}
 
 #-----------System Checks------------("system/flags")
 
@@ -430,8 +447,9 @@ async def show_loaded_kb():
 #-----------System Actions-----------("/system/actions")
 @app.post("/system/actions/reset_solver")
 def reset_solver():
-    global solver, selected_domain, save_status
+    global solver, selected_domain, save_status, validity_check
     save_status=False
+    validity_check=False
     solver = SmartOOASPSolver(smart_generation_functions=SMART_FUNCTIONS)
     print(selected_domain)
     initialise_solver(solver, InitData(objects="",prio_associations="",domain=selected_domain+"/kb.lp"))
@@ -567,7 +585,8 @@ async def request_save():
 
 @app.put("/configurator/add/{cls}")
 async def add_object(cls):
-    global solve_semaphore, save_status
+    global solve_semaphore, save_status, validity_check
+    validity_check = False
     save_status = False
     if solve_semaphore:
         return Response("Solver is currently busy.", data=[]).build(code=status.HTTP_503_SERVICE_UNAVAILABLE)
@@ -579,7 +598,8 @@ async def add_object(cls):
 
 @app.post("/configurator/attribute/{name}/{target_id}/{value}")
 def assign_value(name, target_id, value):
-    global solver, solve_semaphore, save_status
+    global solver, solve_semaphore, save_status, validity_check
+    validity_check=False
     save_status = False
     if solve_semaphore:
         return Response("Solver is currently busy.", data=[]).build(code=status.HTTP_503_SERVICE_UNAVAILABLE)
@@ -592,7 +612,8 @@ async def associate(id1, id2, name):
     """
     Creates an association between two objects.
     """
-    global solve_semaphore,allowed_associations, save_status
+    global solve_semaphore,allowed_associations, save_status, validity_check
+    validity_check = False
     save_status=False
     if solve_semaphore:
         return Response("Solver is currently busy.", data=[]).build(code=status.HTTP_503_SERVICE_UNAVAILABLE)
@@ -620,7 +641,8 @@ async def all_information():
             "brave":{}}if solve_semaphore else {"state": represent_as_graph(),"brave": get_possibilities()}
     
     if len(res["state"]["nodes"]) == 0:
-        res["state"]["nodes"].append({"id":"-2", "type":"startNode", "position":{"x":150, "y":150},"data":{}})    
+        res["state"]["nodes"].append({"id":"-2", "type":"startNode", "position":{"x":150, "y":150},"data":{}})
+    
     return(res)
 
 @app.get("/configurator/model")
