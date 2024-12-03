@@ -548,9 +548,16 @@ def get_domain(domain_name):
     response = app.pfm.get_domain_metadata(domain_name)
     return JSONResponse(status_code=status.HTTP_200_OK, content=response)
 
-@app.put("/files/domains/{name}/rename/{new_name}")
-def rename_domain(name, new_name):
-    pass
+@app.put("/files/domains/update/{domain_name}")
+def update_domain(domain_name,
+    name: str = Form(...),
+    description: str = Form(...),
+    constraintsFile: UploadFile = File(None),
+    encodingFile: UploadFile = File(None)):
+
+    app.pfm.update_domain(domain_name, data)
+    return JSONResponse(status_code=status.HTTP_200_OK, content="")
+
 #----------->CONFIGURATIONS<---------- ("/files/configurations")
 @app.get("/files/configurations")
 def all_configurations():
