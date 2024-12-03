@@ -63,6 +63,8 @@ OOASP: Connecting Object-Oriented and Logic Programming (2015): [Conference pape
 
 ### Research Papers on Interactive Configuration with ASP
 
+Progress on an ASP-based Interactive Configurator (2024): [Extended Abstract](https://taasp.at/2024/assets/paper/TAASP_2024_paper_3.pdf)
+
 Interactive Configuration with ASP Multi-Shot Solving (2023): [Workshop Paper](https://ceur-ws.org/Vol-3509/paper13.pdf )
 
 Challenges of Developing an API for Interactive Configuration using ASP (2022): [Extended Abstract](http://www.kr.tuwien.ac.at/events/taasp22/papers/TAASP_2022_paper_5.pdf)
