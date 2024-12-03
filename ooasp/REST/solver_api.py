@@ -305,6 +305,16 @@ def represent_as_graph():
                     if node["id"] == assoc["from"]:
                         if assoc not in node["data"]["assocs"]:
                             node["data"]["assocs"].append(assoc)
+        
+        for vio in brave["violations"]:
+            if vio["object_id"] in active_objects:
+                for node in data["nodes"]:
+                    if node["id"] == vio["object_id"]:
+                        if "violations" not in node["data"].keys():
+                            node["data"].update({"violations":[vio]})
+                        else:
+                            if vio not in node["data"]["violations"]:
+                                node["data"]["violations"].append(vio)
 
     return data
 
@@ -318,6 +328,9 @@ def solve_threaded():
     solver.assumptions = set()
     for fact in new_assumptions:
         solver.assumptions.add(fact[0:-1])
+    # this needs to be reset because we forcefully change assumptions
+    solver.brave=None
+    solver.cautious=None
     solve_semaphore = False
     print("Fisnished Solving")
 
@@ -327,7 +340,7 @@ def get_possibilities():
     Returns all possible changes in a dictionary format
     """
     res = {"objects":[],"associations":[],"attrs":[], "smart_suggestions":[], "violations": []} #smart-suggestions currently do not have a pracical use, but might be useful in future
-    global solver
+    global solver, specializations
     brave = solver.get_brave()
 
     for consq in brave:
@@ -363,9 +376,25 @@ def get_possibilities():
                     "data": data}
                 )
         except:
-            divided = consq.split("(")
-            print(divided)
-            # if divided
+            try:
+                divided = consq.split("(")
+                print(divided)
+                if divided[0] == "ooasp_cv":
+                    object_info = divided[1].split(",")
+                    message_args = divided[-1].split(",")
+                    message = list(zip(object_info[2].strip('"').split("{}"), message_args))
+                    message_str = ""
+                    for t in message[0:-1]:
+                        message_str += f"{t[0]}{t[1]}"
+                    violation = {
+                        "violation_name": object_info[0],
+                        "object_id": object_info[1],
+                        "message": message_str
+                    }
+                    if message_args[0] not in list(specializations.keys()):
+                        res["violations"].append(violation)
+            except:
+                continue
     return res
 
 #===========SYSTEM============("/system")
