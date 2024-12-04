@@ -582,6 +582,13 @@ def delete_configuration(name):
     response = app.pfm.delete_configuration(name)
     return JSONResponse(status_code=status.HTTP_200_OK, content=response)
 
+@app.post("/files/configurations/icon/{name}")
+def change_icon(name, icon_name: str):
+    log = app.pfm.get_configuration_by_name(name)
+    log[1]["icon"] = icon_name
+    app.pfm._save_mapping()
+    return JSONResponse(content=app.pfm.get_configuration_by_name(name)[0])
+
 @app.put("/files/configurations/{name}/rename/{new_name}")
 def rename_configuration(name, new_name):
     global open_configuration_file, open_configuration_file_name
