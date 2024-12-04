@@ -560,7 +560,7 @@ def add_add_template(name, template_name: str = Form(...), template_file: Upload
         app.pfm.add_template_to_domain(name,template_name)
     except:
         return
-
+    
 @app.get("/files/domains/{name}/templates")
 def get_domain_templates(name):
     res=app.pfm.get_domain_templates(name)
@@ -705,6 +705,14 @@ async def call_solve():
     t1.start()
     print(solve_semaphore)
     return Response("Generating a solution.", data=str(solver.model)).build()
+
+@app.post("/configurator/solver/load_template/{template_name}")
+def import_from_template(template_name):
+    global solve_semaphore, solver, selected_domain
+    if solve_semaphore:
+        return JSONResponse(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, content="Solver is busy.")
+    import_solution(os.path.join(selected_domain, "templates", template_name))
+    return
 
 @app.get("/configurator/solver/objects")
 async def get_all_objects():
