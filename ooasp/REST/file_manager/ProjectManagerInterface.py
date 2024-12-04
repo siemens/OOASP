@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 from fastapi import FastAPI
 import uuid
+import shutil
 
 #TODO define response rules
 #TODO implement renaming functionality for everything
@@ -257,24 +258,21 @@ class RESTManager():
         return "There was a problem removing the domain."
     
     def update_domain(self, name, new_name, description, constraintsFile, encodingFile):
-        def _read_metadata():
-            with open(str(os.path.join(DEFAULT_LOCATION,SYS_FOLDER_NAME, DOMAIN_DIR,name,Domain.METADATA)), "r")as f:
-                return str(json.load(f))
-
-        #TODO rework this to include icons etc
         dom = Domain()._load(str(os.path.join(DEFAULT_LOCATION,SYS_FOLDER_NAME, DOMAIN_DIR,name,Domain.METADATA)))
+        if description is not None:
+            dom._change_description(description)
+        if encodingFile is not None:
+            with open(os.path.join(self.domain_path, name,dom.CONSTRAINTS_FNAME), "wb") as buffer:
+                print("COPY?")
+                shutil.copyfileobj(constraintsFile.file, buffer)
+        if constraintsFile is not None:
+            with open(os.path.join(self.domain_path, name,dom.ENCODING_FNAME), "wb") as buffer:
+                shutil.copyfileobj(encodingFile.file, buffer)
+        dom._dump_metadata()
         if new_name is not None:
             dom._update_name(new_name, os.path.join(self.domain_path, new_name))
-        if description is not None:
-            dom._change_description(update_data.description)
-        if encodingFile is not None:
-            with open(encodingFile, "r+") as f:
-                dom._update_kb_content(f.read())
-        if constraintsFile is not None:
-            with open(constraintsFile, "r+") as f:
-                dom._update_constraint_content(f.read())
         dom._dump_metadata()
-        return _read_metadata()
+        return self.__dict__
 
     def get_domain_description(self, name):
         with open(str(os.path.join(DEFAULT_LOCATION,SYS_FOLDER_NAME, DOMAIN_DIR,name,Domain.METADATA)), "r")as f:

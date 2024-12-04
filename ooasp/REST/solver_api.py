@@ -555,7 +555,7 @@ def update_domain(domain_name,
     constraintsFile: UploadFile = File(None),
     encodingFile: UploadFile = File(None)):
 
-    app.pfm.update_domain(domain_name, data)
+    app.pfm.update_domain(domain_name, new_name=name, description=description, constraintsFile=constraintsFile, encodingFile=encodingFile)
     return JSONResponse(status_code=status.HTTP_200_OK, content="")
 
 #----------->CONFIGURATIONS<---------- ("/files/configurations")
