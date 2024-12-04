@@ -551,7 +551,21 @@ def get_domain(domain_name):
     response = app.pfm.get_domain_metadata(domain_name)
     return JSONResponse(status_code=status.HTTP_200_OK, content=response)
 
-@app.put("/domain/{domain_name}") #this will need to be removed
+@app.put("/files/domains/{name}/template")
+def add_add_template(name, template_name: str = Form(...), template_file: UploadFile = File(...)):
+    try:
+        template_file_path = os.path.join(app.pfm.domain_path, name, "templates" ,template_name)
+        with open(template_file_path, "wb") as buffer:
+            shutil.copyfileobj(template_file.file, buffer)
+        app.pfm.add_template_to_domain(name,template_name)
+    except:
+        return
+
+@app.get("/files/domains/{name}/templates")
+def get_domain_templates(name):
+    res=app.pfm.get_domain_templates(name)
+    return JSONResponse(content=res)
+
 @app.put("/files/domains/update/{domain_name}")
 def update_domain(domain_name,
     name: str = Form(...),

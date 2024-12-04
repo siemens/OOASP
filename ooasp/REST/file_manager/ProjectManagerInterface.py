@@ -36,6 +36,7 @@ class Domain:
         self.version = '0.0.0'
         self.description = None
         self.configurations = []
+        self.templates = []
         self.icon = ''
 
     def __repr__(self):
@@ -45,6 +46,10 @@ class Domain:
         if alternative is None:
             self.directory = os.path.join(DEFAULT_LOCATION,SYS_FOLDER_NAME,DOMAIN_DIR,self.name)
 
+    def _register_template(self, name):
+        self.templates.append(name)
+        self._dump_metadata()
+
     def generate_new(self, content="", create_req_files=True):
         estimated_dir = os.path.join(DEFAULT_LOCATION,SYS_FOLDER_NAME,DOMAIN_DIR,self.name)
 
@@ -53,6 +58,7 @@ class Domain:
             print(f"    1. Setting domain directory to '{estimated_dir}'.")
             self.directory = estimated_dir
             os.makedirs(estimated_dir)
+            os.makedirs(os.path.join(estimated_dir, "templates"))
             if create_req_files:
                 print(f"        Creating Template files: '{self.ENCODING_FNAME}','{self.CONSTRAINTS_FNAME}' ")
                 with open(os.path.join(estimated_dir, self.ENCODING_FNAME),"w") as enc_file:
@@ -68,6 +74,7 @@ class Domain:
                         'CONSTRAINTS_FNAME':self.CONSTRAINTS_FNAME,
                         'description': self.description,
                         'configurations': self.configurations,
+                        'templates': self.templates,
                         'icon': self.icon
                         }
             print("    3. Writing metadata")
@@ -93,6 +100,7 @@ class Domain:
                         'CONSTRAINTS_FNAME':self.CONSTRAINTS_FNAME,
                         'description': self.description,
                         'configurations': self.configurations,
+                        'templates': self.templates,
                         'icon':self.icon
                         }
             metadata.update(additional_metadata)
@@ -107,6 +115,7 @@ class Domain:
             self.version = content['version']
             self.description = content["description"]
             self.configurations = content["configurations"]
+            self.templates = content['templates']
             self.icon = content['icon']
 
             if rewrite_fnames:
@@ -186,6 +195,17 @@ class RESTManager():
         self._load_mapping()
     
     #==========DOMAIN==========
+
+    def add_template_to_domain(self, name, template):
+        if not os.path.isfile(os.path.join(self.domain_path, name, "templates", template)):
+            return False
+        dom = Domain()._load(os.path.join(self.domain_path, name, "domain_conf.json"))
+        dom._register_template(template)
+        return True
+
+    def get_domain_templates(self, name):
+        dom = Domain()._load(os.path.join(self.domain_path, name, "domain_conf.json"))
+        return dom.templates
 
     def get_full_domain_response(self):
         res = []
