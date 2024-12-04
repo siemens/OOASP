@@ -271,7 +271,8 @@ class RESTManager():
         if new_name is not None:
             dom._update_name(new_name, os.path.join(self.domain_path, new_name))
         dom._dump_metadata()
-        return self.__dict__
+        dom.directory = str(dom.directory)
+        return dom.__dict__
 
     def get_domain_description(self, name):
         with open(str(os.path.join(DEFAULT_LOCATION,SYS_FOLDER_NAME, DOMAIN_DIR,name,Domain.METADATA)), "r")as f:
