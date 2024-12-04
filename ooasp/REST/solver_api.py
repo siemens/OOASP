@@ -14,7 +14,7 @@ import os
 import copy
 
 global solver, setup_flag, st, allowed_objects, allowed_associations, allowed_attributes, selected_domain
-global solve_semaphore, active_objects, specializations, open_configuration_file, save_status, selected_domain_name
+global solve_semaphore, active_objects, specializations, open_configuration_file, save_status, selected_domain_name, open_configuration_file_name
 
 
 # TODO FIX BUG WHERE THE SOLVER CANNOT BE REINITIALISED -> full reset required
@@ -216,7 +216,6 @@ def initialise_solver(solver, data): #!
 
 def _new_attr(node,attr):
     global solver
-
     found_val = None 
     for fact in solver.assumptions:
         if "ooasp_attr_value" in fact:
@@ -225,16 +224,20 @@ def _new_attr(node,attr):
             print(fact)
             if (str(node["id"]) == str(target)) and (attr["name"] == attr_name):
                 found_val = value
-                break
-            
+                break       
     vals = set()
     vals.add(attr["value"])
-    node["data"]["attributes"].append({
+    attr_dict = {
         "name":attr["name"],
         "values": vals,
         "active_value": found_val,
         "object_id": node["id"]
-    })
+    }
+    for exisiting_attr in node["data"]["attributes"]:
+        if exisiting_attr["name"] == attr["name"] and exisiting_attr["object_id"] == node["id"]:
+            return
+    
+    node["data"]["attributes"].append(attr_dict)
     return
 
 def export_as_file(path):
@@ -548,6 +551,7 @@ def get_domain(domain_name):
     response = app.pfm.get_domain_metadata(domain_name)
     return JSONResponse(status_code=status.HTTP_200_OK, content=response)
 
+@app.put("/domain/{domain_name}") #this will need to be removed
 @app.put("/files/domains/update/{domain_name}")
 def update_domain(domain_name,
     name: str = Form(...),
@@ -555,8 +559,8 @@ def update_domain(domain_name,
     constraintsFile: UploadFile = File(None),
     encodingFile: UploadFile = File(None)):
 
-    app.pfm.update_domain(domain_name, new_name=name, description=description, constraintsFile=constraintsFile, encodingFile=encodingFile)
-    return JSONResponse(status_code=status.HTTP_200_OK, content="")
+    response = app.pfm.update_domain(domain_name, new_name=name, description=description, constraintsFile=constraintsFile, encodingFile=encodingFile)
+    return JSONResponse(status_code=status.HTTP_200_OK, content=response)
 
 #----------->CONFIGURATIONS<---------- ("/files/configurations")
 @app.get("/files/configurations")
@@ -576,7 +580,11 @@ def delete_configuration(name):
 
 @app.put("/files/configurations/{name}/rename/{new_name}")
 def rename_configuration(name, new_name):
+    global open_configuration_file, open_configuration_file_name
     response = app.pfm.rename_configuration(name, new_name)
+    if response[0]:
+        open_configuration_file_name = new_name
+        open_configuration_file = Path(str(open_configuration_file).replace(name, new_name))
     # make sure the name changes in the system as well (loaded name and path)
     return JSONResponse(status_code=status.HTTP_200_OK, content=response)
 
@@ -750,7 +758,6 @@ def export_solution_diagram():
 
 
 #----------DOMAIN----------
-@app.put("/domain/{domain_name}")
 async def update_domain(domain_name, update_data: DomainUpdateModel):
     """
     Updates data on an existing domain.

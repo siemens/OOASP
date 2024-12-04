@@ -263,7 +263,6 @@ class RESTManager():
             dom._change_description(description)
         if encodingFile is not None:
             with open(os.path.join(self.domain_path, name,dom.CONSTRAINTS_FNAME), "wb") as buffer:
-                print("COPY?")
                 shutil.copyfileobj(constraintsFile.file, buffer)
         if constraintsFile is not None:
             with open(os.path.join(self.domain_path, name,dom.ENCODING_FNAME), "wb") as buffer:
