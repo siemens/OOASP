@@ -42,6 +42,7 @@ class DomainModel(BaseModel):
 class ConfigurationModel(BaseModel):
     name: str
     domain: str
+    icon: str 
 
 class DomainUpdateModel(BaseModel):
     name: str | None = None

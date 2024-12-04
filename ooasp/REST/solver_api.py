@@ -4,7 +4,7 @@ from ooasp.smart_ooasp import SmartOOASPSolver
 from interfaces import *
 from ooasp.REST.file_manager.ProjectManagerInterface import *
 from fastapi import FastAPI, UploadFile, File, Form,status
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 from clingo import Control, Function, parse_term
@@ -568,9 +568,13 @@ def all_configurations():
     response = app.pfm.map_memo
     return JSONResponse(status_code=status.HTTP_200_OK, content=response)
 
+@app.get("/files/configurations/export/{name}")
+def export_configuration_encoding(name):
+    return FileResponse(os.path.join(app.pfm.configuration_path, name))
+
 @app.post("/files/configurations/new")
 def new_configuration(config: ConfigurationModel):
-    response = app.pfm.new_configuration(name=config.name, domain=config.domain)
+    response = app.pfm.new_configuration(name=config.name, domain=config.domain, icon=config.icon)
     return JSONResponse(status_code=status.HTTP_200_OK, content=response)
 
 @app.delete("/files/configurations/{name}")

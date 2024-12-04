@@ -294,7 +294,7 @@ class RESTManager():
             res.append(log["name"])
         return res
 
-    def new_configuration(self, name, domain, content=""):
+    def new_configuration(self, name, domain, icon="bi bi-bezier2" ,content=""):
         file_path = os.path.join(self.configuration_path, name)
         if os.path.isfile(file_path):
             return (False, "File with this name exists already.")
@@ -304,7 +304,7 @@ class RESTManager():
         
         with open(file_path, "w+") as f:
             f.write(content)
-        self.map_memo.append({"name": name, "domain":domain})
+        self.map_memo.append({"name": name, "domain":domain, "icon": icon})
         self._save_mapping()
         return(True, "File created.")
     
