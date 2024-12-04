@@ -558,8 +558,9 @@ def add_add_template(name, template_name: str = Form(...), template_file: Upload
         with open(template_file_path, "wb") as buffer:
             shutil.copyfileobj(template_file.file, buffer)
         app.pfm.add_template_to_domain(name,template_name)
+        return JSONResponse(content=app.pfm.get_domain_metadata(name))
     except:
-        return
+        return JSONResponse(content="Failed")
     
 @app.get("/files/domains/{name}/templates")
 def get_domain_templates(name):
@@ -592,7 +593,7 @@ def new_configuration(config: ConfigurationModel):
     if config.template is not None:
         shutil.copy(os.path.join(app.pfm.domain_path, config.domain, "templates", config.template),
                     os.path.join(app.pfm.configuration_path, config.name))
-    return JSONResponse(status_code=status.HTTP_200_OK, content=response)
+    return JSONResponse(status_code=status.HTTP_200_OK, content=response[1])
 
 @app.delete("/files/configurations/{name}")
 def delete_configuration(name):
@@ -614,7 +615,7 @@ def rename_configuration(name, new_name):
         open_configuration_file_name = new_name
         open_configuration_file = Path(str(open_configuration_file).replace(name, new_name))
     # make sure the name changes in the system as well (loaded name and path)
-    return JSONResponse(status_code=status.HTTP_200_OK, content=response)
+    return JSONResponse(status_code=status.HTTP_200_OK, content=app.pfm.get_configuration_by_name(new_name)[0])
 
 #-----------PG: Configurator-----------("/configurator")
 

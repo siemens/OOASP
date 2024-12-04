@@ -326,7 +326,7 @@ class RESTManager():
             f.write(content)
         self.map_memo.append({"name": name, "domain":domain, "icon": icon})
         self._save_mapping()
-        return(True, "File created.")
+        return(True, {"name": name, "domain":domain, "icon": icon})
     
     def rename_configuration(self, name, new_name):
         log, config = self.get_configuration_by_name(name)
@@ -342,7 +342,8 @@ class RESTManager():
             return (False, "There was a problem renaming the configuration.")
         
         self.map_memo[self.map_memo.index(log)]["name"] = new_name
-        self._save_mapping()        
+        self._save_mapping()
+        return (True, self.map_memo)
 
     def delete_configuration(self, name):
         log, config = self.get_configuration_by_name(name)
