@@ -48,7 +48,8 @@ class DomainModel(BaseModel):
 class ConfigurationModel(BaseModel):
     name: str
     domain: str
-    icon: str 
+    icon: str | None = None
+    description: str | None = None
     template: str | None = None
 
 class DomainUpdateModel(BaseModel):

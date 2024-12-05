@@ -588,17 +588,11 @@ def export_configuration_encoding(name):
     return FileResponse(os.path.join(app.pfm.configuration_path, name))
 
 @app.post("/files/configurations/new")
-def new_configuration(
-    name: str,
-    domain: str,
-    icon: str | None = None,
-    description: str | None = None,
-    template: str | None = None,
-    ):
-    response = app.pfm.new_configuration(name=name, domain=domain, icon=icon, description=description)
-    if template is not None:
-        shutil.copy(os.path.join(app.pfm.domain_path, domain, "templates", template),
-                    os.path.join(app.pfm.configuration_path, name))       
+def new_configuration(data: ConfigurationModel):
+    response = app.pfm.new_configuration(name=data.name, domain=data.domain, icon=data.icon, description=data.description)
+    if data.template is not None:
+        shutil.copy(os.path.join(app.pfm.domain_path, data.domain, "templates", data.template),
+                    os.path.join(app.pfm.configuration_path, data.name))       
 
     return JSONResponse(status_code=status.HTTP_200_OK, content=response[1])
 
