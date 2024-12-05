@@ -591,11 +591,11 @@ def export_configuration_encoding(name):
 def new_configuration(
     name: str = Form(...),
     domain: str = Form(...),
-    icon: str = Form(None),
-    description: str = Form(None),
-    template: str = Form(None),
-    encodingFile: UploadFile = File(None)):
-    response = app.pfm.new_configuration(name=name, domain=domain, icon=icon, description=description)
+    icon: str | None =  None,
+    description: str | None = None,
+    template: str | None = None,
+    encodingFile: UploadFile | None = File(None)):
+    response = app.pfm.new_configuration(name=name, domain=domain, icon=icon if icon else "bi bi-bezier2", description=description if description else "")
     if template is not None:
         shutil.copy(os.path.join(app.pfm.domain_path, domain, "templates", template),
                     os.path.join(app.pfm.configuration_path, name))
