@@ -314,7 +314,7 @@ class RESTManager():
             res.append(log["name"])
         return res
 
-    def new_configuration(self, name, domain, icon="bi bi-bezier2" ,content=""):
+    def new_configuration(self, name, domain, description ,icon="bi bi-bezier2" ,content=""):
         file_path = os.path.join(self.configuration_path, name)
         if os.path.isfile(file_path):
             return (False, "File with this name exists already.")
@@ -324,9 +324,9 @@ class RESTManager():
         
         with open(file_path, "w+") as f:
             f.write(content)
-        self.map_memo.append({"name": name, "domain":domain, "icon": icon})
+        self.map_memo.append({"name": name, "domain":domain, "icon": icon, "description": description})
         self._save_mapping()
-        return(True, {"name": name, "domain":domain, "icon": icon})
+        return(True, {"name": name, "domain":domain, "icon": icon, "description": description})
     
     def rename_configuration(self, name, new_name):
         log, config = self.get_configuration_by_name(name)
@@ -344,6 +344,24 @@ class RESTManager():
         self.map_memo[self.map_memo.index(log)]["name"] = new_name
         self._save_mapping()
         return (True, self.map_memo)
+    
+    def change_icon(self, name, icon):
+        log, config = self.get_configuration_by_name(name)
+        if log is None:
+            return (False, "Configuration does not exist.")
+        
+        self.map_memo[self.map_memo.index(log)]["icon"] = icon
+        self._save_mapping()
+        return (True, self.map_memo)
+    
+    def change_configuration_description(self, name, desc):
+        log, config = self.get_configuration_by_name(name)
+        if log is None:
+            return (False, "Configuration does not exist.")
+        self.map_memo[self.map_memo.index(log)].update({"description": desc})
+        self._save_mapping()
+        return (True, self.map_memo)
+        
 
     def delete_configuration(self, name):
         log, config = self.get_configuration_by_name(name)

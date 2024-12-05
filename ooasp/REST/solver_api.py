@@ -605,7 +605,21 @@ def change_icon(name, icon_name: str):
     log = app.pfm.get_configuration_by_name(name)
     log[1]["icon"] = icon_name
     app.pfm._save_mapping()
-    return JSONResponse(content=app.pfm.get_configuration_by_name(name)[0])
+    return JSONResponse(content=app.pfm.get_configuration_by_name(name))
+
+@app.put("/files/configurations/{name}")
+def edit_configuration(name, data: ConfigurationUpdateModel):
+    if data.description is not None:
+        print("Changing desc")
+        app.pfm.change_configuration_description(name, data.description)
+    if data.icon is not None:
+        print("Changing icon")
+        app.pfm.change_icon(name, data.icon)
+    if data.name is not None:
+        app.pfm.rename_configuration(name, data.name)
+        name = data.name
+    print(app.pfm.map_memo)
+    return JSONResponse(content=app.pfm.get_configuration_by_name(name))
 
 @app.put("/files/configurations/{name}/rename/{new_name}")
 def rename_configuration(name, new_name):

@@ -3,6 +3,12 @@ from fastapi import FastAPI, status
 from fastapi.responses import JSONResponse
 import os
 #==========DATA MODELS========
+
+class ConfigurationUpdateModel(BaseModel):
+    name: str | None = None
+    icon: str | None = None
+    description: str | None = None
+
 class ProjectDataModel(BaseModel):
     domain: str|None = None
     description: str|None = None
