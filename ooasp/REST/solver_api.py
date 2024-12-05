@@ -591,9 +591,9 @@ def export_configuration_encoding(name):
 def new_configuration(
     name: str = Form(...),
     domain: str = Form(...),
-    icon: str = Form(...),
-    description: str = Form(...),
-    template: UploadFile = File(None),
+    icon: str = Form(None),
+    description: str = Form(None),
+    template: str = Form(None),
     encodingFile: UploadFile = File(None)):
     response = app.pfm.new_configuration(name=name, domain=domain, icon=icon, description=description)
     if template is not None:

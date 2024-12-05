@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from fastapi import FastAPI, status
+from fastapi import FastAPI, status, File, UploadFile
 from fastapi.responses import JSONResponse
 import os
 #==========DATA MODELS========

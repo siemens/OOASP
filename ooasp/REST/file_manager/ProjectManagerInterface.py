@@ -315,6 +315,8 @@ class RESTManager():
         return res
 
     def new_configuration(self, name, domain, description ,icon="bi bi-bezier2" ,content=""):
+        if (icon == "") or (icon is None):
+            icon = "bi bi-bezier2"
         file_path = os.path.join(self.configuration_path, name)
         if os.path.isfile(file_path):
             return (False, "File with this name exists already.")
@@ -362,7 +364,6 @@ class RESTManager():
         self._save_mapping()
         return (True, self.map_memo)
         
-
     def delete_configuration(self, name):
         log, config = self.get_configuration_by_name(name)
         if log is None:
