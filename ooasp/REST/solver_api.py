@@ -589,22 +589,26 @@ def export_configuration_encoding(name):
 
 @app.post("/files/configurations/new")
 def new_configuration(
-    name: str = Form(...),
-    domain: str = Form(...),
-    icon: str = Form(None),
-    description: str = Form(None),
-    template: str = Form(None),
-    encodingFile: UploadFile = File(None)):
+    name: str,
+    domain: str,
+    icon: str | None = None,
+    description: str | None = None,
+    template: str | None = None,
+    ):
     response = app.pfm.new_configuration(name=name, domain=domain, icon=icon, description=description)
     if template is not None:
         shutil.copy(os.path.join(app.pfm.domain_path, domain, "templates", template),
-                    os.path.join(app.pfm.configuration_path, name))
-    if encodingFile is not None:
-        config_encoding = os.path.join(app.pfm.configuration_path, name)
-        with open(config_encoding, "wb") as buffer:
-            shutil.copyfileobj(encodingFile.file, buffer)
+                    os.path.join(app.pfm.configuration_path, name))       
 
     return JSONResponse(status_code=status.HTTP_200_OK, content=response[1])
+
+@app.post("/files/configurations/{name}/import")
+def import_encoding(name, encodingFile: UploadFile = File(...)):
+    config_encoding = os.path.join(app.pfm.configuration_path, name)
+    with open(config_encoding, "wb") as buffer:
+        shutil.copyfileobj(encodingFile.file, buffer)
+    return buffer
+
 
 @app.delete("/files/configurations/{name}")
 def delete_configuration(name):
