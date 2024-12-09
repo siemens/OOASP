@@ -625,6 +625,7 @@ def edit_configuration(name, data: ConfigurationUpdateModel):
         print("Changing icon")
         app.pfm.change_icon(name, data.icon)
     if data.name is not None:
+        print(name, data.name)
         app.pfm.rename_configuration(name, data.name)
         name = data.name
     print(app.pfm.map_memo)

@@ -176,12 +176,19 @@ class Domain:
             try:
                 os.rmdir(self.directory)
             except:
+                for template in os.listdir(os.path.join(self.directory, "templates")):
+                    fpath = os.path.join(self.directory, "templates",template)
+                    os.remove(fpath)
+                    print(f"Removing domain file: '{fpath}' ")
+                os.rmdir(os.path.join(self.directory, "templates"))
+
                 files = os.listdir(self.directory)
                 for file in files:
                     fpath = os.path.join(self.directory, file)
                     print(f"Removing domain file: '{fpath}' ")
                     os.remove(fpath)
                 os.rmdir(self.directory)
+
         return not self._check_exists()
 
 class RESTManager():
@@ -306,6 +313,7 @@ class RESTManager():
     #==========CONFIGURATIONS============
     def get_configuration_by_name(self, name):
         res = list(filter(lambda d: d["name"]== name ,self.map_memo))
+        print(res, name)
         return (res[0] if len(res)> 0 else None, self.map_memo[self.map_memo.index(res[0])])
     
     def list_all_configuration_names(self):
