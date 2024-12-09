@@ -529,6 +529,7 @@ async def create_domain(
     }
  
     app.pfm.new_domain(name)
+    app.pfm.update_domain_description(name, description)
  
     if constraintsFile:
         constraints_file_path = os.path.join(app.pfm.domain_path, name, "constraints.lp")
