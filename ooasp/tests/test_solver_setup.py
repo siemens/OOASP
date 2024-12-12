@@ -35,6 +35,7 @@ def test_grounding(init_solver):
         solver.add_object("frame")
     assert initial_ground < solver.times["ground"]
 
+
 def test_solve(init_solver):
     solver = init_solver
     solver.create_initial_objects()
