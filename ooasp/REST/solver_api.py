@@ -38,7 +38,7 @@ cv_check = False
 save_status = False
 
 app = MyAPI()
-app.add_middleware(
+app.add_middleware(  # allows connection in the development environment
     CORSMiddleware,
     allow_origins=FE_ORIGINS,
     allow_credentials=True,
