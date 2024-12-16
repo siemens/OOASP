@@ -853,21 +853,8 @@ def export_to_file(path):
 @app.get("/configurator/solver/save/image/{name}")
 async def get_diagram(name):
     global solver
-    # TODO suffix logic
     solver.save_png(name=name, extra_prg="_clinguin_browsing.")
     return Response(f"File saved in ./out/{name}.png", data=None).build()
-
-
-@app.get("/configurator/solver/export/ooasp")
-def export_assumptions():
-    pass
-
-
-@app.get("/configurator/solver/export/solution/diagram")
-def export_solution_diagram():
-    pass
-
-# ------------------------------------------------------------------------------------
 
 # ---------- File management ----------
 
