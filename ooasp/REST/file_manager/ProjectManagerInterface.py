@@ -1,3 +1,6 @@
+# Copyright (c) 2024 Siemens AG Oesterreich
+# SPDX-License-Identifier: MIT
+
 from abc import ABC, abstractmethod
 import os
 import os.path
@@ -12,9 +15,13 @@ DEFAULT_LOCATION = Path("")
 SYS_FOLDER_NAME = 'interactive_configurator_files'
 DOMAIN_DIR = 'domains'
 CONFIG_DIR = 'configuration_files'
+METADATA = 'domain_conf.json'
 
 
 def make_file_structure(location):
+    """
+    Creates necessary file structure to accommodate the domain and configuration file management.
+    """
     location = Path(location)
     os.makedirs(os.path.join(location, SYS_FOLDER_NAME), exist_ok=True)
     os.makedirs(os.path.join(location, SYS_FOLDER_NAME, DOMAIN_DIR), exist_ok=True)
@@ -26,7 +33,7 @@ class Domain:
 
     ENCODING_FNAME = 'kb.lp'
     CONSTRAINTS_FNAME = 'constraints.lp'
-    METADATA = 'domain_conf.json'
+    METADATA = METADATA  # needs to be reassigned to be available within the object
 
     def __init__(self, name=None) -> None:
         self.name = name
@@ -45,13 +52,22 @@ class Domain:
             self.directory = os.path.join(DEFAULT_LOCATION, SYS_FOLDER_NAME, DOMAIN_DIR, self.name)
 
     def _register_template(self, name):
+        """
+        Lists template as part of the domain.
+        """
         self.templates.append(name)
         self._dump_metadata()
 
     def generate_new(self, content="", create_req_files=True):
+        """
+        Generates a new and empty Domain and creates the required files for it to be accessible by other systems.
+        """
         estimated_dir = os.path.join(DEFAULT_LOCATION, SYS_FOLDER_NAME, DOMAIN_DIR, self.name)
 
-        if not os.path.exists(estimated_dir):
+        if os.path.exists(estimated_dir):
+            print(f"Project with this name ({self.name}) already exists.")
+            return False
+        else:
             print(f"New project directory will be created in '{estimated_dir}'.")
             print(f"    1. Setting domain directory to '{estimated_dir}'.")
             self.directory = estimated_dir
@@ -80,31 +96,25 @@ class Domain:
                 json.dump(metadata, mf, indent=4)
             return True
 
-        print(f"Project with this name ({self.name}) already exists.")
-        return False
-
     def _check_exists(self):
         if not os.path.exists(self.directory):
             return False
         return True
 
     def _dump_metadata(self, other_file=None, additional_metadata={}):
+        """
+        Saves metadata into physical memory.
+        """
         fpath = os.path.join(self.directory, self.METADATA) if other_file is None else other_file
         with open(fpath, 'w') as f:
-            metadata = {'name': self.name,
-                        'directory': self.directory,
-                        'version': self.version,
-                        'ENCODING_FNAME': self.ENCODING_FNAME,
-                        'CONSTRAINTS_FNAME': self.CONSTRAINTS_FNAME,
-                        'description': self.description,
-                        'configurations': self.configurations,
-                        'templates': self.templates,
-                        'icon': self.icon
-                        }
+            metadata = self.__dict__
             metadata.update(additional_metadata)
             json.dump(metadata, f, indent=4)
 
     def _load(self, config_file, rewrite_fnames=False):
+        """
+        Loads the data from physical memory and sets all values accordingly in the object.
+        """
         with open(config_file, "r") as f:
             content = json.load(f)
 
@@ -137,6 +147,9 @@ class Domain:
         return True
 
     def _update(self, version=None, directory=None, ENCODING_FNAME=None, CONSTRAINTS_FNAME=None, METADATA=None, configurations=None, icon=None) -> dict:
+        """
+        Updates provided attributes.
+        """
         self.version = version if version is not None else self.version
         self.directory = directory if directory is not None else self.directory
         self.ENCODING_FNAME = ENCODING_FNAME if ENCODING_FNAME is not None else self.ENCODING_FNAME
@@ -154,6 +167,9 @@ class Domain:
             f.write(content)
 
     def _update_name(self, name, new_path):
+        """
+        Changes name of the domain
+        """
         try:
             os.rename(self.directory, new_path)
             self.name = name
@@ -162,6 +178,9 @@ class Domain:
             pass
 
     def _add_configuration(self, configuration):
+        """
+        Lists a configuration file as a part of the domain.
+        """
         new = self.configurations
         new.append(configuration)
         self._update(CONFIGURATIONS=new)
@@ -169,6 +188,10 @@ class Domain:
         return self
 
     def _delete(self):
+        """
+        Removes the domain.
+        Attempts to remove all files within the Domain directory, then deletes the directory.
+        """
         print(self._check_exists())
         if self._check_exists():
             try:
@@ -203,22 +226,31 @@ class RESTManager():
     # ==========DOMAIN==========
 
     def add_template_to_domain(self, name, template):
+        """
+        Registers a template as a part of the corresponding domain.
+        """
         if not os.path.isfile(os.path.join(self.domain_path, name, "templates", template)):
             return False
-        dom = Domain()._load(os.path.join(self.domain_path, name, "domain_conf.json"))
+        dom = Domain()._load(os.path.join(self.domain_path, name, METADATA))
         dom._register_template(template)
         return True
 
     def get_domain_templates(self, name):
-        dom = Domain()._load(os.path.join(self.domain_path, name, "domain_conf.json"))
+        """
+        Returns list of all templates registered within requested domain.
+        """
+        dom = Domain()._load(os.path.join(self.domain_path, name, METADATA))
         return dom.templates
 
     def get_full_domain_response(self):
+        """
+        Builds a complete JSON representation of domains and configurations recognized by the system.
+        """
         res = []
         domains = self.get_all_domains()
         for domain_name in domains:
             try:
-                domain = Domain(domain_name)._load(os.path.join(self.domain_path, domain_name, "domain_conf.json"))
+                domain = Domain(domain_name)._load(os.path.join(self.domain_path, domain_name, METADATA))
                 obj = {"name": domain_name,
                        "description": domain.description,
                        "icon": domain.icon,
@@ -230,6 +262,9 @@ class RESTManager():
         return res
 
     def _load_mapping(self):
+        """
+        Loads contents of -configuration mapping file into the instance from physical memory.
+        """
         try:
             with open(self.MAPPING_FILE, "r+") as f:
                 content = json.load(f)
@@ -242,12 +277,17 @@ class RESTManager():
             return False
 
     def _save_mapping(self):
+        """
+        Saves current state of the configuration mapping into physical memory.
+        """
         with open(self.MAPPING_FILE, "w") as f:
             json.dump(self.map_memo, f, indent=4)
             return True
 
     def get_all_domains(self):
-
+        """
+        Returns list of all directories within the loaded domain directory.
+        """
         return os.listdir(self.domain_path)
 
     def new_domain(self, name):
@@ -269,9 +309,10 @@ class RESTManager():
         return content
 
     def delete_domain(self, name):
-        pass
+        """
+        Deletes a corresponding domain.
+        """
         available = os.listdir(self.domain_path)
-        # TODO find all corresponding files and orphan them
         if name not in available:
             return "Domain does not exist."
         dom = Domain()._load(str(os.path.join(DEFAULT_LOCATION, SYS_FOLDER_NAME, DOMAIN_DIR, name, Domain.METADATA)))
@@ -284,6 +325,9 @@ class RESTManager():
         return "There was a problem removing the domain."
 
     def update_domain(self, name, new_name, description, constraintsFile, encodingFile):
+        """
+        Updates information about domain, including contents of the encoding files.
+        """
         dom = Domain()._load(str(os.path.join(DEFAULT_LOCATION, SYS_FOLDER_NAME, DOMAIN_DIR, name, Domain.METADATA)))
         if description is not None:
             dom._change_description(description)
@@ -311,6 +355,9 @@ class RESTManager():
 
     # ==========CONFIGURATIONS============
     def get_configuration_by_name(self, name):
+        """
+        Returns all data for a corresponding domain if it exists within the known mapping.
+        """
         res = list(filter(lambda d: d["name"] == name, self.map_memo))
         print(res, name)
         return (res[0] if len(res) > 0 else None, self.map_memo[self.map_memo.index(res[0])])
@@ -322,6 +369,9 @@ class RESTManager():
         return res
 
     def new_configuration(self, name, domain, description, icon="bi bi-bezier2", content=""):
+        """
+        Creates a new configuration and fills required data by default values if not provided.
+        """
         if (icon == "") or (icon is None):
             icon = "bi bi-bezier2"
         file_path = os.path.join(self.configuration_path, name)
@@ -388,7 +438,6 @@ class RESTManager():
 class MyAPI(FastAPI):
     def __init__(self):
         super().__init__()
+        make_file_structure(".")
         self.pfm = RESTManager(domain_path=Path("./interactive_configurator_files/domains"), configuration_path=Path(
             "./interactive_configurator_files/configuration_files"), path=Path("./interactive_configurator_files"))
-        os.makedirs(Path("./interactive_configurator_files/domains"), exist_ok=True)
-        os.makedirs(Path("./interactive_configurator_files/configuration_files"), exist_ok=True)

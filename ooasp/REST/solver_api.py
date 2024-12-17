@@ -1,4 +1,6 @@
-import random
+# Copyright (c) 2024 Siemens AG Oesterreich
+# SPDX-License-Identifier: MIT
+
 import shutil
 from ooasp.smart_ooasp import SmartOOASPSolver
 from interfaces import *
@@ -62,10 +64,10 @@ def save():
 
 
 def import_solution(f_path: str = "fe_model.lp") -> None:
-    global solver
     """
-        Takes a file containing a configuration encoding and loads it into the editor.
-        """
+    Takes a file containing a configuration encoding and loads it into the editor.
+    """
+    global solver
     f_path = f_path.strip(
         '"'
     )
@@ -256,6 +258,8 @@ def export_as_file(path):
 def represent_as_graph():
     """
     Represents list of objects and associations a collection of nodes and edges.
+    If the solver is busy, returns a placeholder node instead.
+    Nodes are built in a format required by the front-end representation, including styling and placeholder positions.
     """
     global solve_semaphore, cv_check
     if solve_semaphore:
@@ -277,7 +281,7 @@ def represent_as_graph():
             active_objects.append(data_list[1])
             node = {"id": data_list[1],
                     "type": "cstNode",
-                    "position": {"x": random.randint(20, 200), "y": random.randint(20, 200)},
+                    "position": {"x": 0, "y": 0},
                     "data": {"class": data_list[0], "object_id": data_list[1], "attributes": [], "assocs": []}
                     }
             data["nodes"].append(node)
@@ -352,7 +356,7 @@ def solve_threaded():
     solver.cautious = None
     validity_check = True
     solve_semaphore = False
-    print("Fisnished Solving")
+    print("SOLVER:> Finished Solving!")
 
 
 def get_possibilities():
