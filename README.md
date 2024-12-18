@@ -51,6 +51,14 @@ Run the clinguin UI with the following command:
 clinguin client-server --ui-files clinguin_ui/ui.lp --backend=OOASPBackend --clingraph-files ooasp/encodings/viz_config.lp --default-graph=config --custom-classes clinguin_ui/ooasp_backend.py --domain-files examples/racks/kb.lp
 ```
 
+### Solver REST API Usage
+
+To use and access the solver using CRUD commands though RESTful api run:
+
+```bash
+fastapi dev ./ooasp/REST/solver_api.py
+```
+
 ### Documentation
 
 For the documentation of the protoype see [DOC.md](DOC.md)

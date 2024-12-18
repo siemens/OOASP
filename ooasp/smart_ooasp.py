@@ -207,6 +207,18 @@ class SmartOOASPSolver:
         self.cautious = None
         self.brave = None
 
+    def choose_attribute_value(self, attr_data) -> None:
+        """
+        Adds value to an object attribute.
+        """
+        for assumption in self.assumptions:
+            if f"ooasp_attr_value({attr_data[0]},{attr_data[1]}" in assumption:
+                self.assumptions.remove(assumption)
+        attr_atom = (f"ooasp_attr_value({attr_data[0]},{attr_data[1]},{attr_data[2]})")
+        self.assumptions.add(attr_atom)
+        self.cautious = None
+        self.brave = None
+
     def get_cautious(self) -> list[Symbol]:
         """
         Obtains and stores the cautious consequences of the current configuration.
@@ -266,7 +278,7 @@ class SmartOOASPSolver:
         return self.brave
 
     def save_png(
-        self, directory: str = "./out", suffix: str = "", extra_prg=""
+        self, directory: str = "./out", suffix: str = "", extra_prg="", name="config"
     ) -> None:
         """
         Saves the configuration as a png using clingraph
@@ -298,7 +310,7 @@ class SmartOOASPSolver:
         f = render(
             graphs,
             format="png",
-            name_format="config" + suffix,
+            name_format=name + suffix,
             directory=directory,
             view=True,
         )
