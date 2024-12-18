@@ -8,7 +8,7 @@ from ooasp.REST.file_manager.ProjectManagerInterface import *
 from fastapi import FastAPI, UploadFile, File, Form, status
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
-from typing import List
+from typing import Annotated, List
 from clingo import Control, Function, parse_term
 import threading
 
@@ -540,12 +540,11 @@ def domain_files_path():
     response = str(app.pfm.domain_path)
     return JSONResponse(status_code=status.HTTP_200_OK, content=response)
 
-
 @app.post("/files/domains/new")
 async def create_domain(
     name: str = Form(...),
     description: str = Form(...),
-    constraintsFile: UploadFile = File(None),
+    additionalFiles: List[UploadFile] = None,
     encodingFile: UploadFile = File(None)
 ):
 
@@ -557,15 +556,23 @@ async def create_domain(
     app.pfm.new_domain(name)
     app.pfm.update_domain_description(name, description)
 
-    if constraintsFile:
-        constraints_file_path = os.path.join(app.pfm.domain_path, name, "constraints.lp")
-        with open(constraints_file_path, "wb") as buffer:
-            shutil.copyfileobj(constraintsFile.file, buffer)
+    constraint_files = []
+    print(additionalFiles)
+
+    if additionalFiles:
+        for f in additionalFiles:
+            additional_file_path = os.path.join(app.pfm.domain_path, name, f.filename)
+            constraint_files.append(f.filename)
+            with open(additional_file_path, "wb") as buffer:
+                shutil.copyfileobj(f.file, buffer)
 
     if encodingFile:
         encoding_file_path = os.path.join(app.pfm.domain_path, name, "kb.lp")
         with open(encoding_file_path, "wb") as buffer:
             shutil.copyfileobj(encodingFile.file, buffer)
+
+    new_dom =  Domain()._load(os.path.join(app.pfm.domain_path, name, METADATA))
+    new_dom.CONSTRAINTS_FNAME = [new_dom.CONSTRAINTS_FNAME] + constraint_files if isinstance(new_dom.CONSTRAINTS_FNAME, list) else constraint_files
 
     return JSONResponse(content=domain_data)
 

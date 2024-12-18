@@ -58,7 +58,7 @@ class Domain:
         self.templates.append(name)
         self._dump_metadata()
 
-    def generate_new(self, content="", create_req_files=True):
+    def generate_new(self, content="", create_req_files=True, additional_constraint_files=[]):
         """
         Generates a new and empty Domain and creates the required files for it to be accessible by other systems.
         """
@@ -85,7 +85,7 @@ class Domain:
                         'directory': self.directory,
                         'version': '0.0.1',
                         'ENCODING_FNAME': self.ENCODING_FNAME,
-                        'CONSTRAINTS_FNAME': self.CONSTRAINTS_FNAME,
+                        'CONSTRAINTS_FNAME': [self.CONSTRAINTS_FNAME]+additional_constraint_files,
                         'description': self.description,
                         'configurations': self.configurations,
                         'templates': self.templates,
