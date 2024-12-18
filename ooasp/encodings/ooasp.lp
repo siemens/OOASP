@@ -34,3 +34,5 @@ check_permanent_cv. % Checks for permanent constraints apply
 #show ooasp_isa/2.
 #show ooasp_attr_value/3.
 #show ooasp_associated/3.
+
+#show ooasp_cv/4.
