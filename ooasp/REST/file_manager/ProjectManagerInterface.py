@@ -67,34 +67,34 @@ class Domain:
         if os.path.exists(estimated_dir):
             print(f"Project with this name ({self.name}) already exists.")
             return False
-        else:
-            print(f"New project directory will be created in '{estimated_dir}'.")
-            print(f"    1. Setting domain directory to '{estimated_dir}'.")
-            self.directory = estimated_dir
-            os.makedirs(estimated_dir)
-            os.makedirs(os.path.join(estimated_dir, "templates"))
-            if create_req_files:
-                print(f"        Creating Template files: '{self.ENCODING_FNAME}','{self.CONSTRAINTS_FNAME}' ")
-                with open(os.path.join(estimated_dir, self.ENCODING_FNAME), "w") as enc_file:
-                    enc_file.write(f"% ===== '{self.name}' domain encoding ===== ")
-                    enc_file.write(content)
-                with open(os.path.join(estimated_dir, self.CONSTRAINTS_FNAME), "w") as enc_file:
-                    enc_file.write(f"% ===== '{self.name}' constraint encoding ===== ")
-            print("    2. Generating Domain metadata")
-            metadata = {'name': self.name,
-                        'directory': self.directory,
-                        'version': '0.0.1',
-                        'ENCODING_FNAME': self.ENCODING_FNAME,
-                        'CONSTRAINTS_FNAME': [self.CONSTRAINTS_FNAME]+additional_constraint_files,
-                        'description': self.description,
-                        'configurations': self.configurations,
-                        'templates': self.templates,
-                        'icon': self.icon
-                        }
-            print("    3. Writing metadata")
-            with open(os.path.join(estimated_dir, self.METADATA), "w") as mf:
-                json.dump(metadata, mf, indent=4)
-            return True
+
+        print(f"New project directory will be created in '{estimated_dir}'.")
+        print(f"    1. Setting domain directory to '{estimated_dir}'.")
+        self.directory = estimated_dir
+        os.makedirs(estimated_dir)
+        os.makedirs(os.path.join(estimated_dir, "templates"))
+        if create_req_files:
+            print(f"        Creating Template files: '{self.ENCODING_FNAME}','{self.CONSTRAINTS_FNAME}' ")
+            with open(os.path.join(estimated_dir, self.ENCODING_FNAME), "w") as enc_file:
+                enc_file.write(f"% ===== '{self.name}' domain encoding ===== ")
+                enc_file.write(content)
+            with open(os.path.join(estimated_dir, self.CONSTRAINTS_FNAME), "w") as enc_file:
+                enc_file.write(f"% ===== '{self.name}' constraint encoding ===== ")
+        print("    2. Generating Domain metadata")
+        metadata = {'name': self.name,
+                    'directory': self.directory,
+                    'version': '0.0.1',
+                    'ENCODING_FNAME': self.ENCODING_FNAME,
+                    'CONSTRAINTS_FNAME': [self.CONSTRAINTS_FNAME]+additional_constraint_files,
+                    'description': self.description,
+                    'configurations': self.configurations,
+                    'templates': self.templates,
+                    'icon': self.icon
+                    }
+        print("    3. Writing metadata")
+        with open(os.path.join(estimated_dir, self.METADATA), "w") as mf:
+            json.dump(metadata, mf, indent=4)
+        return True
 
     def _check_exists(self):
         if not os.path.exists(self.directory):
@@ -261,9 +261,9 @@ class RESTManager():
                 continue
         return res
 
-    def _load_mapping(self):
+    def _load_mapping(self): 
         """
-        Loads contents of -configuration mapping file into the instance from physical memory.
+        Loads contents of configuration mapping file into the instance from physical memory.
         """
         try:
             with open(self.MAPPING_FILE, "r+") as f:

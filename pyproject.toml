@@ -12,7 +12,7 @@ pytest = "^7.1.2"
 clingraph = ">=1.0.0"
 Clorm = "^1.4.0"
 clinguin = "^2.1.1"
-fastapi = "^0.115.5"
+fastapi = {extras = ["standard"], version = "^0.115.6"}
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.2"
