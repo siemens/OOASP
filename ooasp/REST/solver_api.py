@@ -540,6 +540,7 @@ def domain_files_path():
     response = str(app.pfm.domain_path)
     return JSONResponse(status_code=status.HTTP_200_OK, content=response)
 
+
 @app.post("/files/domains/new")
 async def create_domain(
     name: str = Form(...),
@@ -571,8 +572,9 @@ async def create_domain(
         with open(encoding_file_path, "wb") as buffer:
             shutil.copyfileobj(encodingFile.file, buffer)
 
-    new_dom =  Domain()._load(os.path.join(app.pfm.domain_path, name, METADATA))
-    new_dom.CONSTRAINTS_FNAME = [new_dom.CONSTRAINTS_FNAME] + constraint_files if isinstance(new_dom.CONSTRAINTS_FNAME, list) else constraint_files
+    new_dom = Domain()._load(os.path.join(app.pfm.domain_path, name, METADATA))
+    new_dom.CONSTRAINTS_FNAME = [new_dom.CONSTRAINTS_FNAME] + \
+        constraint_files if isinstance(new_dom.CONSTRAINTS_FNAME, list) else constraint_files
 
     return JSONResponse(content=domain_data)
 
@@ -608,11 +610,11 @@ def get_domain_templates(name):
 def update_domain(domain_name,
                   name: str = Form(...),
                   description: str = Form(...),
-                  constraintsFile: UploadFile = File(None),
+                  constraintsFiles: List[UploadFile] = [],
                   encodingFile: UploadFile = File(None)):
 
     response = app.pfm.update_domain(domain_name, new_name=name, description=description,
-                                     constraintsFile=constraintsFile, encodingFile=encodingFile)
+                                     constraintsFiles=constraintsFiles, encodingFile=encodingFile)
     return JSONResponse(status_code=status.HTTP_200_OK, content=response)
 
 # ----------->CONFIGURATIONS<---------- ("/files/configurations")

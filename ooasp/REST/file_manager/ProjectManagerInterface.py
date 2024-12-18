@@ -324,17 +324,22 @@ class RESTManager():
             return "Domain deleted successfully."
         return "There was a problem removing the domain."
 
-    def update_domain(self, name, new_name, description, constraintsFile, encodingFile):
+    def update_domain(self, name, new_name, description, constraintsFiles, encodingFile):
         """
         Updates information about domain, including contents of the encoding files.
         """
         dom = Domain()._load(str(os.path.join(DEFAULT_LOCATION, SYS_FOLDER_NAME, DOMAIN_DIR, name, Domain.METADATA)))
         if description is not None:
             dom._change_description(description)
+
+        if constraintsFiles is not None or constraintsFiles != []:
+            print(constraintsFiles)
+            for f in constraintsFiles:
+                additional_file_path = os.path.join(self.domain_path, name, f.filename)
+                with open(additional_file_path, "wb") as buffer:
+                    shutil.copyfileobj(f.file, buffer)
+
         if encodingFile is not None:
-            with open(os.path.join(self.domain_path, name, dom.CONSTRAINTS_FNAME), "wb") as buffer:
-                shutil.copyfileobj(constraintsFile.file, buffer)
-        if constraintsFile is not None:
             with open(os.path.join(self.domain_path, name, dom.ENCODING_FNAME), "wb") as buffer:
                 shutil.copyfileobj(encodingFile.file, buffer)
         dom._dump_metadata()
